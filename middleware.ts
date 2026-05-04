@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const ROOT_DOMAIN = 'guacamaya.co'
+const ROOT_DOMAIN = 'guacamaya.net'
 
 export function middleware(req: NextRequest) {
   const host = (req.headers.get('host') ?? '').split(':')[0]

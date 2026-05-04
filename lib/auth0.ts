@@ -1,4 +1,4 @@
-export const NS = 'https://guacamaya.co/'
+export const NS = 'https://guacamaya.net/'
 
 type Token = Record<string, unknown>
 

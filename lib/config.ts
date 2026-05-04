@@ -1,6 +1,6 @@
 // Host público para construir URLs de tenants ({slug}.{host}).
 // Dev: lvh.me:8080 (resuelve a 127.0.0.1 sin /etc/hosts).
-// Prod: guacamaya.co (cuando exista).
+// Prod: guacamaya.net
 export const PUBLIC_ROOT_HOST =
   process.env.PUBLIC_ROOT_HOST ?? 'lvh.me:8080'
 

@@ -183,7 +183,7 @@ export function CreateTenantForm() {
         hint={
           slug
             ? slugValido
-              ? `Subdominio: ${slugClean}.guacamaya.co`
+              ? `Subdominio: ${slugClean}.guacamaya.net`
               : '2-30 caracteres: minúsculas, números y guiones'
             : '2-30 caracteres: minúsculas, números y guiones'
         }

@@ -3,7 +3,7 @@
 -- Diseño:
 --  · El admin genera un token aleatorio en el servidor (32 bytes base64url).
 --  · Solo el HASH (sha256) llega a Postgres — el plaintext nunca toca la DB.
---  · El cliente abre {slug}.guacamaya.co/invite/{token}, hace login en Auth0,
+--  · El cliente abre {slug}.guacamaya.net/invite/{token}, hace login en Auth0,
 --    y el servidor valida + canjea atómicamente.
 --  · Canje: vincula miembro.auth0_user_id ↔ session.user.sub. A partir de ahí
 --    el PWA resuelve miembro por (tenant_id, auth0_user_id) sin claim de Auth0.

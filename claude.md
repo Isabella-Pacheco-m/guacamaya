@@ -3,7 +3,7 @@
 ## Qué construimos
 
 **Guacamaya** es un SaaS multi-tenant que permite a negocios colombianos crear su propio
-club de miembros con marca propia. Cada negocio obtiene una PWA en `{slug}.guacamaya.co`.
+club de miembros con marca propia. Cada negocio obtiene una PWA en `{slug}.guacamaya.net`.
 Los clientes acumulan puntos, suben de nivel y canjean recompensas.
 
 ---
@@ -179,7 +179,7 @@ Tenant y aplicaciones ya configurados — no crear nuevos.
 
 ```typescript
 // lib/auth0.ts
-export const NS = 'https://guacamaya.co/'
+export const NS = 'https://guacamaya.net/'
 export const getTenantId  = (t: any): string => t[NS + 'tenantId']
 export const getMiembroId = (t: any): string => t[NS + 'miembroId']
 ```
@@ -203,13 +203,13 @@ las callbacks correspondientes cuando se necesite multi-tenant end-to-end.
 ### Custom claims — Auth0 Action requerida
 
 Para que `getTenantId(token)` y `getMiembroId(token)` funcionen, el Login Flow
-de Auth0 debe inyectar los claims con namespace `https://guacamaya.co/` en el
+de Auth0 debe inyectar los claims con namespace `https://guacamaya.net/` en el
 ID token:
 
 ```javascript
 // Auth0 → Actions → Library → Login Flow
 exports.onExecutePostLogin = async (event, api) => {
-  const NS = 'https://guacamaya.co/'
+  const NS = 'https://guacamaya.net/'
   const tenantId  = event.user.app_metadata?.tenantId
   const miembroId = event.user.app_metadata?.miembroId
   if (tenantId)  api.idToken.setCustomClaim(NS + 'tenantId',  tenantId)
