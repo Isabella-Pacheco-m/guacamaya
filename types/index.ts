@@ -1,0 +1,107 @@
+export type Nivel = 'BRONCE' | 'PLATA' | 'ORO'
+
+export type TipoTransaccion =
+  | 'COMPRA'
+  | 'CANJE'
+  | 'AJUSTE'
+  | 'REGALO'
+  | 'CUMPLEANOS'
+  | 'SELLO'
+  | 'SELLO_CANJE'
+
+export interface Tenant {
+  id: string
+  nombre: string
+  slug: string
+  logo_url: string | null
+  color_primario: string
+  puntos_por_mil: number
+  puntos_cumpleanos: number | null
+}
+
+export interface Miembro {
+  id: string
+  tenant_id: string
+  nombre: string
+  telefono: string | null
+  email: string | null
+  puntos_actuales: number
+  puntos_historicos: number
+  nivel: Nivel
+  mes_cumpleanos: number | null
+  sellos_actuales: number
+  tarjeta_ciclo: number
+}
+
+export interface Transaccion {
+  id: string
+  tenant_id: string
+  miembro_id: string
+  tipo: TipoTransaccion
+  monto_cop: number | null
+  puntos_delta: number
+  nota: string | null
+  created_at: string
+}
+
+export interface Recompensa {
+  id: string
+  tenant_id: string
+  nombre: string
+  descripcion: string | null
+  costo_puntos: number
+  activa: boolean
+  imagen_url: string | null
+}
+
+export interface FeedPost {
+  id: string
+  tenant_id: string
+  titulo: string
+  cuerpo: string
+  imagen_url: string | null
+  link_url: string | null
+  link_label: string | null
+  autor_email: string | null
+  created_at: string
+}
+
+export type SorteoEstado = 'ABIERTO' | 'CERRADO' | 'SORTEADO'
+
+export interface Sorteo {
+  id: string
+  tenant_id: string
+  titulo: string
+  descripcion: string | null
+  requisitos: string | null
+  imagen_url: string | null
+  cierra_at: string | null
+  estado: SorteoEstado
+  ganador_miembro_id: string | null
+  created_at: string
+}
+
+export interface SorteoConMeta extends Sorteo {
+  participaciones_count: number
+  ganador_nombre?: string | null
+}
+
+export interface SorteoParticipacion {
+  id: string
+  sorteo_id: string
+  tenant_id: string
+  miembro_id: string
+  evidencia_url: string | null
+  comentario: string | null
+  created_at: string
+}
+
+export interface SorteoParticipacionAdmin {
+  id: string
+  miembro_id: string
+  miembro_nombre: string
+  miembro_telefono: string | null
+  evidencia_url: string | null
+  comentario: string | null
+  created_at: string
+}

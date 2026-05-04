@@ -1,0 +1,80 @@
+import { NextResponse } from 'next/server'
+import { requireAdminTenantId } from '@/lib/api-auth'
+import {
+  FEATURE_KEYS,
+  getTenantFeatures,
+  updateTenantFeatures,
+  TenantFeaturesError,
+  type TenantFeaturesPatch,
+} from '@/lib/tenant-features'
+
+export const dynamic = 'force-dynamic'
+
+export async function GET() {
+  const auth = await requireAdminTenantId()
+  if (!auth.ok) return auth.res
+  const features = await getTenantFeatures(auth.tenantId)
+  return NextResponse.json(features)
+}
+
+export async function PATCH(req: Request) {
+  const auth = await requireAdminTenantId()
+  if (!auth.ok) return auth.res
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+  if (typeof body !== 'object' || body === null) {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+  const raw = body as Record<string, unknown>
+
+  const patch: TenantFeaturesPatch = {}
+  for (const k of FEATURE_KEYS) {
+    const v = raw[k]
+    if (v === undefined) continue
+    if (typeof v !== 'boolean') {
+      return NextResponse.json(
+        { error: `${k} debe ser boolean` },
+        { status: 400 }
+      )
+    }
+    patch[k] = v
+  }
+  if ('tarjeta_size' in raw) {
+    const v = raw.tarjeta_size
+    if (typeof v !== 'number' || !Number.isInteger(v)) {
+      return NextResponse.json(
+        { error: 'tarjeta_size debe ser entero' },
+        { status: 400 }
+      )
+    }
+    patch.tarjeta_size = v
+  }
+  if ('sello_valor_cop' in raw) {
+    const v = raw.sello_valor_cop
+    if (v === null) {
+      patch.sello_valor_cop = null
+    } else if (typeof v === 'number' && Number.isInteger(v)) {
+      patch.sello_valor_cop = v
+    } else {
+      return NextResponse.json(
+        { error: 'sello_valor_cop debe ser entero o null' },
+        { status: 400 }
+      )
+    }
+  }
+
+  try {
+    const features = await updateTenantFeatures(auth.tenantId, patch)
+    return NextResponse.json(features)
+  } catch (err) {
+    if (err instanceof TenantFeaturesError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
+    throw err
+  }
+}

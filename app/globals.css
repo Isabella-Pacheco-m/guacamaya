@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-base: 'Manrope', sans-serif;
+
+  --color-graphite: #1A1A1E;
+  --color-lime: #B8FA4E;
+  /* RGB triplet (sin rgb()) para poder componer alpha en runtime.
+     TenantTheme sobreescribe esta variable con el color del tenant. */
+  --color-electric: 48 92 255;
+  --color-sky: #84A6FF;
+  --color-surface: #F5F5F3;
+  --color-white: #FFFFFF;
+  --color-border: #E8E8E6;
+  --color-text-muted: #6B6B6B;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+body {
+  font-family: var(--font-base);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-graphite);
+  background-color: var(--color-surface);
+}
+
+/* Utilidades `electric` definidas manualmente: usan `var(--color-electric)`
+   directamente para que el theming por tenant funcione. Si se definen vía
+   tailwind.config, Tailwind v3 las inlinea como hex literales y pierde
+   la indirección de la CSS var. */
+@layer utilities {
+  .text-electric { color: rgb(var(--color-electric)); }
+  .bg-electric { background-color: rgb(var(--color-electric)); }
+  .bg-electric\/5 { background-color: rgb(var(--color-electric) / 0.05); }
+  .bg-electric\/10 { background-color: rgb(var(--color-electric) / 0.1); }
+  .border-electric { border-color: rgb(var(--color-electric)); }
+  .border-electric\/30 { border-color: rgb(var(--color-electric) / 0.3); }
+  .accent-electric { accent-color: rgb(var(--color-electric)); }
+  .ring-electric\/30 { --tw-ring-color: rgb(var(--color-electric) / 0.3); }
+
+  .focus\:border-electric:focus { border-color: rgb(var(--color-electric)); }
+  .focus\:ring-electric\/30:focus { --tw-ring-color: rgb(var(--color-electric) / 0.3); }
+  .focus-visible\:ring-electric:focus-visible {
+    --tw-ring-color: rgb(var(--color-electric));
+  }
+
+  /* Halo radial sutil para hero/states de bienvenida. Usa el tenant color
+     vía la CSS var, así reacciona al theming. */
+  .bg-tenant-halo {
+    background:
+      radial-gradient(120% 80% at 80% 0%, rgb(var(--color-electric) / 0.08), transparent 60%),
+      radial-gradient(80% 60% at 0% 100%, rgb(var(--color-electric) / 0.05), transparent 60%),
+      var(--color-surface);
+  }
+}
