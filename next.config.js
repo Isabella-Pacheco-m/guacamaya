@@ -1,8 +1,37 @@
+// Rutas con sesión que NUNCA deben servirse desde el service worker:
+// servir HTML cacheado de un usuario logueado a otro (o post-logout)
+// rompe la auth y filtra contenido. Para esos paths siempre red, sin caché.
+const NETWORK_ONLY_PATHS = /^\/(api|admin|superadmin|claim)(\/|$)/
+
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
+  runtimeCaching: [
+    {
+      urlPattern: NETWORK_ONLY_PATHS,
+      handler: 'NetworkOnly',
+    },
+    {
+      urlPattern: /\.(?:js|css|woff2?|ttf|eot)$/i,
+      handler: 'StaleWhileRevalidate',
+      options: { cacheName: 'static-assets' },
+    },
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+      handler: 'StaleWhileRevalidate',
+      options: { cacheName: 'images' },
+    },
+    {
+      urlPattern: /^https:\/\/fonts\.(?:gstatic|googleapis)\.com\/.*/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'google-fonts',
+        expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+      },
+    },
+  ],
 })
 
 /** @type {import('next').NextConfig} */
