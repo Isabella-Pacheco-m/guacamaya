@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest} from 'next/server'
 import { requireClienteContext } from '@/lib/api-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { setMesCumpleanos, MesCumpleanosError } from '@/lib/tenantQueries'
 
 export const dynamic = 'force-dynamic'
 
-export async function PATCH(req: Request) {
-  const auth = await requireClienteContext()
+export async function PATCH(req: NextRequest) {
+  const auth = await requireClienteContext(req)
   if (!auth.ok) return auth.res
 
   // El cliente solo puede setear su mes si el negocio activó la feature.

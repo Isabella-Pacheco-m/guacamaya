@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest} from 'next/server'
 import { getSession } from '@auth0/nextjs-auth0'
 import { requireAdminTenantId } from '@/lib/api-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -16,15 +16,15 @@ import {
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function GET() {
-  const auth = await requireAdminTenantId()
+export async function GET(req: NextRequest) {
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
   const posts = await listFeedPosts(auth.tenantId)
   return NextResponse.json({ posts })
 }
 
-export async function POST(req: Request) {
-  const auth = await requireAdminTenantId()
+export async function POST(req: NextRequest) {
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   const features = await getTenantFeatures(auth.tenantId)
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
     imagenUrl = pub.publicUrl
   }
 
-  const session = await getSession()
+  const session = await getSession(req, new NextResponse())
   const autorEmail = (session?.user?.email as string | undefined) ?? null
 
   try {

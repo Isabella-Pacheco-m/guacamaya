@@ -23,10 +23,10 @@ interface CreateBody {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
-  if (!(await isSuperadmin())) {
+  if (!(await isSuperadmin(req))) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 403 })
   }
-  const session = await getSession()
+  const session = await getSession(req, new NextResponse())
   const createdByEmail = (session?.user.email as string | undefined) ?? null
 
   let body: CreateBody

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest} from 'next/server'
 import { requireAdminTenantId } from '@/lib/api-auth'
 import {
   upsertTarjetaPremio,
@@ -9,8 +9,8 @@ import {
 export const dynamic = 'force-dynamic'
 
 // PUT: upsert (threshold + descripcion)
-export async function PUT(req: Request) {
-  const auth = await requireAdminTenantId()
+export async function PUT(req: NextRequest) {
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   let body: unknown
@@ -62,8 +62,8 @@ export async function PUT(req: Request) {
 }
 
 // DELETE: ?threshold=N
-export async function DELETE(req: Request) {
-  const auth = await requireAdminTenantId()
+export async function DELETE(req: NextRequest) {
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   const url = new URL(req.url)

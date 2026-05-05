@@ -10,7 +10,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // El flujo de canje self-service desde la PWA del cliente queda para cuando
 // implementemos el login PWA con miembroId resuelto en el JWT.
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminTenantId()
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   let body: unknown

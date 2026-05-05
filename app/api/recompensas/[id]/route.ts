@@ -13,7 +13,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const auth = await requireAdminTenantId()
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   if (!UUID_RE.test(params.id)) {

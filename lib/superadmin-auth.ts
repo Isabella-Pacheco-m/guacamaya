@@ -1,6 +1,15 @@
 import { redirect } from 'next/navigation'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
+
+// En App Router Route Handlers, `getSession()` sin args no detecta la cookie
+// (bug conocido de @auth0/nextjs-auth0 v3 + Next 14). Para Route Handlers hay
+// que pasar req+res explícitos. Server Components siguen funcionando sin args.
+async function readSession(req?: NextRequest) {
+  if (req) return getSession(req, new NextResponse())
+  return getSession()
+}
 
 // Allow-list de emails con acceso al panel del superadmin. Modelo simple
 // mientras no haya un claim Auth0 dedicado. Para acceder, además de estar
@@ -37,8 +46,8 @@ export interface SuperadminContext {
  *  - email no en allow-list → / con error
  *  - email no verificado → / con error
  */
-export async function requireSuperadmin(): Promise<SuperadminContext> {
-  const session = await getSession()
+export async function requireSuperadmin(req?: NextRequest): Promise<SuperadminContext> {
+  const session = await readSession(req)
   if (!session?.user) {
     redirect('/api/auth/login?returnTo=/superadmin')
   }
@@ -72,8 +81,8 @@ export async function requireSuperadmin(): Promise<SuperadminContext> {
 }
 
 /** Para checks en API routes que devuelven JSON, no HTML. */
-export async function isSuperadmin(): Promise<boolean> {
-  const session = await getSession()
+export async function isSuperadmin(req?: NextRequest): Promise<boolean> {
+  const session = await readSession(req)
   if (!session?.user) return false
   if (getTenantId(session.user) || getMiembroId(session.user)) return false
   const email = String(session.user.email ?? '').toLowerCase()

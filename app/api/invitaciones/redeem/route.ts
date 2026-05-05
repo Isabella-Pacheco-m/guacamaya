@@ -8,7 +8,7 @@ import { redeemInvitacion, InvitacionError } from '@/lib/invitaciones'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const session = await getSession()
+  const session = await getSession(req, new NextResponse())
   if (!session?.user) {
     return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
   }

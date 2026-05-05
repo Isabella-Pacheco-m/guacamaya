@@ -9,7 +9,7 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const tenant = await getTenantFromRequest()
     return NextResponse.json(tenant)
@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const auth = await requireAdminTenantId()
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   let body: unknown

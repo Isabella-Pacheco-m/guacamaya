@@ -38,7 +38,7 @@ async function deleteAllLogosFor(tenantId: string): Promise<void> {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminTenantId()
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   let form: FormData
@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ tenant })
 }
 
-export async function DELETE() {
-  const auth = await requireAdminTenantId()
+export async function DELETE(req: NextRequest) {
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   const tenant = await getTenantById(auth.tenantId)

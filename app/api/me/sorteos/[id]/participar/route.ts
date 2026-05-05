@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest} from 'next/server'
 import { requireClienteContext } from '@/lib/api-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getTenantFeatures } from '@/lib/tenant-features'
@@ -17,10 +17,10 @@ export const runtime = 'nodejs'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const auth = await requireClienteContext()
+  const auth = await requireClienteContext(req)
   if (!auth.ok) return auth.res
   if (!UUID_RE.test(params.id)) {
     return NextResponse.json({ error: 'id inválido' }, { status: 400 })

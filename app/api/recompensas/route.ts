@@ -4,8 +4,8 @@ import { listRecompensas, createRecompensa } from '@/lib/tenantQueries'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  const auth = await requireAdminTenantId()
+export async function GET(req: NextRequest) {
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   try {
@@ -18,7 +18,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminTenantId()
+  const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
   let body: unknown
