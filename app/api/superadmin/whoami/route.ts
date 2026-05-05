@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getSession } from '@auth0/nextjs-auth0'
+import { isSuperadmin } from '@/lib/superadmin-auth'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -79,10 +80,66 @@ export async function GET(req: NextRequest) {
       AUTH0_COOKIE_DOMAIN: process.env.AUTH0_COOKIE_DOMAIN ?? null,
     },
     request: {
+      method: req.method,
       url: req.url,
       host: req.headers.get('host'),
       x_forwarded_host: req.headers.get('x-forwarded-host'),
       x_forwarded_proto: req.headers.get('x-forwarded-proto'),
+      origin: req.headers.get('origin'),
+      referer: req.headers.get('referer'),
+    },
+  })
+}
+
+// Mismo análisis pero por POST — el form de "Crear negocio" hace POST y eso
+// es lo que está fallando con 403. Si esto devuelve has_user:true entonces
+// el bug NO es la cookie/sesión y hay que mirar otro punto del POST handler.
+export async function POST(req: NextRequest) {
+  const cookieStore = cookies()
+  const allCookies = cookieStore.getAll().map((c) => c.name).sort()
+
+  let sessionB: any = null
+  let errB: string | null = null
+  try {
+    sessionB = await getSession(req, new NextResponse())
+  } catch (e: any) {
+    errB = e?.message ?? String(e)
+  }
+
+  let isAdmin = false
+  let isAdminErr: string | null = null
+  try {
+    isAdmin = await isSuperadmin(req)
+  } catch (e: any) {
+    isAdminErr = e?.message ?? String(e)
+  }
+
+  const raw = process.env.SUPERADMIN_EMAILS ?? ''
+  const allowed = raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length > 0)
+
+  return NextResponse.json({
+    cookies: { via_next_headers: allCookies },
+    session_with_req_res: sessionB?.user
+      ? {
+          has_user: true,
+          email: String(sessionB.user.email ?? '').toLowerCase(),
+          email_verified: sessionB.user.email_verified,
+          tenantId_claim: sessionB.user[NS + 'tenantId'] ?? null,
+          miembroId_claim: sessionB.user[NS + 'miembroId'] ?? null,
+        }
+      : { has_user: false, error: errB },
+    isSuperadmin: { result: isAdmin, error: isAdminErr },
+    env: {
+      SUPERADMIN_EMAILS_values: allowed,
+    },
+    request: {
+      method: req.method,
+      origin: req.headers.get('origin'),
+      referer: req.headers.get('referer'),
+      host: req.headers.get('host'),
     },
   })
 }
