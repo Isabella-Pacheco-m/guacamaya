@@ -1,7 +1,7 @@
 'use server'
 
 import { getSession } from '@auth0/nextjs-auth0'
-import { requireSuperadmin } from '@/lib/superadmin-auth'
+import { isSuperadmin } from '@/lib/superadmin-auth'
 import {
   TenantCreateError,
   createTenant,
@@ -40,13 +40,22 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // Server Action: corre en el mismo contexto del Server Component (lee la
 // sesión vía cookies() de next/headers). No depende de que el navegador
 // mande la cookie en un fetch — eso evita problemas con SW, SameSite,
-// extensiones, etc. Si la auth pasa el layout, también pasa aquí.
+// extensiones, etc.
+//
+// IMPORTANT: NO uses requireSuperadmin() aquí — hace redirect() que en una
+// Server Action interrumpe el return y el cliente recibe undefined. En su
+// lugar usamos isSuperadmin() y devolvemos un error explícito que la UI
+// puede mostrar (con un link a /api/auth/login si la sesión expiró).
 export async function createTenantAction(
   input: CreateTenantActionInput
 ): Promise<CreateTenantActionResult> {
-  // Reutiliza requireSuperadmin (server-component path: getSession() sin args).
-  // Si no es superadmin, redirige; si lo es, devuelve user.
-  await requireSuperadmin()
+  if (!(await isSuperadmin())) {
+    return {
+      ok: false,
+      error:
+        'Tu sesión no es válida o expiró. Vuelve a iniciar sesión y reintenta.',
+    }
+  }
   const session = await getSession()
   const createdByEmail = (session?.user.email as string | undefined) ?? null
 
