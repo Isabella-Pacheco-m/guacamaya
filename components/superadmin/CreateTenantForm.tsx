@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { createTenantAction } from '@/app/superadmin/tenants/new/actions'
 
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/
 const HEX_RE = /^#[0-9a-f]{6}$/i
@@ -58,26 +59,23 @@ export function CreateTenantForm() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/superadmin/tenants', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: nombre.trim(),
-          slug: slugClean,
-          color_primario: color.toUpperCase(),
-          puntos_por_mil: ppmInt,
-          email_dueno: emailDueno.trim().toLowerCase(),
-        }),
+      // Server Action: corre server-side, lee la sesión del mismo contexto
+      // que el layout. Sin fetch, sin dependencia de cookies del browser.
+      const data = await createTenantAction({
+        nombre: nombre.trim(),
+        slug: slugClean,
+        color_primario: color.toUpperCase(),
+        puntos_por_mil: ppmInt,
+        email_dueno: emailDueno.trim().toLowerCase(),
       })
-      const data = await res.json()
-      if (!res.ok) {
+      if (!data.ok || !data.tenant || !data.invitation) {
         setError(data.error ?? 'No se pudo crear el tenant')
         return
       }
-      setResult(data)
+      setResult({ tenant: data.tenant, invitation: data.invitation })
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error de red')
+      setError(err instanceof Error ? err.message : 'Error inesperado')
     } finally {
       setLoading(false)
     }
