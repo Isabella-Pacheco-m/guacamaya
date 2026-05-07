@@ -36,6 +36,7 @@ export function CreateTenantForm() {
   const [result, setResult] = useState<{
     tenant: CreatedTenant
     invitation: InvitationResult
+    domainWarning?: string
   } | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -72,7 +73,11 @@ export function CreateTenantForm() {
         setError(data.error ?? 'No se pudo crear el tenant')
         return
       }
-      setResult({ tenant: data.tenant, invitation: data.invitation })
+      setResult({
+        tenant: data.tenant,
+        invitation: data.invitation,
+        domainWarning: data.domain_warning,
+      })
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
@@ -141,6 +146,13 @@ export function CreateTenantForm() {
             su nuevo permiso se aplique al token.
           </p>
         </div>
+
+        {result.domainWarning && (
+          <div className="border border-amber-300 bg-amber-50 rounded-md px-4 py-3 text-sm text-amber-900">
+            <p className="font-medium">Subdominio sin registrar en Vercel</p>
+            <p className="mt-1 text-xs leading-relaxed">{result.domainWarning}</p>
+          </div>
+        )}
 
         <div className="flex justify-end gap-3 border-t border-border pt-5">
           <Button

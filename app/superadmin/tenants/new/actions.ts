@@ -9,6 +9,7 @@ import {
 } from '@/lib/tenant'
 import { createAdminInvitation } from '@/lib/admin-invitations'
 import { adminClaimUrl } from '@/lib/config'
+import { registerTenantDomainOnVercel } from '@/lib/vercel'
 
 export interface CreateTenantActionInput {
   nombre: string
@@ -33,6 +34,10 @@ export interface CreateTenantActionResult {
     expires_at: string
     claim_url: string
   }
+  // Cuando el subdominio no se pudo registrar automáticamente en Vercel,
+  // la creación del tenant igual procede — devolvemos un warning para que
+  // la UI muestre instrucciones de registro manual al superadmin.
+  domain_warning?: string
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -81,6 +86,23 @@ export async function createTenantAction(
       createdByEmail,
     })
 
+    // Registrar el subdominio en Vercel para que {slug}.guacamaya.net emita
+    // cert SSL y empiece a servir el app. No bloqueamos la creación si esto
+    // falla — el superadmin puede agregarlo manualmente desde el dashboard.
+    let domainWarning: string | undefined
+    const domainRes = await registerTenantDomainOnVercel(tenant.slug)
+    if (!domainRes.ok) {
+      if (domainRes.reason === 'missing-config') {
+        domainWarning =
+          'El tenant fue creado, pero VERCEL_API_TOKEN/VERCEL_PROJECT_ID no están configurados. Agrega ' +
+          `${tenant.slug}.guacamaya.net manualmente en Vercel → Project → Settings → Domains.`
+      } else {
+        domainWarning =
+          `El tenant fue creado, pero falló el registro del subdominio en Vercel (${domainRes.detail}). ` +
+          `Agrega ${tenant.slug}.guacamaya.net manualmente en Vercel → Project → Settings → Domains.`
+      }
+    }
+
     return {
       ok: true,
       tenant: {
@@ -95,6 +117,7 @@ export async function createTenantAction(
         expires_at: invitation.expires_at,
         claim_url: adminClaimUrl(token),
       },
+      domain_warning: domainWarning,
     }
   } catch (err) {
     if (err instanceof TenantCreateError) {
