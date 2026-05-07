@@ -14,7 +14,6 @@ import { registerTenantDomainOnVercel } from '@/lib/vercel'
 export interface CreateTenantActionInput {
   nombre: string
   slug: string
-  color_primario: string
   puntos_por_mil: number
   email_dueno: string
 }
@@ -69,10 +68,12 @@ export async function createTenantAction(
     return { ok: false, error: 'email_dueno requerido y debe ser válido' }
   }
 
+  // El color y el logo NO se piden en el formulario de superadmin: el
+  // dueño del negocio los configura desde su panel /admin/marca después
+  // de aceptar la invitación. Aquí solo dejamos el default sano.
   const tenantInput: CreateTenantInput = {
     nombre: input.nombre ?? '',
     slug: input.slug ?? '',
-    color_primario: input.color_primario,
     puntos_por_mil: input.puntos_por_mil,
     puntos_cumpleanos: null,
   }

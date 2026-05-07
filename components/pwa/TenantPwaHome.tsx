@@ -107,9 +107,14 @@ export function TenantPwaHome({
 
         {features.tarjeta_enabled && (
           <TarjetaCliente
+            tenantNombre={tenant.nombre}
+            miembroNombre={miembro.nombre}
             sellos={miembro.sellos_actuales}
             tarjetaSize={features.tarjeta_size}
             premios={tarjetaPremios}
+            colorFondo={features.tarjeta_color_fondo}
+            colorSello={features.tarjeta_color_sello}
+            estiloSello={features.tarjeta_estilo_sello}
           />
         )}
 

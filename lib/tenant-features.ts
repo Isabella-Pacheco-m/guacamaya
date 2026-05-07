@@ -9,6 +9,9 @@ export const FEATURE_KEYS = [
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
 
+export const TARJETA_ESTILOS = ['circulo', 'estrella', 'corazon', 'cuadrado'] as const
+export type TarjetaEstilo = (typeof TARJETA_ESTILOS)[number]
+
 export interface TenantFeatures {
   tenant_id: string
   feed_enabled: boolean
@@ -17,6 +20,9 @@ export interface TenantFeatures {
   cumpleanos_enabled: boolean
   tarjeta_size: number
   sello_valor_cop: number | null
+  tarjeta_color_fondo: string
+  tarjeta_color_sello: string
+  tarjeta_estilo_sello: TarjetaEstilo
 }
 
 const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
@@ -26,10 +32,13 @@ const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
   cumpleanos_enabled: false,
   tarjeta_size: 10,
   sello_valor_cop: null,
+  tarjeta_color_fondo: '#1A1A1E',
+  tarjeta_color_sello: '#B8FA4E',
+  tarjeta_estilo_sello: 'circulo',
 }
 
 const SELECT =
-  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, tarjeta_size, sello_valor_cop'
+  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello'
 
 export async function getTenantFeatures(tenantId: string): Promise<TenantFeatures> {
   const { data, error } = await supabaseAdmin
@@ -56,7 +65,12 @@ export interface TenantFeaturesPatch {
   cumpleanos_enabled?: boolean
   tarjeta_size?: number
   sello_valor_cop?: number | null
+  tarjeta_color_fondo?: string
+  tarjeta_color_sello?: string
+  tarjeta_estilo_sello?: TarjetaEstilo
 }
+
+const HEX_RE = /^#[0-9a-f]{6}$/i
 
 export class TenantFeaturesError extends Error {
   constructor(message: string, public readonly status: number) {
@@ -69,7 +83,7 @@ export async function updateTenantFeatures(
   tenantId: string,
   patch: TenantFeaturesPatch
 ): Promise<TenantFeatures> {
-  const sanitized: Record<string, boolean | number | null> = {}
+  const sanitized: Record<string, boolean | number | string | null> = {}
   for (const k of FEATURE_KEYS) {
     const v = patch[k]
     if (typeof v === 'boolean') sanitized[k] = v
@@ -96,6 +110,33 @@ export async function updateTenantFeatures(
     } else {
       sanitized.sello_valor_cop = v
     }
+  }
+  if (patch.tarjeta_color_fondo !== undefined) {
+    if (!HEX_RE.test(patch.tarjeta_color_fondo)) {
+      throw new TenantFeaturesError(
+        'tarjeta_color_fondo debe ser hex #RRGGBB',
+        400
+      )
+    }
+    sanitized.tarjeta_color_fondo = patch.tarjeta_color_fondo.toUpperCase()
+  }
+  if (patch.tarjeta_color_sello !== undefined) {
+    if (!HEX_RE.test(patch.tarjeta_color_sello)) {
+      throw new TenantFeaturesError(
+        'tarjeta_color_sello debe ser hex #RRGGBB',
+        400
+      )
+    }
+    sanitized.tarjeta_color_sello = patch.tarjeta_color_sello.toUpperCase()
+  }
+  if (patch.tarjeta_estilo_sello !== undefined) {
+    if (!TARJETA_ESTILOS.includes(patch.tarjeta_estilo_sello)) {
+      throw new TenantFeaturesError(
+        `tarjeta_estilo_sello debe ser uno de: ${TARJETA_ESTILOS.join(', ')}`,
+        400
+      )
+    }
+    sanitized.tarjeta_estilo_sello = patch.tarjeta_estilo_sello
   }
   if (Object.keys(sanitized).length === 0) {
     throw new TenantFeaturesError('Sin cambios', 400)

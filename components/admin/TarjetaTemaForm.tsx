@@ -1,0 +1,197 @@
+'use client'
+
+import { useMemo, useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
+import { TarjetaCliente } from '@/components/pwa/TarjetaCliente'
+import {
+  TARJETA_ESTILOS,
+  type TarjetaEstilo,
+  type TenantFeatures,
+} from '@/lib/tenant-features'
+
+const HEX_RE = /^#[0-9a-f]{6}$/i
+
+const ESTILO_LABEL: Record<TarjetaEstilo, string> = {
+  circulo: 'Círculo · ✓',
+  estrella: 'Estrella · ★',
+  corazon: 'Corazón · ♥',
+  cuadrado: 'Cuadrado · ✓',
+}
+
+export function TarjetaTemaForm({
+  features,
+  tenantNombre,
+}: {
+  features: TenantFeatures
+  tenantNombre: string
+}) {
+  const router = useRouter()
+  const [colorFondo, setColorFondo] = useState(features.tarjeta_color_fondo.toUpperCase())
+  const [colorSello, setColorSello] = useState(features.tarjeta_color_sello.toUpperCase())
+  const [estilo, setEstilo] = useState<TarjetaEstilo>(features.tarjeta_estilo_sello)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
+
+  const fondoValido = HEX_RE.test(colorFondo)
+  const selloValido = HEX_RE.test(colorSello)
+  const dirty =
+    colorFondo.toUpperCase() !== features.tarjeta_color_fondo.toUpperCase() ||
+    colorSello.toUpperCase() !== features.tarjeta_color_sello.toUpperCase() ||
+    estilo !== features.tarjeta_estilo_sello
+
+  // Vista previa con sellos rellenos a 60% para mostrar contraste y diseño.
+  const sellosPreview = useMemo(
+    () => Math.max(1, Math.round(features.tarjeta_size * 0.6)),
+    [features.tarjeta_size]
+  )
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!dirty || saving || !fondoValido || !selloValido) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/tenant/funcionalidades', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          tarjeta_color_fondo: colorFondo,
+          tarjeta_color_sello: colorSello,
+          tarjeta_estilo_sello: estilo,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'No se pudo guardar')
+        return
+      }
+      setSavedAt(Date.now())
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error de red')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-6">
+      <div>
+        <p className="text-xs uppercase tracking-wider text-muted mb-3">
+          Vista previa
+        </p>
+        <TarjetaCliente
+          tenantNombre={tenantNombre}
+          miembroNombre="María García"
+          sellos={sellosPreview}
+          tarjetaSize={features.tarjeta_size}
+          premios={[]}
+          colorFondo={fondoValido ? colorFondo : features.tarjeta_color_fondo}
+          colorSello={selloValido ? colorSello : features.tarjeta_color_sello}
+          estiloSello={estilo}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-graphite">
+            Color de fondo
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={fondoValido ? colorFondo : '#1A1A1E'}
+              onChange={(e) => setColorFondo(e.target.value.toUpperCase())}
+              className="h-12 w-14 rounded-md border border-border cursor-pointer bg-white"
+              aria-label="Selector color de fondo"
+            />
+            <input
+              type="text"
+              value={colorFondo}
+              onChange={(e) => setColorFondo(e.target.value)}
+              maxLength={7}
+              className="flex-1 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm font-mono uppercase"
+            />
+          </div>
+          {!fondoValido && (
+            <span className="text-xs text-red-600">Formato esperado: #RRGGBB</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-graphite">
+            Color del sello
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={selloValido ? colorSello : '#B8FA4E'}
+              onChange={(e) => setColorSello(e.target.value.toUpperCase())}
+              className="h-12 w-14 rounded-md border border-border cursor-pointer bg-white"
+              aria-label="Selector color del sello"
+            />
+            <input
+              type="text"
+              value={colorSello}
+              onChange={(e) => setColorSello(e.target.value)}
+              maxLength={7}
+              className="flex-1 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm font-mono uppercase"
+            />
+          </div>
+          {!selloValido && (
+            <span className="text-xs text-red-600">Formato esperado: #RRGGBB</span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-graphite">
+          Estilo del sello
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {TARJETA_ESTILOS.map((e) => {
+            const active = e === estilo
+            return (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setEstilo(e)}
+                className={
+                  'rounded-md px-3 py-3 text-sm border transition-colors text-left ' +
+                  (active
+                    ? 'border-graphite bg-graphite text-white'
+                    : 'border-border bg-white text-graphite hover:border-graphite/40')
+                }
+              >
+                {ESTILO_LABEL[e]}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+          {error}
+        </div>
+      )}
+
+      {savedAt && !error && !dirty && (
+        <div className="text-sm text-graphite bg-lime/30 border border-lime/40 rounded-md px-3 py-2">
+          Cambios guardados.
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={saving || !dirty || !fondoValido || !selloValido}
+        >
+          {saving ? 'Guardando...' : 'Guardar'}
+        </Button>
+      </div>
+    </form>
+  )
+}

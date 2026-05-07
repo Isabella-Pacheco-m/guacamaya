@@ -2,9 +2,11 @@ import { NextResponse, type NextRequest} from 'next/server'
 import { requireAdminTenantId } from '@/lib/api-auth'
 import {
   FEATURE_KEYS,
+  TARJETA_ESTILOS,
   getTenantFeatures,
   updateTenantFeatures,
   TenantFeaturesError,
+  type TarjetaEstilo,
   type TenantFeaturesPatch,
 } from '@/lib/tenant-features'
 
@@ -66,6 +68,25 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       )
     }
+  }
+  for (const k of ['tarjeta_color_fondo', 'tarjeta_color_sello'] as const) {
+    if (k in raw) {
+      const v = raw[k]
+      if (typeof v !== 'string') {
+        return NextResponse.json({ error: `${k} debe ser string` }, { status: 400 })
+      }
+      patch[k] = v
+    }
+  }
+  if ('tarjeta_estilo_sello' in raw) {
+    const v = raw.tarjeta_estilo_sello
+    if (typeof v !== 'string' || !TARJETA_ESTILOS.includes(v as TarjetaEstilo)) {
+      return NextResponse.json(
+        { error: `tarjeta_estilo_sello debe ser uno de: ${TARJETA_ESTILOS.join(', ')}` },
+        { status: 400 }
+      )
+    }
+    patch.tarjeta_estilo_sello = v as TarjetaEstilo
   }
 
   try {

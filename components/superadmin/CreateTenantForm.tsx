@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/Input'
 import { createTenantAction } from '@/app/superadmin/tenants/new/actions'
 
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/
-const HEX_RE = /^#[0-9a-f]{6}$/i
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface InvitationResult {
@@ -29,7 +28,6 @@ export function CreateTenantForm() {
   const [nombre, setNombre] = useState('')
   const [slug, setSlug] = useState('')
   const [emailDueno, setEmailDueno] = useState('')
-  const [color, setColor] = useState('#305CFF')
   const [puntosPorMil, setPuntosPorMil] = useState('1')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,16 +41,11 @@ export function CreateTenantForm() {
   const slugClean = slug.trim().toLowerCase()
   const slugValido =
     slugClean.length >= 2 && SLUG_RE.test(slugClean) && !slugClean.includes('--')
-  const colorValido = HEX_RE.test(color)
   const emailValido = EMAIL_RE.test(emailDueno.trim().toLowerCase())
   const ppmInt = parseInt(puntosPorMil, 10)
   const ppmValido = Number.isInteger(ppmInt) && ppmInt >= 1 && ppmInt <= 100
   const formValido =
-    nombre.trim().length > 0 &&
-    slugValido &&
-    colorValido &&
-    emailValido &&
-    ppmValido
+    nombre.trim().length > 0 && slugValido && emailValido && ppmValido
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -65,7 +58,6 @@ export function CreateTenantForm() {
       const data = await createTenantAction({
         nombre: nombre.trim(),
         slug: slugClean,
-        color_primario: color.toUpperCase(),
         puntos_por_mil: ppmInt,
         email_dueno: emailDueno.trim().toLowerCase(),
       })
@@ -215,32 +207,6 @@ export function CreateTenantForm() {
         hint="Solo se muestra como referencia — el enlace de invitación es lo que da acceso."
         required
       />
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-graphite">
-          Color primario
-        </label>
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            value={colorValido ? color : '#305CFF'}
-            onChange={(e) => setColor(e.target.value.toUpperCase())}
-            className="h-12 w-14 rounded-md border border-border cursor-pointer bg-white"
-            aria-label="Selector de color"
-          />
-          <input
-            type="text"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            placeholder="#305CFF"
-            maxLength={7}
-            className="flex-1 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm font-mono uppercase"
-          />
-        </div>
-        {!colorValido && (
-          <span className="text-xs text-red-600">Formato esperado: #RRGGBB</span>
-        )}
-      </div>
 
       <Input
         name="puntos_por_mil"

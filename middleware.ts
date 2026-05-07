@@ -28,6 +28,10 @@ export function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-tenant-slug', tenantSlug)
+  // Pathname original — lo usa requireCliente() para redirigir cross-host
+  // al subdominio del miembro preservando el deep-link después del callback
+  // de Auth0 (que siempre vuelve al apex).
+  requestHeaders.set('x-pathname', req.nextUrl.pathname)
 
   return NextResponse.next({
     request: { headers: requestHeaders },
