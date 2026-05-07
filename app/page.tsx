@@ -5,7 +5,7 @@ import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
 import { isSuperadmin } from '@/lib/superadmin-auth'
 import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
-import { getTenantBySlug } from '@/lib/tenant'
+import { getTenantById, getTenantBySlug } from '@/lib/tenant'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { listTarjetaPremiosForMiembro } from '@/lib/tenantQueries'
 import { listFeedPosts } from '@/lib/feed'
@@ -115,8 +115,17 @@ async function renderTenantHome(slug: string) {
 async function renderRootHome(errorCode: string | undefined) {
   const session = await getSession()
 
+  // Admin logueado en el apex: el callback de Auth0 siempre vuelve a
+  // AUTH0_BASE_URL (apex), aunque el "Ingresar" se haya iniciado en el
+  // subdominio del tenant. Redirigir cross-host al subdominio correcto
+  // para que el panel admin corra bajo {slug}.guacamaya.net.
   if (session?.user && getTenantId(session.user) && !getMiembroId(session.user)) {
-    redirect('/admin/dashboard')
+    const tenantUuid = getTenantId(session.user)
+    const tenant = await getTenantById(tenantUuid)
+    if (tenant) {
+      redirect(`${tenantBaseUrl(tenant.slug)}/admin/dashboard`)
+    }
+    redirect('/?error=missing-tenant')
   }
 
   // Superadmin (email en allow-list, sin claims tenantId/miembroId) →
