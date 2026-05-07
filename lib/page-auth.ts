@@ -26,9 +26,14 @@ export interface ClienteContext {
  * Si falta sesión → /api/auth/login. Si es cliente PWA → / (no autorizado).
  */
 export async function requireAdmin(): Promise<AdminContext> {
+  const h = headers()
+  const pathname = h.get('x-pathname') || '/admin/dashboard'
   const session = await getSession()
   if (!session?.user) {
-    redirect('/api/auth/login?returnTo=/admin/dashboard')
+    // Preservar el destino original — si se entra a /admin/miembros sin
+    // sesión y volvemos a /admin/dashboard hardcodeado, el usuario pierde
+    // el contexto y aparenta un "redirige siempre a dashboard".
+    redirect(`/api/auth/login?returnTo=${encodeURIComponent(pathname)}`)
   }
   const tenantId = getTenantId(session.user)
   if (!tenantId) {
