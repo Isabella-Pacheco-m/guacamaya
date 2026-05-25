@@ -20,10 +20,13 @@ function readableTextOn(hex: string): string {
 }
 
 function StampGlyph({ estilo }: { estilo: TarjetaEstilo }) {
-  // El ✓ se ve mejor un poco más pequeño que los símbolos figurativos.
+  // Dimensionamos el glyph en cqw (relativo al ancho del sello, que es el
+  // container query container) para que se vea grande y proporcional tanto en
+  // el preview ancho del admin como en la PWA angosta del cliente. El ✓ se ve
+  // mejor un poco más pequeño que los símbolos figurativos.
   const isCheck = estilo === 'circulo' || estilo === 'cuadrado'
   return (
-    <span className={isCheck ? 'leading-none text-[14px]' : 'leading-none'}>
+    <span className={`leading-none ${isCheck ? 'text-[length:46cqw]' : 'text-[length:58cqw]'}`}>
       {ESTILO_GLYPH[estilo]}
     </span>
   )
@@ -108,7 +111,7 @@ export function TarjetaCliente({
             return (
               <div
                 key={n}
-                className={`aspect-square ${stampShape} flex items-center justify-center transition-transform`}
+                className={`aspect-square ${stampShape} flex items-center justify-center transition-transform [container-type:inline-size]`}
                 style={
                   filled
                     ? {
