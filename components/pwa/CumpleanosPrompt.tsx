@@ -44,6 +44,11 @@ export function CumpleanosPrompt({
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
+        // 409 = el mes ya estaba definido en el servidor (UI desactualizada).
+        // Refrescamos para mostrar el estado real (tarjeta de solo lectura).
+        if (res.status === 409) {
+          router.refresh()
+        }
         throw new Error(data.error || 'No se pudo guardar')
       }
       setSavedMes(nuevoMes)
@@ -74,8 +79,11 @@ export function CumpleanosPrompt({
       <p className="text-xs uppercase tracking-wider text-electric mb-2">
         Cuéntanos cuándo cumples
       </p>
-      <p className="text-sm text-graphite mb-4">
+      <p className="text-sm text-graphite mb-1">
         Activa ofertas especiales durante tu mes de cumpleaños.
+      </p>
+      <p className="text-xs text-muted mb-4">
+        Solo puedes elegirlo una vez, así que confírmalo bien.
       </p>
       <div className="grid grid-cols-3 gap-2">
         {MESES.map((label, idx) => {

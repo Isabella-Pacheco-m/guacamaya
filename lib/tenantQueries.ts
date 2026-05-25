@@ -301,6 +301,12 @@ export async function setMesCumpleanos(
     if (msg.includes('miembro no encontrado')) {
       throw new MesCumpleanosError('Miembro no encontrado', 404)
     }
+    if (msg.includes('mes ya definido')) {
+      throw new MesCumpleanosError(
+        'Ya registraste tu mes de cumpleaños y no se puede cambiar.',
+        409
+      )
+    }
     if (msg.includes('mes debe estar')) {
       throw new MesCumpleanosError('El mes debe ser un número entre 1 y 12', 400)
     }

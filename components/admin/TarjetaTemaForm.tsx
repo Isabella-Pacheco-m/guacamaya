@@ -5,19 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { TarjetaCliente } from '@/components/pwa/TarjetaCliente'
 import {
+  ESTILO_GLYPH,
+  ESTILO_LABEL,
   TARJETA_ESTILOS,
+  TARJETA_PRESETS,
   type TarjetaEstilo,
   type TenantFeatures,
-} from '@/lib/tenant-features'
+} from '@/lib/tarjeta'
 
 const HEX_RE = /^#[0-9a-f]{6}$/i
-
-const ESTILO_LABEL: Record<TarjetaEstilo, string> = {
-  circulo: 'Círculo · ✓',
-  estrella: 'Estrella · ★',
-  corazon: 'Corazón · ♥',
-  cuadrado: 'Cuadrado · ✓',
-}
 
 export function TarjetaTemaForm({
   features,
@@ -46,6 +42,13 @@ export function TarjetaTemaForm({
     () => Math.max(1, Math.round(features.tarjeta_size * 0.6)),
     [features.tarjeta_size]
   )
+
+  function applyPreset(p: (typeof TARJETA_PRESETS)[number]) {
+    setColorFondo(p.colorFondo.toUpperCase())
+    setColorSello(p.colorSello.toUpperCase())
+    setEstilo(p.estilo)
+    setSavedAt(null)
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -92,6 +95,42 @@ export function TarjetaTemaForm({
           colorSello={selloValido ? colorSello : features.tarjeta_color_sello}
           estiloSello={estilo}
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-graphite">
+          Combinaciones rápidas
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {TARJETA_PRESETS.map((p) => {
+            const active =
+              colorFondo.toUpperCase() === p.colorFondo.toUpperCase() &&
+              colorSello.toUpperCase() === p.colorSello.toUpperCase() &&
+              estilo === p.estilo
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => applyPreset(p)}
+                className={
+                  'flex items-center gap-2 rounded-full border pl-1.5 pr-3 py-1.5 text-sm transition-colors ' +
+                  (active
+                    ? 'border-graphite bg-graphite text-white'
+                    : 'border-border bg-white text-graphite hover:border-graphite/40')
+                }
+              >
+                <span
+                  className="h-6 w-6 rounded-full border border-black/10 shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${p.colorFondo} 0 50%, ${p.colorSello} 50% 100%)`,
+                  }}
+                  aria-hidden
+                />
+                {p.nombre}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -150,21 +189,25 @@ export function TarjetaTemaForm({
         <label className="text-sm font-medium text-graphite">
           Estilo del sello
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {TARJETA_ESTILOS.map((e) => {
             const active = e === estilo
             return (
               <button
                 key={e}
                 type="button"
-                onClick={() => setEstilo(e)}
+                onClick={() => {
+                  setEstilo(e)
+                  setSavedAt(null)
+                }}
                 className={
-                  'rounded-md px-3 py-3 text-sm border transition-colors text-left ' +
+                  'flex flex-col items-center justify-center gap-1 rounded-md px-2 py-3 text-xs border transition-colors ' +
                   (active
                     ? 'border-graphite bg-graphite text-white'
                     : 'border-border bg-white text-graphite hover:border-graphite/40')
                 }
               >
+                <span className="text-base leading-none">{ESTILO_GLYPH[e]}</span>
                 {ESTILO_LABEL[e]}
               </button>
             )

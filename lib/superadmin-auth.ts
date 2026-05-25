@@ -3,12 +3,25 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
 
-// En App Router Route Handlers, `getSession()` sin args no detecta la cookie
-// (bug conocido de @auth0/nextjs-auth0 v3 + Next 14). Para Route Handlers hay
-// que pasar req+res explícitos. Server Components siguen funcionando sin args.
+// Lectura de sesión robusta en App Router (ver nota en lib/api-auth.ts).
+// Intentamos `getSession()` sin args primero (funciona en Server Components y
+// Route Handlers con auth0-nextjs v3.8) y caemos al par (req,res) si no
+// resuelve usuario o lanza.
 async function readSession(req?: NextRequest) {
-  if (req) return getSession(req, new NextResponse())
-  return getSession()
+  try {
+    const s = await getSession()
+    if (s?.user) return s
+  } catch {
+    // sigue al fallback con req/res
+  }
+  if (req) {
+    try {
+      return await getSession(req, new NextResponse())
+    } catch {
+      return null
+    }
+  }
+  return null
 }
 
 // Allow-list de emails con acceso al panel del superadmin. Modelo simple

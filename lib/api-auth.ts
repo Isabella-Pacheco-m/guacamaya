@@ -5,11 +5,28 @@ import { getTenantFromRequest, TenantNotFoundError } from '@/lib/tenant'
 import { getMiembroByAuth0 } from '@/lib/invitaciones'
 import type { Miembro, Tenant } from '@/types'
 
-// En App Router Route Handlers `getSession()` sin args no detecta la cookie.
-// Workaround documentado: pasar req+res. Ver lib/superadmin-auth.ts.
+// Lectura de sesión robusta en App Router. Con @auth0/nextjs-auth0 v3.8,
+// `getSession()` (sin args, vía next/headers `cookies()`) resuelve la sesión
+// tanto en Server Components como en Route Handlers — es el camino que ya
+// funciona en las páginas de este app. Lo intentamos primero y, si no
+// resuelve usuario (o lanza en algún runtime), caemos al par (req,res) que
+// lee de `req.cookies`. Así ninguno de los dos caminos es un punto único de
+// fallo y evitamos el 401 "No autenticado" espurio en mutaciones del cliente.
 async function readSession(req?: NextRequest) {
-  if (req) return getSession(req, new NextResponse())
-  return getSession()
+  try {
+    const s = await getSession()
+    if (s?.user) return s
+  } catch {
+    // getSession() sin args puede lanzar fuera de contexto de request; seguimos.
+  }
+  if (req) {
+    try {
+      return await getSession(req, new NextResponse())
+    } catch {
+      return null
+    }
+  }
+  return null
 }
 
 export type AdminAuthResult =

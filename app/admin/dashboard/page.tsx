@@ -28,15 +28,28 @@ function Stat({
   value,
   hint,
   size = 'md',
+  tone = 'light',
 }: {
   label: string
   value: string
   hint?: string
   size?: 'md' | 'lg'
+  tone?: 'light' | 'dark'
 }) {
   const valueClass =
     size === 'lg' ? 'mt-3 text-[44px] font-light leading-none tracking-tight'
                   : 'mt-2 text-[28px] font-light leading-none'
+  if (tone === 'dark') {
+    return (
+      <div className="flex flex-col rounded-lg bg-graphite text-white shadow-card p-6">
+        <div className="text-[11px] text-white/50 uppercase tracking-wider">
+          {label}
+        </div>
+        <div className={`${valueClass} text-white tabular-nums`}>{value}</div>
+        {hint && <div className="mt-2 text-xs text-lime">{hint}</div>}
+      </div>
+    )
+  }
   return (
     <Card padding="md" className="flex flex-col">
       <div className="text-[11px] text-muted uppercase tracking-wider">{label}</div>
@@ -102,6 +115,8 @@ export default async function DashboardPage({
           label="Miembros"
           value={COP.format(miembros.length)}
           size="lg"
+          tone="dark"
+          hint={`${COP.format(distribucionNivel.ORO ?? 0)} en nivel Oro`}
         />
         <Stat
           label="Puntos en circulación"

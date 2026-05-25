@@ -1,29 +1,16 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import {
+  FEATURE_KEYS,
+  TARJETA_ESTILOS,
+  type FeatureKey,
+  type TarjetaEstilo,
+  type TenantFeatures,
+} from '@/lib/tarjeta'
 
-export const FEATURE_KEYS = [
-  'feed_enabled',
-  'sorteos_enabled',
-  'tarjeta_enabled',
-  'cumpleanos_enabled',
-] as const
-
-export type FeatureKey = (typeof FEATURE_KEYS)[number]
-
-export const TARJETA_ESTILOS = ['circulo', 'estrella', 'corazon', 'cuadrado'] as const
-export type TarjetaEstilo = (typeof TARJETA_ESTILOS)[number]
-
-export interface TenantFeatures {
-  tenant_id: string
-  feed_enabled: boolean
-  sorteos_enabled: boolean
-  tarjeta_enabled: boolean
-  cumpleanos_enabled: boolean
-  tarjeta_size: number
-  sello_valor_cop: number | null
-  tarjeta_color_fondo: string
-  tarjeta_color_sello: string
-  tarjeta_estilo_sello: TarjetaEstilo
-}
+// Re-export para no romper imports existentes (`from '@/lib/tenant-features'`).
+// Las constantes/tipos puros viven en lib/tarjeta.ts; aquí solo la capa de datos.
+export { FEATURE_KEYS, TARJETA_ESTILOS }
+export type { FeatureKey, TarjetaEstilo, TenantFeatures }
 
 const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
   feed_enabled: false,

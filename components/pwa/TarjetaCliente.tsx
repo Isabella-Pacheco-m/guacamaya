@@ -1,5 +1,10 @@
 import type { TarjetaPremioEstado } from '@/lib/tenantQueries'
-import type { TarjetaEstilo } from '@/lib/tenant-features'
+import {
+  ESTILO_CLIP,
+  ESTILO_GLYPH,
+  estiloRadiusClass,
+  type TarjetaEstilo,
+} from '@/lib/tarjeta'
 
 // Devuelve un color de texto legible (blanco u oscuro) para un fondo hex
 // dado, usando luminancia relativa estándar (sRGB → WCAG).
@@ -15,17 +20,13 @@ function readableTextOn(hex: string): string {
 }
 
 function StampGlyph({ estilo }: { estilo: TarjetaEstilo }) {
-  switch (estilo) {
-    case 'estrella':
-      return <span className="leading-none">★</span>
-    case 'corazon':
-      return <span className="leading-none">♥</span>
-    case 'cuadrado':
-      return <span className="leading-none text-[14px]">✓</span>
-    case 'circulo':
-    default:
-      return <span className="leading-none text-[14px]">✓</span>
-  }
+  // El ✓ se ve mejor un poco más pequeño que los símbolos figurativos.
+  const isCheck = estilo === 'circulo' || estilo === 'cuadrado'
+  return (
+    <span className={isCheck ? 'leading-none text-[14px]' : 'leading-none'}>
+      {ESTILO_GLYPH[estilo]}
+    </span>
+  )
 }
 
 export function TarjetaCliente({
@@ -57,7 +58,8 @@ export function TarjetaCliente({
 
   // Grid responsivo: máx 5 columnas para que cada sello sea grande y visible.
   const cols = Math.min(5, tarjetaSize)
-  const stampShape = estiloSello === 'cuadrado' ? 'rounded-md' : 'rounded-full'
+  const stampShape = estiloRadiusClass(estiloSello)
+  const clipPath = ESTILO_CLIP[estiloSello]
 
   return (
     <div className="mb-6">
@@ -112,12 +114,14 @@ export function TarjetaCliente({
                     ? {
                         background: colorSello,
                         color: readableTextOn(colorSello),
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
+                        boxShadow: clipPath ? 'none' : '0 2px 6px rgba(0,0,0,0.18)',
+                        clipPath,
                       }
                     : {
-                        background: 'transparent',
-                        border: `1.5px dashed ${empty}`,
+                        background: clipPath ? empty : 'transparent',
+                        border: clipPath ? 'none' : `1.5px dashed ${empty}`,
                         color: muted,
+                        clipPath,
                       }
                 }
               >
