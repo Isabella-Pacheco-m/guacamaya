@@ -1,5 +1,4 @@
 import { headers } from 'next/headers'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
@@ -61,9 +60,9 @@ async function renderTenantHome(slug: string) {
           <p className="text-muted text-sm mb-10 max-w-xs mx-auto">
             Acumula puntos por cada compra y canjea recompensas que te encantarán.
           </p>
-          <Link href="/api/auth/login">
+          <a href="/api/auth/login">
             <Button className="w-full">Ingresar</Button>
-          </Link>
+          </a>
         </div>
       </main>
     )
@@ -173,16 +172,16 @@ async function renderRootHome(errorCode: string | undefined) {
             <p className="text-sm text-muted">
               Tu cuenta no está vinculada a ningún tenant.
             </p>
-            <Link href="/api/auth/logout">
+            <a href="/api/auth/logout">
               <Button variant="secondary" className="w-full">
                 Cerrar sesión
               </Button>
-            </Link>
+            </a>
           </div>
         ) : (
-          <Link href="/api/auth/login">
+          <a href="/api/auth/login">
             <Button className="w-full">Ingresar</Button>
-          </Link>
+          </a>
         )}
       </div>
     </main>
@@ -204,11 +203,11 @@ function CenteredCard({
         <h1 className="text-2xl font-light mb-3">{title}</h1>
         <p className="text-muted text-sm mb-6">{body}</p>
         {action && (
-          <Link href={action.href}>
+          <a href={action.href}>
             <Button variant="secondary" className="w-full">
               {action.label}
             </Button>
-          </Link>
+          </a>
         )}
       </Card>
     </main>

@@ -174,7 +174,7 @@ export default async function AdminLayout({
             </p>
             <p className="text-[11px] text-white/45">Admin</p>
           </div>
-          <Link
+          <a
             href="/api/auth/logout"
             title="Cerrar sesión"
             className="text-white/55 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors"
@@ -193,7 +193,7 @@ export default async function AdminLayout({
               <path d="M10 12H3" />
               <path d="m6 8-4 4 4 4" />
             </svg>
-          </Link>
+          </a>
         </div>
       </aside>
 
@@ -206,12 +206,12 @@ export default async function AdminLayout({
           >
             Guacamaya
           </Link>
-          <Link
+          <a
             href="/api/auth/logout"
             className="text-xs text-white/70 hover:text-white px-3 py-1.5 rounded-full border border-white/20"
           >
             Salir
-          </Link>
+          </a>
         </div>
         <nav className="border-t border-white/10 px-3 py-2 flex gap-1 overflow-x-auto">
           {flat.map((item) => {

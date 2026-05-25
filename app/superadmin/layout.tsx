@@ -60,12 +60,12 @@ export default async function SuperadminLayout({
                 unoptimized
               />
             )}
-            <Link
+            <a
               href="/api/auth/logout"
               className="text-xs text-white/70 hover:text-white px-3 py-2 rounded-full border border-white/20 hover:border-white/40 transition-colors"
             >
               Salir
-            </Link>
+            </a>
           </div>
         </div>
       </header>

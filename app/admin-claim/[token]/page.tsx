@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
@@ -175,9 +174,9 @@ function SuccessScreen({
           Para terminar, vamos a cerrar tu sesión y volver a entrar — así tu
           nuevo permiso se aplica.
         </p>
-        <Link href={`/api/auth/logout?returnTo=${logoutReturnTo}`}>
+        <a href={`/api/auth/logout?returnTo=${logoutReturnTo}`}>
           <Button className="w-full">Entrar al panel</Button>
-        </Link>
+        </a>
       </Card>
     </main>
   )
@@ -198,11 +197,11 @@ function ErrorScreen({
         <h1 className="text-2xl font-light mb-3">{title}</h1>
         <p className="text-muted text-sm mb-6">{body}</p>
         {action && (
-          <Link href={action.href}>
+          <a href={action.href}>
             <Button variant="secondary" className="w-full">
               {action.label}
             </Button>
-          </Link>
+          </a>
         )}
       </Card>
     </main>

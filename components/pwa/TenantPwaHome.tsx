@@ -168,14 +168,14 @@ export function TenantPwaHome({
               )}
             </nav>
 
-            <Link href="/api/auth/logout" className="block">
+            <a href="/api/auth/logout" className="block">
               <Button
                 variant="ghost"
                 className="w-full text-muted hover:text-graphite"
               >
                 Cerrar sesión
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </div>
