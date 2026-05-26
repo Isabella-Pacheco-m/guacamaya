@@ -25,10 +25,27 @@ export default async function FeedPwaPage() {
         <TenantTheme color={tenant.color_primario} />
         <header className="mb-6">
           <Link href="/" className="text-xs text-electric hover:underline">
-            ← {tenant.nombre}
+            ← Inicio
           </Link>
-          <h1 className="text-2xl font-light mt-1 leading-tight">Comunidad</h1>
-          <p className="text-sm text-muted mt-1.5">
+          <div className="mt-3 flex items-center gap-3.5">
+            {tenant.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tenant.logo_url}
+                alt={tenant.nombre}
+                className="h-14 w-14 rounded-2xl object-contain bg-white p-1.5 ring-2 ring-electric/30 shadow-sm shrink-0"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-electric">
+                Comunidad
+              </p>
+              <h1 className="text-2xl font-light leading-tight tracking-tight truncate">
+                {tenant.nombre}
+              </h1>
+            </div>
+          </div>
+          <p className="text-sm text-muted mt-3">
             {puedePublicar
               ? `Novedades de ${tenant.nombre} y su comunidad.`
               : `Lo último de ${tenant.nombre}.`}
