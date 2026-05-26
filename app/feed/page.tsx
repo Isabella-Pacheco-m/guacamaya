@@ -21,7 +21,7 @@ export default async function FeedPwaPage() {
 
   return (
     <main className="min-h-screen bg-tenant-halo">
-      <div className="px-6 py-10 max-w-md mx-auto">
+      <div className="px-6 py-10 lg:py-14 max-w-md lg:max-w-2xl mx-auto">
         <TenantTheme color={tenant.color_primario} />
         <header className="mb-6">
           <Link href="/" className="text-xs text-electric hover:underline">
@@ -53,8 +53,8 @@ export default async function FeedPwaPage() {
           )}
         </div>
 
-        <Link href="/" className="block mt-8">
-          <Button variant="secondary" className="w-full">
+        <Link href="/" className="mt-8 block lg:inline-block">
+          <Button variant="secondary" className="w-full lg:w-auto">
             Volver
           </Button>
         </Link>

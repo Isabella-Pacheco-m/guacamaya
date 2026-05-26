@@ -15,7 +15,7 @@ export default async function RecompensasPwaPage() {
 
   return (
     <main className="min-h-screen bg-tenant-halo">
-      <div className="px-6 py-10 max-w-md mx-auto">
+      <div className="px-6 py-10 lg:py-14 max-w-md lg:max-w-4xl mx-auto">
       <TenantTheme color={tenant.color_primario} />
       <header className="mb-8 flex items-center justify-between gap-3">
         <div>
@@ -39,7 +39,7 @@ export default async function RecompensasPwaPage() {
           </p>
         </Card>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid gap-3 lg:grid-cols-2 lg:gap-4 lg:items-start">
           {recompensas.map((r) => {
             const alcanza = miembro.puntos_actuales >= r.costo_puntos
             return (
@@ -92,8 +92,8 @@ export default async function RecompensasPwaPage() {
         Para canjear, muéstrale tu cuenta al personal en mostrador.
       </p>
 
-      <Link href="/" className="block mt-6">
-        <Button variant="secondary" className="w-full">
+      <Link href="/" className="mt-6 block lg:inline-block">
+        <Button variant="secondary" className="w-full lg:w-auto">
           Volver
         </Button>
       </Link>
