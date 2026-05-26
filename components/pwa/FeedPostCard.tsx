@@ -35,56 +35,85 @@ export function FeedPostCard({
 }) {
   const esMiembro = post.autor_miembro_id != null
   const autorNombre = esMiembro ? post.autor_nombre ?? 'Miembro' : tenant.nombre
+  const tieneImagen = Boolean(post.imagen_url)
 
   return (
-    <article className="bg-white rounded-lg shadow-card overflow-hidden">
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+    <article className="group bg-white rounded-3xl ring-1 ring-black/[0.04] shadow-[0_12px_40px_-16px_rgba(0,0,0,0.22)] overflow-hidden transition-shadow duration-300 hover:shadow-[0_22px_55px_-18px_rgba(0,0,0,0.3)]">
+      {/* Encabezado: autor */}
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4">
         {!esMiembro && tenant.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={tenant.logo_url}
-            alt=""
-            className="h-9 w-9 rounded-full object-cover shrink-0"
-          />
+          <span className="h-11 w-11 rounded-full bg-surface ring-1 ring-black/[0.06] shrink-0 overflow-hidden flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={tenant.logo_url}
+              alt=""
+              className="h-full w-full object-contain p-1.5"
+            />
+          </span>
         ) : (
           <span
             className={
-              'h-9 w-9 rounded-full shrink-0 flex items-center justify-center text-sm font-medium ' +
-              (esMiembro ? 'bg-surface text-graphite' : 'bg-graphite text-lime')
+              'h-11 w-11 rounded-full shrink-0 flex items-center justify-center text-base font-semibold ' +
+              (esMiembro
+                ? 'bg-gradient-to-br from-electric to-sky text-white'
+                : 'bg-graphite text-lime')
             }
           >
             {initial(autorNombre)}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-graphite truncate">
-            {autorNombre}
-            {!esMiembro && (
-              <span className="ml-1.5 align-middle text-[10px] uppercase tracking-wide text-electric">
-                negocio
-              </span>
-            )}
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-graphite truncate">
+              {autorNombre}
+            </p>
+            <span
+              className={
+                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ' +
+                (esMiembro
+                  ? 'bg-surface text-muted'
+                  : 'bg-electric/10 text-electric')
+              }
+            >
+              {esMiembro ? 'Miembro' : 'Negocio'}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted mt-0.5">
+            {relativeTime(post.created_at)}
           </p>
-          <p className="text-[11px] text-muted">{relativeTime(post.created_at)}</p>
         </div>
       </div>
 
-      {post.imagen_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={post.imagen_url}
-          alt=""
-          className="w-full max-h-80 object-cover"
-        />
+      {/* Imagen (con título superpuesto si lo hay) */}
+      {tieneImagen && (
+        <div className="px-5">
+          <div className="relative rounded-2xl overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.imagen_url as string}
+              alt=""
+              className="w-full aspect-[16/10] object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+            {post.titulo && (
+              <>
+                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                <h3 className="absolute inset-x-0 bottom-0 px-4 pb-4 text-white text-2xl font-semibold leading-tight tracking-tight drop-shadow-sm">
+                  {post.titulo}
+                </h3>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
-      <div className="px-4 pt-3 pb-4 flex flex-col gap-2">
-        {post.titulo && (
-          <h3 className="text-lg font-medium leading-snug tracking-tight">
+      {/* Cuerpo */}
+      <div className="px-5 pt-4 pb-5 flex flex-col gap-2.5">
+        {post.titulo && !tieneImagen && (
+          <h3 className="text-2xl font-semibold leading-tight tracking-tight text-graphite">
             {post.titulo}
           </h3>
         )}
-        <p className="text-sm text-graphite whitespace-pre-wrap leading-relaxed">
+        <p className="text-[15px] text-graphite/90 whitespace-pre-wrap leading-relaxed">
           {post.cuerpo}
         </p>
         {post.link_url && (
@@ -92,10 +121,10 @@ export function FeedPostCard({
             href={post.link_url}
             target="_blank"
             rel="noreferrer"
-            className="text-electric text-sm font-medium hover:underline self-start mt-1 inline-flex items-center gap-1 group"
+            className="self-start mt-1 inline-flex items-center gap-1.5 rounded-full bg-electric px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 group/link"
           >
             {post.link_label || post.link_url}
-            <span className="transition-transform group-hover:translate-x-0.5">
+            <span className="transition-transform group-hover/link:translate-x-0.5">
               →
             </span>
           </a>
