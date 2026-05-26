@@ -145,7 +145,7 @@ export function TenantPwaHome({
                     Ver todas →
                   </Link>
                 </div>
-                <FeedPostCard post={ultimoPost} />
+                <FeedPostCard post={ultimoPost} tenant={tenant} />
               </div>
             )}
 

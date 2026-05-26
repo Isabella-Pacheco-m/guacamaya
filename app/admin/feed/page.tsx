@@ -23,7 +23,10 @@ export default async function FeedAdminPage() {
           Publica novedades, eventos y contenido para tus miembros.
         </p>
       </div>
-      <FeedAdminPanel initial={posts} />
+      <FeedAdminPanel
+        initial={posts}
+        miembrosPuedenPublicar={features.feed_miembros_pueden_publicar}
+      />
     </div>
   )
 }

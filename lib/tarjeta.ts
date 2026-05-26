@@ -36,6 +36,7 @@ export interface TenantFeatures {
   sorteos_enabled: boolean
   tarjeta_enabled: boolean
   cumpleanos_enabled: boolean
+  feed_miembros_pueden_publicar: boolean
   tarjeta_size: number
   sello_valor_cop: number | null
   tarjeta_color_fondo: string

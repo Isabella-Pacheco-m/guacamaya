@@ -17,6 +17,7 @@ const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
   sorteos_enabled: false,
   tarjeta_enabled: false,
   cumpleanos_enabled: false,
+  feed_miembros_pueden_publicar: false,
   tarjeta_size: 10,
   sello_valor_cop: null,
   tarjeta_color_fondo: '#1A1A1E',
@@ -25,7 +26,7 @@ const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
 }
 
 const SELECT =
-  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello'
+  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, feed_miembros_pueden_publicar, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello'
 
 export async function getTenantFeatures(tenantId: string): Promise<TenantFeatures> {
   const { data, error } = await supabaseAdmin
@@ -50,6 +51,7 @@ export interface TenantFeaturesPatch {
   sorteos_enabled?: boolean
   tarjeta_enabled?: boolean
   cumpleanos_enabled?: boolean
+  feed_miembros_pueden_publicar?: boolean
   tarjeta_size?: number
   sello_valor_cop?: number | null
   tarjeta_color_fondo?: string
@@ -74,6 +76,10 @@ export async function updateTenantFeatures(
   for (const k of FEATURE_KEYS) {
     const v = patch[k]
     if (typeof v === 'boolean') sanitized[k] = v
+  }
+  // Sub-ajuste del feed (no es una feature de primer nivel, va aparte).
+  if (typeof patch.feed_miembros_pueden_publicar === 'boolean') {
+    sanitized.feed_miembros_pueden_publicar = patch.feed_miembros_pueden_publicar
   }
   if (patch.tarjeta_size !== undefined) {
     const v = patch.tarjeta_size

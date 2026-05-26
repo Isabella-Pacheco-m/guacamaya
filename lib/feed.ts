@@ -48,6 +48,70 @@ export interface CreateFeedPostInput {
   autorEmail?: string | null
 }
 
+// Sube una imagen de post al bucket del tenant y devuelve su URL pública.
+// Valida tipo y tamaño; lanza FeedPostError. Compartido por el alta del admin
+// y la del miembro.
+export async function uploadFeedImage(
+  tenantId: string,
+  file: File
+): Promise<string> {
+  const ext = FEED_MIME_TO_EXT[file.type]
+  if (!ext) {
+    throw new FeedPostError('Imagen: usa PNG, JPG o WebP', 400)
+  }
+  if (file.size > FEED_MAX_BYTES) {
+    throw new FeedPostError('Imagen demasiado grande (máximo 4 MB)', 413)
+  }
+  const path = `${feedPrefix(tenantId)}post-${Date.now()}.${ext}`
+  const buf = Buffer.from(await file.arrayBuffer())
+  const { error } = await supabaseAdmin.storage
+    .from(FEED_BUCKET)
+    .upload(path, buf, {
+      contentType: file.type,
+      upsert: false,
+      cacheControl: '3600',
+    })
+  if (error) {
+    console.error('upload feed image', error)
+    throw new FeedPostError(error.message, 500)
+  }
+  const { data: pub } = supabaseAdmin.storage.from(FEED_BUCKET).getPublicUrl(path)
+  return pub.publicUrl
+}
+
+export interface CreateFeedPostMiembroInput {
+  miembroId: string
+  nombre: string
+  cuerpo: string
+  imagenUrl?: string | null
+}
+
+// Alta de post hecha por un miembro (sin título ni link). El RPC valida que
+// el miembro pertenezca al tenant.
+export async function createFeedPostMiembro(
+  tenantId: string,
+  input: CreateFeedPostMiembroInput
+): Promise<FeedPost> {
+  const { data, error } = await supabaseAdmin.rpc('create_feed_post_miembro', {
+    p_tenant_id: tenantId,
+    p_miembro_id: input.miembroId,
+    p_nombre: input.nombre,
+    p_cuerpo: input.cuerpo,
+    p_imagen_url: input.imagenUrl ?? null,
+  })
+  if (error) {
+    const msg = error.message || ''
+    if (msg.includes('cuerpo no puede estar vacio')) {
+      throw new FeedPostError('El mensaje no puede estar vacío', 400)
+    }
+    if (msg.includes('miembro no encontrado')) {
+      throw new FeedPostError('Miembro no encontrado', 404)
+    }
+    throw error
+  }
+  return data as FeedPost
+}
+
 export async function createFeedPost(
   tenantId: string,
   input: CreateFeedPostInput

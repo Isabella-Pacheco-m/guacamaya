@@ -57,12 +57,16 @@ export interface Recompensa {
 export interface FeedPost {
   id: string
   tenant_id: string
-  titulo: string
+  titulo: string | null
   cuerpo: string
   imagen_url: string | null
   link_url: string | null
   link_label: string | null
   autor_email: string | null
+  // Autoría: si autor_miembro_id es null el post es del negocio; si no, es de
+  // un miembro y autor_nombre trae su nombre para mostrar.
+  autor_miembro_id: string | null
+  autor_nombre: string | null
   created_at: string
 }
 

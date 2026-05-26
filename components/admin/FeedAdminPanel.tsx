@@ -14,9 +14,16 @@ const dateFmt = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
 })
 
-export function FeedAdminPanel({ initial }: { initial: FeedPost[] }) {
+export function FeedAdminPanel({
+  initial,
+  miembrosPuedenPublicar,
+}: {
+  initial: FeedPost[]
+  miembrosPuedenPublicar: boolean
+}) {
   const router = useRouter()
   const [posts, setPosts] = useState<FeedPost[]>(initial)
+  const [permitir, setPermitir] = useState(miembrosPuedenPublicar)
   const [titulo, setTitulo] = useState('')
   const [cuerpo, setCuerpo] = useState('')
   const [linkUrl, setLinkUrl] = useState('')
@@ -33,6 +40,29 @@ export function FeedAdminPanel({ initial }: { initial: FeedPost[] }) {
     setLinkLabel('')
     setFile(null)
     if (fileRef.current) fileRef.current.value = ''
+  }
+
+  async function togglePermitir(next: boolean) {
+    const prev = permitir
+    setPermitir(next)
+    setError(null)
+    try {
+      const res = await fetch('/api/tenant/funcionalidades', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feed_miembros_pueden_publicar: next }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setPermitir(prev)
+        setError(data.error ?? 'No se pudo guardar')
+        return
+      }
+      router.refresh()
+    } catch (e) {
+      setPermitir(prev)
+      setError(e instanceof Error ? e.message : 'Error de red')
+    }
   }
 
   async function publish() {
@@ -92,6 +122,28 @@ export function FeedAdminPanel({ initial }: { initial: FeedPost[] }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="bg-white rounded-lg shadow-card p-5 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-sm font-medium">Publicaciones de miembros</h2>
+          <p className="text-sm text-muted mt-1 leading-relaxed">
+            Permite que tus miembros también publiquen en el feed desde su app.
+            Aparecen al instante y puedes eliminar cualquier publicación.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={permitir}
+          aria-label="Permitir publicaciones de miembros"
+          onClick={() => togglePermitir(!permitir)}
+          className={`shrink-0 mt-0.5 relative w-11 h-6 rounded-full transition-colors ${permitir ? 'bg-graphite' : 'bg-border'}`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${permitir ? 'translate-x-5' : ''}`}
+          />
+        </button>
+      </div>
+
       <div className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-3">
         <h2 className="text-sm font-medium">Publicar</h2>
         <input
@@ -164,10 +216,24 @@ export function FeedAdminPanel({ initial }: { initial: FeedPost[] }) {
               <div className="p-5 flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="text-base font-medium">{p.titulo}</h3>
+                    {p.titulo && (
+                      <h3 className="text-base font-medium">{p.titulo}</h3>
+                    )}
                     <p className="text-[11px] text-muted mt-0.5">
+                      {p.autor_miembro_id ? (
+                        <span className="text-graphite font-medium">
+                          {p.autor_nombre ?? 'Miembro'}
+                        </span>
+                      ) : (
+                        p.autor_email ?? 'Negocio'
+                      )}
+                      {p.autor_miembro_id && (
+                        <span className="ml-1.5 text-[10px] uppercase tracking-wide bg-surface border border-border rounded-full px-1.5 py-0.5">
+                          miembro
+                        </span>
+                      )}
+                      {' · '}
                       {dateFmt.format(new Date(p.created_at))}
-                      {p.autor_email && ` · ${p.autor_email}`}
                     </p>
                   </div>
                   <button

@@ -46,6 +46,16 @@ export async function PATCH(req: NextRequest) {
     }
     patch[k] = v
   }
+  if ('feed_miembros_pueden_publicar' in raw) {
+    const v = raw.feed_miembros_pueden_publicar
+    if (typeof v !== 'boolean') {
+      return NextResponse.json(
+        { error: 'feed_miembros_pueden_publicar debe ser boolean' },
+        { status: 400 }
+      )
+    }
+    patch.feed_miembros_pueden_publicar = v
+  }
   if ('tarjeta_size' in raw) {
     const v = raw.tarjeta_size
     if (typeof v !== 'number' || !Number.isInteger(v)) {
