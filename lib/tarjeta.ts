@@ -52,12 +52,14 @@ export const ESTILO_LABEL: Record<TarjetaEstilo, string> = {
   hexagono: 'Hexágono',
 }
 
-// Icono que muestra el sello relleno.
+// Glyph representativo de la FORMA del sello — se usa en el selector de estilo
+// del panel admin para que cada opción muestre su figura. (El sello relleno en
+// la tarjeta del cliente se dibuja con SVG, no con estos glyphs.)
 export const ESTILO_GLYPH: Record<TarjetaEstilo, string> = {
-  circulo: '✓',
+  circulo: '●',
   estrella: '★',
   corazon: '♥',
-  cuadrado: '✓',
+  cuadrado: '■',
   diamante: '◆',
   hexagono: '⬢',
 }

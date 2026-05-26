@@ -118,8 +118,14 @@ export function TarjetaCliente({
   const muted = cardText === '#FFFFFF' ? 'rgba(255,255,255,0.7)' : 'rgba(26,26,30,0.65)'
   const empty = cardText === '#FFFFFF' ? 'rgba(255,255,255,0.18)' : 'rgba(26,26,30,0.12)'
 
-  // Grid responsivo: máx 5 columnas para que cada sello sea grande y visible.
-  const cols = Math.min(5, tarjetaSize)
+  // Elegimos el número de columnas que reparte los sellos en filas parejas
+  // (5→5, 8→4, 10→5, 12→4). Si ningún divisor entra, usamos 5 y el
+  // flex-wrap + justify-center de abajo centra la última fila para que no se
+  // vea incompleta con tamaños "raros" (7, 11, …).
+  const cols =
+    [5, 4, 3].find((c) => tarjetaSize % c === 0) ??
+    (tarjetaSize <= 5 ? tarjetaSize : 5)
+  const cellWidth = `calc((100% - ${(cols - 1) * 0.5}rem) / ${cols})`
   const stampShape = estiloRadiusClass(estiloSello)
   const clipPath = ESTILO_CLIP[estiloSello]
 
@@ -161,10 +167,7 @@ export function TarjetaCliente({
           </div>
         </div>
 
-        <div
-          className="relative grid gap-2 mb-5"
-          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-        >
+        <div className="relative flex flex-wrap justify-center gap-2 mb-5">
           {cells.map((n) => {
             const filled = n <= sellos
             const esPremio = premioPorUmbral.has(n)
@@ -194,6 +197,7 @@ export function TarjetaCliente({
                 clipPath,
               }
             }
+            cellStyle.width = cellWidth
 
             return (
               <div

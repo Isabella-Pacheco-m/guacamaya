@@ -17,7 +17,7 @@ import type { TarjetaPremio } from '@/lib/tenantQueries'
 const HEX_RE = /^#[0-9a-f]{6}$/i
 const SIZE_MIN = 2
 const SIZE_MAX = 50
-const SIZE_PRESETS = [6, 8, 10, 12] as const
+const SIZE_PRESETS = [5, 8, 10, 12] as const
 
 export function TarjetaTemaForm({
   features,
