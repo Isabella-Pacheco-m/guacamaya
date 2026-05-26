@@ -12,35 +12,59 @@ import {
   type TarjetaEstilo,
   type TenantFeatures,
 } from '@/lib/tarjeta'
+import type { TarjetaPremio } from '@/lib/tenantQueries'
 
 const HEX_RE = /^#[0-9a-f]{6}$/i
+const SIZE_MIN = 2
+const SIZE_MAX = 50
+const SIZE_PRESETS = [6, 8, 10, 12] as const
 
 export function TarjetaTemaForm({
   features,
   tenantNombre,
+  premios,
 }: {
   features: TenantFeatures
   tenantNombre: string
+  premios: TarjetaPremio[]
 }) {
   const router = useRouter()
   const [colorFondo, setColorFondo] = useState(features.tarjeta_color_fondo.toUpperCase())
   const [colorSello, setColorSello] = useState(features.tarjeta_color_sello.toUpperCase())
   const [estilo, setEstilo] = useState<TarjetaEstilo>(features.tarjeta_estilo_sello)
+  const [size, setSize] = useState(features.tarjeta_size)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<number | null>(null)
 
   const fondoValido = HEX_RE.test(colorFondo)
   const selloValido = HEX_RE.test(colorSello)
+  const sizeValido = Number.isInteger(size) && size >= SIZE_MIN && size <= SIZE_MAX
   const dirty =
     colorFondo.toUpperCase() !== features.tarjeta_color_fondo.toUpperCase() ||
     colorSello.toUpperCase() !== features.tarjeta_color_sello.toUpperCase() ||
-    estilo !== features.tarjeta_estilo_sello
+    estilo !== features.tarjeta_estilo_sello ||
+    size !== features.tarjeta_size
+
+  // Premios que quedarían sin alcanzar si se reduce el tamaño por debajo de su
+  // umbral — se avisa para que el admin los ajuste en la sección de Premios.
+  const premiosHuérfanos = premios.filter((p) => p.threshold > size)
 
   // Vista previa con sellos rellenos a 60% para mostrar contraste y diseño.
   const sellosPreview = useMemo(
-    () => Math.max(1, Math.round(features.tarjeta_size * 0.6)),
-    [features.tarjeta_size]
+    () => Math.max(1, Math.round(size * 0.6)),
+    [size]
+  )
+  const premiosPreview = useMemo(
+    () =>
+      premios
+        .filter((p) => p.threshold <= size)
+        .map((p) => ({
+          ...p,
+          alcanzado: sellosPreview >= p.threshold,
+          canjeado: false,
+        })),
+    [premios, size, sellosPreview]
   )
 
   function applyPreset(p: (typeof TARJETA_PRESETS)[number]) {
@@ -52,7 +76,7 @@ export function TarjetaTemaForm({
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!dirty || saving || !fondoValido || !selloValido) return
+    if (!dirty || saving || !fondoValido || !selloValido || !sizeValido) return
     setSaving(true)
     setError(null)
     try {
@@ -63,6 +87,7 @@ export function TarjetaTemaForm({
           tarjeta_color_fondo: colorFondo,
           tarjeta_color_sello: colorSello,
           tarjeta_estilo_sello: estilo,
+          tarjeta_size: size,
         }),
       })
       const data = await res.json()
@@ -89,8 +114,8 @@ export function TarjetaTemaForm({
           tenantNombre={tenantNombre}
           miembroNombre="María García"
           sellos={sellosPreview}
-          tarjetaSize={features.tarjeta_size}
-          premios={[]}
+          tarjetaSize={sizeValido ? size : features.tarjeta_size}
+          premios={premiosPreview}
           colorFondo={fondoValido ? colorFondo : features.tarjeta_color_fondo}
           colorSello={selloValido ? colorSello : features.tarjeta_color_sello}
           estiloSello={estilo}
@@ -187,6 +212,62 @@ export function TarjetaTemaForm({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-graphite">
+          Número de sellos
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          {SIZE_PRESETS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setSize(s)
+                setSavedAt(null)
+              }}
+              className={
+                'rounded-full border px-4 py-2 text-sm transition-colors ' +
+                (size === s
+                  ? 'border-graphite bg-graphite text-white'
+                  : 'border-border bg-white text-graphite hover:border-graphite/40')
+              }
+            >
+              {s}
+            </button>
+          ))}
+          <input
+            type="number"
+            min={SIZE_MIN}
+            max={SIZE_MAX}
+            value={size}
+            onChange={(e) => {
+              setSize(Math.trunc(Number(e.target.value)))
+              setSavedAt(null)
+            }}
+            aria-label="Número de sellos personalizado"
+            className="w-24 border border-border rounded-md px-4 py-2 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm tabular-nums"
+          />
+        </div>
+        <span className="text-xs text-muted">
+          Entre {SIZE_MIN} y {SIZE_MAX}. El premio del último sello reinicia la
+          tarjeta al canjearse.
+        </span>
+        {!sizeValido && (
+          <span className="text-xs text-red-600">
+            Debe ser un entero entre {SIZE_MIN} y {SIZE_MAX}.
+          </span>
+        )}
+        {sizeValido && premiosHuérfanos.length > 0 && (
+          <span className="text-xs text-amber-600">
+            {premiosHuérfanos.length === 1
+              ? 'Hay 1 premio'
+              : `Hay ${premiosHuérfanos.length} premios`}{' '}
+            por encima de {size} sellos que quedarán sin alcanzar. Ajústalos en
+            la sección Premios.
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-graphite">
           Estilo del sello
         </label>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -230,7 +311,7 @@ export function TarjetaTemaForm({
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={saving || !dirty || !fondoValido || !selloValido}
+          disabled={saving || !dirty || !fondoValido || !selloValido || !sizeValido}
         >
           {saving ? 'Guardando...' : 'Guardar'}
         </Button>

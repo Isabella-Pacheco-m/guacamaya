@@ -1,7 +1,7 @@
+import type { CSSProperties } from 'react'
 import type { TarjetaPremioEstado } from '@/lib/tenantQueries'
 import {
   ESTILO_CLIP,
-  ESTILO_GLYPH,
   estiloRadiusClass,
   type TarjetaEstilo,
 } from '@/lib/tarjeta'
@@ -19,17 +19,75 @@ function readableTextOn(hex: string): string {
   return L > 0.55 ? '#1A1A1E' : '#FFFFFF'
 }
 
-function StampGlyph({ estilo }: { estilo: TarjetaEstilo }) {
-  // Dimensionamos el glyph en cqw (relativo al ancho del sello, que es el
-  // container query container) para que se vea grande y proporcional tanto en
-  // el preview ancho del admin como en la PWA angosta del cliente. El ✓ se ve
-  // mejor un poco más pequeño que los símbolos figurativos.
-  const isCheck = estilo === 'circulo' || estilo === 'cuadrado'
+// Iconos del sello como SVG: se centran de forma determinística (sin los
+// desajustes de baseline de los glyphs Unicode) y escalan con el sello porque
+// el ancho/alto va en % del contenedor.
+function StarIcon({ className }: { className?: string }) {
   return (
-    <span className={`leading-none ${isCheck ? 'text-[length:46cqw]' : 'text-[length:58cqw]'}`}>
-      {ESTILO_GLYPH[estilo]}
-    </span>
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+      <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+    </svg>
   )
+}
+
+function HeartIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+  )
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  )
+}
+
+function GiftIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M12 8v13" />
+      <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+      <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8" />
+    </svg>
+  )
+}
+
+// El emblema del sello relleno depende del estilo elegido. Para diamante y
+// hexágono la forma del sello ya comunica el estilo, así que adentro va un
+// check (evita el ícono redundante de "hexágono dentro de hexágono").
+function EmblemIcon({
+  estilo,
+  className,
+}: {
+  estilo: TarjetaEstilo
+  className?: string
+}) {
+  if (estilo === 'estrella') return <StarIcon className={className} />
+  if (estilo === 'corazon') return <HeartIcon className={className} />
+  return <CheckIcon className={className} />
 }
 
 export function TarjetaCliente({
@@ -52,6 +110,7 @@ export function TarjetaCliente({
   estiloSello: TarjetaEstilo
 }) {
   const cells = Array.from({ length: tarjetaSize }, (_, i) => i + 1)
+  const premioPorUmbral = new Map(premios.map((p) => [p.threshold, p]))
   const reclamables = premios.filter((p) => p.alcanzado && !p.canjeado)
   const siguiente = premios.find((p) => !p.alcanzado && !p.canjeado)
 
@@ -108,30 +167,55 @@ export function TarjetaCliente({
         >
           {cells.map((n) => {
             const filled = n <= sellos
+            const esPremio = premioPorUmbral.has(n)
+
+            let cellStyle: CSSProperties
+            if (filled) {
+              cellStyle = {
+                background: colorSello,
+                color: readableTextOn(colorSello),
+                boxShadow: clipPath ? 'none' : '0 2px 6px rgba(0,0,0,0.18)',
+                clipPath,
+              }
+            } else if (esPremio) {
+              // Premio aún no alcanzado: resaltado en el color del sello para
+              // que el cliente vea que ahí lo espera una recompensa.
+              cellStyle = {
+                background: clipPath ? `${colorSello}26` : 'transparent',
+                border: clipPath ? 'none' : `1.5px solid ${colorSello}`,
+                color: colorSello,
+                clipPath,
+              }
+            } else {
+              cellStyle = {
+                background: clipPath ? empty : 'transparent',
+                border: clipPath ? 'none' : `1.5px dashed ${empty}`,
+                color: muted,
+                clipPath,
+              }
+            }
+
             return (
               <div
                 key={n}
                 className={`aspect-square ${stampShape} flex items-center justify-center transition-transform [container-type:inline-size]`}
-                style={
-                  filled
-                    ? {
-                        background: colorSello,
-                        color: readableTextOn(colorSello),
-                        boxShadow: clipPath ? 'none' : '0 2px 6px rgba(0,0,0,0.18)',
-                        clipPath,
-                      }
-                    : {
-                        background: clipPath ? empty : 'transparent',
-                        border: clipPath ? 'none' : `1.5px dashed ${empty}`,
-                        color: muted,
-                        clipPath,
-                      }
-                }
+                style={cellStyle}
               >
-                {filled ? (
-                  <StampGlyph estilo={estiloSello} />
+                {esPremio ? (
+                  <GiftIcon className="w-[46%] h-[46%]" />
+                ) : filled ? (
+                  <EmblemIcon
+                    estilo={estiloSello}
+                    className={
+                      estiloSello === 'estrella' || estiloSello === 'corazon'
+                        ? 'w-[52%] h-[52%]'
+                        : 'w-[46%] h-[46%]'
+                    }
+                  />
                 ) : (
-                  <span className="text-[10px] tabular-nums">{n}</span>
+                  <span className="text-[length:26cqw] font-medium tabular-nums leading-none">
+                    {n}
+                  </span>
                 )}
               </div>
             )

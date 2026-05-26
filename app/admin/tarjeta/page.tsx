@@ -37,13 +37,15 @@ export default async function TarjetaPage() {
         <div>
           <h2 className="text-xl font-light tracking-tight">Diseño</h2>
           <p className="text-muted text-sm mt-1">
-            Color de fondo, color del sello y forma. Aplica solo a la tarjeta.
+            Número de sellos, color de fondo, color del sello y forma. Aplica
+            solo a la tarjeta.
           </p>
         </div>
         <Card padding="lg">
           <TarjetaTemaForm
             features={features}
             tenantNombre={tenant?.nombre ?? 'Tu negocio'}
+            premios={premios}
           />
         </Card>
       </section>
