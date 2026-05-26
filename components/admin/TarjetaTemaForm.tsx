@@ -33,6 +33,9 @@ export function TarjetaTemaForm({
   const [colorSello, setColorSello] = useState(features.tarjeta_color_sello.toUpperCase())
   const [estilo, setEstilo] = useState<TarjetaEstilo>(features.tarjeta_estilo_sello)
   const [size, setSize] = useState(features.tarjeta_size)
+  const [valor, setValor] = useState(
+    features.sello_valor_cop != null ? String(features.sello_valor_cop) : ''
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<number | null>(null)
@@ -40,11 +43,17 @@ export function TarjetaTemaForm({
   const fondoValido = HEX_RE.test(colorFondo)
   const selloValido = HEX_RE.test(colorSello)
   const sizeValido = Number.isInteger(size) && size >= SIZE_MIN && size <= SIZE_MAX
+  // "Valor por sello" es opcional: vacío = null. Si trae valor, entero positivo.
+  const valorTrim = valor.trim()
+  const valorNum = valorTrim === '' ? null : Number(valorTrim)
+  const valorValido =
+    valorTrim === '' || (Number.isInteger(valorNum) && (valorNum as number) > 0)
   const dirty =
     colorFondo.toUpperCase() !== features.tarjeta_color_fondo.toUpperCase() ||
     colorSello.toUpperCase() !== features.tarjeta_color_sello.toUpperCase() ||
     estilo !== features.tarjeta_estilo_sello ||
-    size !== features.tarjeta_size
+    size !== features.tarjeta_size ||
+    valorNum !== features.sello_valor_cop
 
   // Premios que quedarían sin alcanzar si se reduce el tamaño por debajo de su
   // umbral — se avisa para que el admin los ajuste en la sección de Premios.
@@ -76,7 +85,8 @@ export function TarjetaTemaForm({
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!dirty || saving || !fondoValido || !selloValido || !sizeValido) return
+    if (!dirty || saving || !fondoValido || !selloValido || !sizeValido || !valorValido)
+      return
     setSaving(true)
     setError(null)
     try {
@@ -88,6 +98,7 @@ export function TarjetaTemaForm({
           tarjeta_color_sello: colorSello,
           tarjeta_estilo_sello: estilo,
           tarjeta_size: size,
+          sello_valor_cop: valorNum,
         }),
       })
       const data = await res.json()
@@ -268,6 +279,39 @@ export function TarjetaTemaForm({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-graphite">
+          Valor por sello{' '}
+          <span className="font-normal text-muted">(opcional)</span>
+        </label>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted">$</span>
+          <input
+            type="number"
+            min={1}
+            inputMode="numeric"
+            placeholder="ej: 10000"
+            value={valor}
+            onChange={(e) => {
+              setValor(e.target.value)
+              setSavedAt(null)
+            }}
+            aria-label="Valor en COP de cada sello"
+            className="w-40 border border-border rounded-md px-4 py-2 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm tabular-nums"
+          />
+          <span className="text-sm text-muted">COP = 1 sello</span>
+        </div>
+        <span className="text-xs text-muted">
+          Referencia informativa de cuánto vale cada sello. No cambia cómo se
+          otorgan — los sellos los agregas manualmente.
+        </span>
+        {!valorValido && (
+          <span className="text-xs text-red-600">
+            Debe ser un entero positivo, o dejarse vacío.
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-graphite">
           Estilo del sello
         </label>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -311,7 +355,14 @@ export function TarjetaTemaForm({
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={saving || !dirty || !fondoValido || !selloValido || !sizeValido}
+          disabled={
+            saving ||
+            !dirty ||
+            !fondoValido ||
+            !selloValido ||
+            !sizeValido ||
+            !valorValido
+          }
         >
           {saving ? 'Guardando...' : 'Guardar'}
         </Button>

@@ -43,8 +43,6 @@ const FEATURES: FeatureMeta[] = [
   },
 ]
 
-const COP = new Intl.NumberFormat('es-CO')
-
 export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {
   const router = useRouter()
   const [state, setState] = useState<TenantFeatures>(initial)
@@ -139,13 +137,14 @@ export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {
               />
             </div>
             {showTarjetaConfig && (
-              <TarjetaConfig
-                state={state}
-                loading={loading}
-                savedKey={savedKey}
-                onPatch={(key, body, revert) => patch(key, body, revert)}
-                onLocalChange={(updater) => setState(updater)}
-              />
+              <div className="border-t border-border pt-4">
+                <Link
+                  href="/admin/tarjeta"
+                  className="text-electric text-sm hover:underline"
+                >
+                  Configurar tarjeta (tamaño, valor, diseño y premios) →
+                </Link>
+              </div>
             )}
           </div>
         )
@@ -182,114 +181,3 @@ function Toggle({
   )
 }
 
-function TarjetaConfig({
-  state,
-  loading,
-  savedKey,
-  onPatch,
-  onLocalChange,
-}: {
-  state: TenantFeatures
-  loading: string | null
-  savedKey: string | null
-  onPatch: (
-    key: string,
-    body: Record<string, unknown>,
-    revert: () => void
-  ) => Promise<void>
-  onLocalChange: (updater: (s: TenantFeatures) => TenantFeatures) => void
-}) {
-  const [size, setSize] = useState<string>(String(state.tarjeta_size))
-  const [valor, setValor] = useState<string>(
-    state.sello_valor_cop != null ? String(state.sello_valor_cop) : ''
-  )
-
-  async function saveSize() {
-    const n = Number(size)
-    if (!Number.isInteger(n) || n < 1 || n > 100) return
-    if (n === state.tarjeta_size) return
-    const prev = state.tarjeta_size
-    onLocalChange((s) => ({ ...s, tarjeta_size: n }))
-    await onPatch('tarjeta_size', { tarjeta_size: n }, () => {
-      onLocalChange((s) => ({ ...s, tarjeta_size: prev }))
-      setSize(String(prev))
-    })
-  }
-
-  async function saveValor() {
-    const trimmed = valor.trim()
-    let nuevoValor: number | null
-    if (trimmed === '') {
-      nuevoValor = null
-    } else {
-      const n = Number(trimmed)
-      if (!Number.isInteger(n) || n <= 0) return
-      nuevoValor = n
-    }
-    if (nuevoValor === state.sello_valor_cop) return
-    const prev = state.sello_valor_cop
-    onLocalChange((s) => ({ ...s, sello_valor_cop: nuevoValor }))
-    await onPatch('sello_valor_cop', { sello_valor_cop: nuevoValor }, () => {
-      onLocalChange((s) => ({ ...s, sello_valor_cop: prev }))
-      setValor(prev != null ? String(prev) : '')
-    })
-  }
-
-  return (
-    <div className="border-t border-border pt-4 flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted">
-            Espacios en la tarjeta
-            {savedKey === 'tarjeta_size' && (
-              <span className="ml-2 text-[11px] text-graphite bg-lime/40 rounded-full px-2 py-0.5">
-                guardado
-              </span>
-            )}
-          </span>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            onBlur={saveSize}
-            disabled={loading === 'tarjeta_size'}
-            className="border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-electric"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted">
-            Valor por sello (COP, opcional)
-            {savedKey === 'sello_valor_cop' && (
-              <span className="ml-2 text-[11px] text-graphite bg-lime/40 rounded-full px-2 py-0.5">
-                guardado
-              </span>
-            )}
-          </span>
-          <input
-            type="number"
-            min={0}
-            placeholder="ej: 10000"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            onBlur={saveValor}
-            disabled={loading === 'sello_valor_cop'}
-            className="border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-electric"
-          />
-          {state.sello_valor_cop != null && (
-            <span className="text-[11px] text-muted">
-              ${COP.format(state.sello_valor_cop)} = 1 sello
-            </span>
-          )}
-        </label>
-      </div>
-      <Link
-        href="/admin/tarjeta"
-        className="text-electric text-sm hover:underline self-start"
-      >
-        Configurar premios →
-      </Link>
-    </div>
-  )
-}
