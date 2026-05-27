@@ -2,7 +2,11 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
-import { getTenantBySlug } from '@/lib/tenant'
+import {
+  getTenantBySlug,
+  findTenantByAdminEmail,
+  isAdminOfTenant,
+} from '@/lib/tenant'
 import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
 import { tenantBaseUrl } from '@/lib/config'
 import type { Miembro, Tenant } from '@/types'
@@ -22,12 +26,22 @@ export interface ClienteContext {
 }
 
 /**
- * Server-side: garantiza sesión con tenantId y SIN miembroId (admin del tenant).
- * Si falta sesión → /api/auth/login. Si es cliente PWA → / (no autorizado).
+ * Server-side: garantiza que la sesión es del admin del tenant del subdominio.
+ *
+ * Modelo por email (no por claim de Auth0): el admin es quien inicia sesión en
+ * {slug}.guacamaya.net con el correo que el superadmin asignó al tenant
+ * (tenants.admin_email), siempre que el email esté verificado por el IdP.
+ *
+ *  - sin sesión → /api/auth/login (preservando el destino)
+ *  - en el apex (sin slug): buscar el tenant por admin_email y mandar al
+ *    subdominio; si no es admin de ninguno → / con error
+ *  - en el subdominio: el email del token debe coincidir con admin_email
  */
 export async function requireAdmin(): Promise<AdminContext> {
   const h = headers()
+  const slug = h.get('x-tenant-slug') || ''
   const pathname = h.get('x-pathname') || '/admin/dashboard'
+
   const session = await getSession()
   if (!session?.user) {
     // Preservar el destino original — si se entra a /admin/miembros sin
@@ -35,15 +49,36 @@ export async function requireAdmin(): Promise<AdminContext> {
     // el contexto y aparenta un "redirige siempre a dashboard".
     redirect(`/api/auth/login?returnTo=${encodeURIComponent(pathname)}`)
   }
-  const tenantId = getTenantId(session.user)
-  if (!tenantId) {
-    redirect('/?error=missing-tenant')
-  }
-  if (getMiembroId(session.user)) {
+
+  const email = String(session.user.email ?? '').toLowerCase()
+  const verified = Boolean(session.user.email_verified)
+
+  // En el apex (callback de Auth0 siempre aterriza ahí): no hay tenant en el
+  // host. Resolver el subdominio del admin por email y redirigir, preservando
+  // el path (/admin/miembros, etc.).
+  if (!slug) {
+    if (email && verified) {
+      const t = await findTenantByAdminEmail(email)
+      if (t) {
+        const search = h.get('x-search') || ''
+        const dest = pathname.startsWith('/admin')
+          ? `${pathname}${search}`
+          : '/admin/dashboard'
+        redirect(`${tenantBaseUrl(t.slug)}${dest}`)
+      }
+    }
     redirect('/?error=not-admin')
   }
+
+  const tenant = await getTenantBySlug(slug)
+  if (!tenant) redirect('/?error=missing-tenant')
+
+  if (!email || !verified || !(await isAdminOfTenant(tenant.id, email))) {
+    redirect('/?error=not-admin')
+  }
+
   return {
-    tenantId,
+    tenantId: tenant.id,
     user: {
       name: session.user.name as string | undefined,
       email: session.user.email as string | undefined,

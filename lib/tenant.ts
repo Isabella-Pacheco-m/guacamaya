@@ -60,13 +60,13 @@ export class TenantUpdateError extends Error {
 }
 
 const HEX_RE = /^#[0-9a-f]{6}$/i
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // Slugs reservados — son rutas top-level del app o convenciones de
 // subdominio que no podemos ceder a tenants. Si se agrega una ruta
 // nueva en `app/`, agregarla acá también.
 const RESERVED_SLUGS = new Set([
   'admin',
-  'admin-claim',
   'api',
   'auth',
   'canjear',
@@ -101,9 +101,44 @@ export function validateSlug(raw: string): string {
 export interface CreateTenantInput {
   nombre: string
   slug: string
+  admin_email: string
   color_primario?: string
   puntos_por_mil?: number
   puntos_cumpleanos?: number | null
+}
+
+// El admin del negocio se identifica por email asignado (no por claim de
+// Auth0). Estas funciones NO devuelven admin_email en ningún objeto Tenant
+// para no filtrar el correo a la PWA pública / al cliente.
+export async function findTenantByAdminEmail(
+  email: string
+): Promise<{ id: string; slug: string } | null> {
+  const e = email.trim().toLowerCase()
+  if (!e) return null
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('id, slug')
+    .eq('admin_email', e)
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return (data as { id: string; slug: string } | null) ?? null
+}
+
+export async function isAdminOfTenant(
+  tenantId: string,
+  email: string
+): Promise<boolean> {
+  const e = email.trim().toLowerCase()
+  if (!e) return false
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('id')
+    .eq('id', tenantId)
+    .eq('admin_email', e)
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data)
 }
 
 export class TenantCreateError extends Error {
@@ -145,6 +180,11 @@ export async function createTenant(
     throw err
   }
 
+  const adminEmail = (input.admin_email ?? '').trim().toLowerCase()
+  if (!adminEmail || !EMAIL_RE.test(adminEmail)) {
+    throw new TenantCreateError('admin_email requerido y debe ser válido', 400)
+  }
+
   const color = (input.color_primario ?? '#305CFF').trim()
   if (!HEX_RE.test(color)) {
     throw new TenantCreateError('color_primario debe ser hex #RRGGBB', 400)
@@ -176,6 +216,7 @@ export async function createTenant(
     .insert({
       nombre,
       slug,
+      admin_email: adminEmail,
       color_primario: color.toUpperCase(),
       puntos_por_mil: puntosPorMil,
       puntos_cumpleanos: puntosCumple,

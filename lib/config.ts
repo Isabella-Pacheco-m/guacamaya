@@ -20,13 +20,6 @@ export function inviteUrl(token: string): string {
   return `${AUTH_BASE_URL}/invite/${token}`
 }
 
-// Onboarding del primer admin de un tenant nuevo. Vive en el host raíz
-// (mismo origen que el callback de Auth0) — el tenant se resuelve del
-// token, no del subdominio.
-export function adminClaimUrl(token: string): string {
-  return `${AUTH_BASE_URL}/admin-claim/${token}`
-}
-
 // URL que el QR del cliente codifica. Apunta al root host (ahí vive el admin)
 // con miembro_id y recompensa_id en query — el admin escanea con la cámara
 // del teléfono y abre directamente la pantalla de confirmación.

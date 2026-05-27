@@ -1,7 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
-import { getTenantFromRequest, TenantNotFoundError } from '@/lib/tenant'
+import {
+  getTenantFromRequest,
+  isAdminOfTenant,
+  TenantNotFoundError,
+} from '@/lib/tenant'
 import { getMiembroByAuth0 } from '@/lib/invitaciones'
 import type { Miembro, Tenant } from '@/types'
 
@@ -37,6 +41,10 @@ export type ClienteAuthResult =
   | { ok: true; tenant: Tenant; miembro: Miembro }
   | { ok: false; res: NextResponse }
 
+// Admin del tenant: tenant resuelto desde el subdominio (header x-tenant-slug)
+// e identidad por email asignado (tenants.admin_email), igual que el cliente
+// se vincula por auth0_user_id. Sin claim de Auth0: el admin es quien inicia
+// sesión en {slug}.guacamaya.net con el correo que el superadmin le asignó.
 export async function requireAdminTenantId(req?: NextRequest): Promise<AdminAuthResult> {
   const session = await readSession(req)
   if (!session?.user) {
@@ -45,15 +53,23 @@ export async function requireAdminTenantId(req?: NextRequest): Promise<AdminAuth
       res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }),
     }
   }
-  const tenantId = getTenantId(session.user)
-  if (!tenantId) {
-    return {
-      ok: false,
-      res: NextResponse.json({ error: 'Token sin tenantId' }, { status: 403 }),
+
+  let tenant: Tenant
+  try {
+    tenant = await getTenantFromRequest()
+  } catch (err) {
+    if (err instanceof TenantNotFoundError) {
+      return {
+        ok: false,
+        res: NextResponse.json({ error: err.message }, { status: 404 }),
+      }
     }
+    throw err
   }
-  // MVP: si el JWT trae miembroId el usuario es cliente PWA, no admin del tenant.
-  if (getMiembroId(session.user)) {
+
+  const email = String(session.user.email ?? '').toLowerCase()
+  const verified = Boolean(session.user.email_verified)
+  if (!email || !verified || !(await isAdminOfTenant(tenant.id, email))) {
     return {
       ok: false,
       res: NextResponse.json(
@@ -62,7 +78,7 @@ export async function requireAdminTenantId(req?: NextRequest): Promise<AdminAuth
       ),
     }
   }
-  return { ok: true, tenantId }
+  return { ok: true, tenantId: tenant.id }
 }
 
 // Cliente PWA: tenant resuelto desde subdominio (header x-tenant-slug) y

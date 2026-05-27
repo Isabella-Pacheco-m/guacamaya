@@ -4,7 +4,7 @@ import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
 import { isSuperadmin } from '@/lib/superadmin-auth'
 import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
-import { getTenantById, getTenantBySlug } from '@/lib/tenant'
+import { getTenantBySlug, findTenantByAdminEmail } from '@/lib/tenant'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { listTarjetaPremiosForMiembro } from '@/lib/tenantQueries'
 import { listFeedPosts } from '@/lib/feed'
@@ -115,31 +115,30 @@ async function renderTenantHome(slug: string) {
 async function renderRootHome(errorCode: string | undefined) {
   const session = await getSession()
 
-  // Admin logueado en el apex: el callback de Auth0 siempre vuelve a
-  // AUTH0_BASE_URL (apex), aunque el "Ingresar" se haya iniciado en el
-  // subdominio del tenant. Redirigir cross-host al subdominio correcto
-  // para que el panel admin corra bajo {slug}.guacamaya.net.
-  if (session?.user && getTenantId(session.user) && !getMiembroId(session.user)) {
-    const tenantUuid = getTenantId(session.user)
-    const tenant = await getTenantById(tenantUuid)
-    if (tenant) {
-      redirect(`${tenantBaseUrl(tenant.slug)}/admin/dashboard`)
-    }
-    redirect('/?error=missing-tenant')
-  }
-
-  // Superadmin (email en allow-list, sin claims tenantId/miembroId) →
-  // panel global. Esto se chequea ANTES de buscar miembro vinculado para
-  // que un superadmin que también tenga miembros en otros tenants caiga
-  // en su panel, no en uno de los tenants.
-  if (session?.user && !getTenantId(session.user) && !getMiembroId(session.user)) {
+  // El callback de Auth0 siempre vuelve al apex (AUTH0_BASE_URL), aunque el
+  // "Ingresar" se haya iniciado en un subdominio. Acá decidimos a dónde
+  // mandar a cada identidad. La cookie de sesión es compartida en
+  // .guacamaya.net, así que el subdominio destino ya ve la sesión.
+  if (session?.user) {
+    // Superadmin (email en allow-list) → panel global. Se chequea primero
+    // para que un superadmin que además sea admin/cliente caiga en su panel.
     if (await isSuperadmin()) {
       redirect('/superadmin')
     }
-  }
 
-  // Cliente vinculado en root → mandarlo al subdominio de su tenant.
-  if (session?.user && !getTenantId(session.user)) {
+    const email = String(session.user.email ?? '').toLowerCase()
+    const verified = Boolean(session.user.email_verified)
+
+    // Admin de negocio: identidad por email asignado al tenant (no por claim
+    // de Auth0). Mandarlo al panel de su subdominio.
+    if (email && verified) {
+      const adminTenant = await findTenantByAdminEmail(email)
+      if (adminTenant) {
+        redirect(`${tenantBaseUrl(adminTenant.slug)}/admin/dashboard`)
+      }
+    }
+
+    // Cliente vinculado → subdominio de su tenant.
     const sub = session.user.sub as string | undefined
     if (sub) {
       const linked = await findMiembroByAuth0(sub)

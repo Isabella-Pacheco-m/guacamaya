@@ -5,9 +5,7 @@ import {
   createTenant,
   type CreateTenantInput,
 } from '@/lib/tenant'
-import { createAdminInvitation } from '@/lib/admin-invitations'
-import { adminClaimUrl } from '@/lib/config'
-import { getSession } from '@auth0/nextjs-auth0'
+import { tenantBaseUrl } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,8 +24,6 @@ export async function POST(req: NextRequest) {
   if (!(await isSuperadmin(req))) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 403 })
   }
-  const session = await getSession(req, new NextResponse())
-  const createdByEmail = (session?.user.email as string | undefined) ?? null
 
   let body: CreateBody
   try {
@@ -47,6 +43,7 @@ export async function POST(req: NextRequest) {
   const input: CreateTenantInput = {
     nombre: body.nombre ?? '',
     slug: body.slug ?? '',
+    admin_email: emailDueno,
     color_primario: body.color_primario,
     puntos_por_mil: body.puntos_por_mil,
     puntos_cumpleanos: body.puntos_cumpleanos ?? null,
@@ -54,21 +51,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const tenant = await createTenant(input)
-    const { invitation, token } = await createAdminInvitation({
-      tenantId: tenant.id,
-      email: emailDueno,
-      ttlDays: 7,
-      createdByEmail,
-    })
 
+    // El admin entra solo: inicia sesión en su subdominio con admin_email.
     return NextResponse.json({
       tenant,
-      invitation: {
-        id: invitation.id,
-        email: invitation.email,
-        expires_at: invitation.expires_at,
-        claim_url: adminClaimUrl(token),
-      },
+      admin_email: emailDueno,
+      admin_login_url: tenantBaseUrl(tenant.slug),
     })
   } catch (err) {
     if (err instanceof TenantCreateError) {

@@ -9,13 +9,6 @@ import { createTenantAction } from '@/app/superadmin/tenants/new/actions'
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-interface InvitationResult {
-  id: string
-  email: string | null
-  expires_at: string
-  claim_url: string
-}
-
 interface CreatedTenant {
   id: string
   nombre: string
@@ -32,7 +25,8 @@ export function CreateTenantForm() {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{
     tenant: CreatedTenant
-    invitation: InvitationResult
+    adminEmail: string
+    adminLoginUrl: string
     domainWarning?: string
   } | null>(null)
   const [copied, setCopied] = useState(false)
@@ -56,13 +50,14 @@ export function CreateTenantForm() {
         slug: slugClean,
         email_dueno: emailDueno.trim().toLowerCase(),
       })
-      if (!data.ok || !data.tenant || !data.invitation) {
+      if (!data.ok || !data.tenant || !data.admin_login_url) {
         setError(data.error ?? 'No se pudo crear el tenant')
         return
       }
       setResult({
         tenant: data.tenant,
-        invitation: data.invitation,
+        adminEmail: data.admin_email ?? emailDueno.trim().toLowerCase(),
+        adminLoginUrl: data.admin_login_url,
         domainWarning: data.domain_warning,
       })
       router.refresh()
@@ -73,19 +68,18 @@ export function CreateTenantForm() {
     }
   }
 
-  async function copyClaimUrl() {
+  async function copyLoginUrl() {
     if (!result) return
     try {
-      await navigator.clipboard.writeText(result.invitation.claim_url)
+      await navigator.clipboard.writeText(result.adminLoginUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // ignore — el textarea sigue siendo seleccionable manualmente
+      // ignore — el input sigue siendo seleccionable manualmente
     }
   }
 
   if (result) {
-    const expira = new Date(result.invitation.expires_at)
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-3">
@@ -104,33 +98,30 @@ export function CreateTenantForm() {
         <div className="border-t border-border pt-5 flex flex-col gap-3">
           <div>
             <p className="text-sm font-medium text-graphite">
-              Enlace de invitación para el dueño
+              Acceso del admin
             </p>
             <p className="text-xs text-muted mt-0.5">
-              Cópialo y mándalo a {result.invitation.email}. Expira el{' '}
-              {expira.toLocaleDateString('es-CO', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-              })}
-              . Es de un solo uso.
+              Pídele al dueño que entre a su subdominio e inicie sesión con{' '}
+              <span className="font-medium text-graphite">
+                {result.adminEmail}
+              </span>
+              . Con ese correo ya queda como admin — no hay enlace que aceptar.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               readOnly
-              value={result.invitation.claim_url}
+              value={result.adminLoginUrl}
               onFocus={(e) => e.currentTarget.select()}
               className="flex-1 border border-border rounded-md px-4 py-3 bg-surface outline-none text-xs font-mono"
             />
-            <Button type="button" onClick={copyClaimUrl} variant="secondary">
+            <Button type="button" onClick={copyLoginUrl} variant="secondary">
               {copied ? 'Copiado' : 'Copiar'}
             </Button>
           </div>
           <p className="text-xs text-muted">
-            Cuando el dueño abra el enlace, se le pedirá iniciar sesión en
-            Auth0. Después de aceptar tendrá que volver a entrar para que
-            su nuevo permiso se aplique al token.
+            Debe iniciar sesión con ese correo exacto (el mismo que registraste).
+            Si entra con otro, no tendrá acceso al panel.
           </p>
         </div>
 

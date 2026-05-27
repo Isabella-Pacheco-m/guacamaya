@@ -98,10 +98,12 @@ export async function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-tenant-slug', tenantSlug)
-  // Pathname original — lo usa requireCliente() para redirigir cross-host
-  // al subdominio del miembro preservando el deep-link después del callback
-  // de Auth0 (que siempre vuelve al apex).
+  // Pathname + query originales — los usan requireCliente()/requireAdmin()
+  // para redirigir cross-host al subdominio preservando el deep-link (p.ej.
+  // el QR de canje /admin/canjes/confirmar?m=..&r=..) después del callback de
+  // Auth0, que siempre vuelve al apex.
   requestHeaders.set('x-pathname', req.nextUrl.pathname)
+  requestHeaders.set('x-search', req.nextUrl.search)
 
   return NextResponse.next({
     request: { headers: requestHeaders },
