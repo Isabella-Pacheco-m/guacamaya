@@ -20,6 +20,13 @@ export function inviteUrl(token: string): string {
   return `${AUTH_BASE_URL}/invite/${token}`
 }
 
+// Enlace de invitación a la comunidad (reusable). Vive en el host raíz como
+// /invite para compartir el mismo origen que el callback de Auth0; tras unirse
+// se redirige al subdominio del tenant.
+export function joinUrl(code: string): string {
+  return `${AUTH_BASE_URL}/unirse/${code}`
+}
+
 // URL que el QR del cliente codifica. Apunta al root host (ahí vive el admin)
 // con miembro_id y recompensa_id en query — el admin escanea con la cámara
 // del teléfono y abre directamente la pantalla de confirmación.

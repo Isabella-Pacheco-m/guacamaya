@@ -95,6 +95,42 @@ export async function redeemInvitacion(
   return data as { miembro: Miembro }
 }
 
+// Auto-registro: el usuario se une a la comunidad sin invitación por-miembro.
+// Crea su fila en `miembros` vinculada a su auth0_user_id (con nombre/email de
+// su perfil de Auth0). Idempotente: si ya es miembro de este tenant, lo
+// devuelve sin duplicar (la unique (tenant_id, auth0_user_id) lo garantiza).
+export async function selfRegisterMiembro(
+  tenantId: string,
+  auth0UserId: string,
+  nombre: string,
+  email: string | null
+): Promise<Miembro> {
+  const existing = await getMiembroByAuth0(tenantId, auth0UserId)
+  if (existing) return existing
+
+  const { data, error } = await supabaseAdmin
+    .from('miembros')
+    .insert({
+      tenant_id: tenantId,
+      auth0_user_id: auth0UserId,
+      nombre: nombre.trim() || 'Cliente',
+      email: email && email.trim() ? email.trim().toLowerCase() : null,
+    })
+    .select(
+      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel'
+    )
+    .single()
+  if (error) {
+    // Carrera: otro request lo creó primero (unique tenant_id+auth0_user_id).
+    if (error.code === '23505') {
+      const again = await getMiembroByAuth0(tenantId, auth0UserId)
+      if (again) return again
+    }
+    throw error
+  }
+  return data as Miembro
+}
+
 export async function getMiembroByAuth0(
   tenantId: string,
   auth0UserId: string

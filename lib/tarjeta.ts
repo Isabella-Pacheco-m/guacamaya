@@ -37,6 +37,9 @@ export interface TenantFeatures {
   tarjeta_enabled: boolean
   cumpleanos_enabled: boolean
   feed_miembros_pueden_publicar: boolean
+  // Registro abierto: cualquier usuario logueado puede unirse a la comunidad
+  // sin enlace de invitación. Default true.
+  registro_abierto: boolean
   tarjeta_size: number
   sello_valor_cop: number | null
   tarjeta_color_fondo: string

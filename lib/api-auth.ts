@@ -16,7 +16,7 @@ import type { Miembro, Tenant } from '@/types'
 // resuelve usuario (o lanza en algún runtime), caemos al par (req,res) que
 // lee de `req.cookies`. Así ninguno de los dos caminos es un punto único de
 // fallo y evitamos el 401 "No autenticado" espurio en mutaciones del cliente.
-async function readSession(req?: NextRequest) {
+export async function readSession(req?: NextRequest) {
   try {
     const s = await getSession()
     if (s?.user) return s

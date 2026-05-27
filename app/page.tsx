@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { TenantPwaHome } from '@/components/pwa/TenantPwaHome'
 import { TenantTheme } from '@/components/pwa/TenantTheme'
+import { TenantJoin } from '@/components/pwa/TenantJoin'
 import { RootLanding } from '@/components/pwa/RootLanding'
 
 export const dynamic = 'force-dynamic'
@@ -83,10 +84,22 @@ async function renderTenantHome(slug: string) {
   const auth0UserId = session.user.sub as string
   const miembro = await getMiembroByAuth0(tenant.id, auth0UserId)
   if (!miembro) {
+    const features = await getTenantFeatures(tenant.id)
+    // Registro abierto: el usuario logueado puede unirse de un clic.
+    if (features.registro_abierto) {
+      return (
+        <TenantJoin
+          nombre={tenant.nombre}
+          logoUrl={tenant.logo_url}
+          colorPrimario={tenant.color_primario}
+        />
+      )
+    }
+    // Comunidad por invitación: necesita un enlace del negocio.
     return (
       <CenteredCard
-        title="No tienes acceso a este club"
-        body={`Tu cuenta no está vinculada a ${tenant.nombre}. Pídele al admin un enlace de invitación.`}
+        title="Este club es por invitación"
+        body={`Pídele al negocio de ${tenant.nombre} un enlace para unirte.`}
         action={{ href: '/api/auth/logout', label: 'Cerrar sesión' }}
       />
     )

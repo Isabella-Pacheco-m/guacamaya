@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { headers } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureTenantFeaturesRow } from '@/lib/tenant-features'
@@ -76,6 +77,7 @@ const RESERVED_SLUGS = new Set([
   'recompensas',
   'sorteos',
   'superadmin',
+  'unirse',
   'www',
 ])
 
@@ -139,6 +141,47 @@ export async function isAdminOfTenant(
     .maybeSingle()
   if (error) throw error
   return Boolean(data)
+}
+
+// =====================================================================
+// Enlace de invitación a la comunidad (join_code reusable por tenant)
+// =====================================================================
+
+// Resuelve el tenant desde el código de invitación (único global), igual que
+// /invite resuelve por token. Lo usa /unirse/[code].
+export async function getTenantByJoinCode(
+  code: string
+): Promise<{ id: string; slug: string; nombre: string } | null> {
+  const c = code.trim()
+  if (!c) return null
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('id, slug, nombre')
+    .eq('join_code', c)
+    .maybeSingle()
+  if (error) throw error
+  return (data as { id: string; slug: string; nombre: string } | null) ?? null
+}
+
+export async function getJoinCode(tenantId: string): Promise<string | null> {
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('join_code')
+    .eq('id', tenantId)
+    .maybeSingle()
+  if (error) throw error
+  return (data?.join_code as string | null) ?? null
+}
+
+// Genera (o rota) el código. Rotar invalida los enlaces anteriores.
+export async function regenerateJoinCode(tenantId: string): Promise<string> {
+  const code = crypto.randomBytes(9).toString('base64url') // ~12 chars
+  const { error } = await supabaseAdmin
+    .from('tenants')
+    .update({ join_code: code })
+    .eq('id', tenantId)
+  if (error) throw error
+  return code
 }
 
 export class TenantCreateError extends Error {
