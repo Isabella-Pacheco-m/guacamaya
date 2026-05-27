@@ -46,6 +46,9 @@ body {
   .border-electric { border-color: rgb(var(--color-electric)); }
   .border-electric\/30 { border-color: rgb(var(--color-electric) / 0.3); }
   .accent-electric { accent-color: rgb(var(--color-electric)); }
+  .hover\:text-electric:hover { color: rgb(var(--color-electric)); }
+  .hover\:border-electric:hover { border-color: rgb(var(--color-electric)); }
+  .hover\:bg-electric\/90:hover { background-color: rgb(var(--color-electric) / 0.9); }
   .ring-electric\/30 { --tw-ring-color: rgb(var(--color-electric) / 0.3); }
 
   .focus\:border-electric:focus { border-color: rgb(var(--color-electric)); }
@@ -62,4 +65,11 @@ body {
       radial-gradient(80% 60% at 0% 100%, rgb(var(--color-electric) / 0.05), transparent 60%),
       var(--color-surface);
   }
+}
+
+/* Puntos ganados que flotan hacia arriba al simular una compra (landing). */
+@keyframes floatup {
+  0% { opacity: 0; transform: translateY(6px); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-12px); }
 }

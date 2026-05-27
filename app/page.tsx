@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@auth0/nextjs-auth0'
@@ -14,6 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { TenantPwaHome } from '@/components/pwa/TenantPwaHome'
 import { TenantTheme } from '@/components/pwa/TenantTheme'
+import { RootLanding } from '@/components/pwa/RootLanding'
 
 export const dynamic = 'force-dynamic'
 
@@ -150,47 +150,7 @@ async function renderRootHome(errorCode: string | undefined) {
   const errorMsg = mapError(errorCode)
 
   return (
-    <main className="min-h-screen bg-tenant-halo flex items-center justify-center px-6">
-      <div className="max-w-md w-full text-center">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-6">
-          SaaS multi-tenant
-        </p>
-        <Image
-          src="/logo-light.png"
-          alt="Guacamaya"
-          width={280}
-          height={120}
-          priority
-          className="h-auto w-[220px] mx-auto mb-6"
-        />
-        <p className="text-muted mb-10 text-sm max-w-xs mx-auto">
-          Club de miembros con marca propia para tu negocio.
-        </p>
-
-        {errorMsg && (
-          <div className="mb-8 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-4 py-3 text-left">
-            {errorMsg}
-          </div>
-        )}
-
-        {session?.user ? (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-muted">
-              Tu cuenta no está vinculada a ningún tenant.
-            </p>
-            <a href="/api/auth/logout">
-              <Button variant="secondary" className="w-full">
-                Cerrar sesión
-              </Button>
-            </a>
-          </div>
-        ) : (
-          <a href="/api/auth/login">
-            <Button className="w-full">Ingresar</Button>
-          </a>
-        )}
-      </div>
-    </main>
+    <RootLanding sessionUnlinked={Boolean(session?.user)} errorMsg={errorMsg} />
   )
 }
 
