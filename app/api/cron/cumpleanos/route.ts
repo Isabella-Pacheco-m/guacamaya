@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabaseAdmin.rpc('regalar_cumpleanos_hoy')
   if (error) {
     console.error('regalar_cumpleanos_hoy fallo', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, ...data })

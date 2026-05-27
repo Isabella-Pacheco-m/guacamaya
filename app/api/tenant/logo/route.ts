@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     })
   if (upErr) {
     console.error('upload logo', upErr)
-    return NextResponse.json({ error: upErr.message }, { status: 500 })
+    return NextResponse.json({ error: 'No se pudo subir el logo' }, { status: 500 })
   }
 
   const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path)
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     // Si falla el update, intentamos borrar el archivo huérfano y devolver el error.
     await supabaseAdmin.storage.from(BUCKET).remove([path]).catch(() => {})
     console.error('update tenant.logo_url', dbErr)
-    return NextResponse.json({ error: dbErr.message }, { status: 500 })
+    return NextResponse.json({ error: 'No se pudo guardar el logo' }, { status: 500 })
   }
 
   return NextResponse.json({ tenant })
@@ -140,7 +140,7 @@ export async function DELETE(req: NextRequest) {
     .single()
   if (error) {
     console.error('clear tenant.logo_url', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'No se pudo eliminar el logo' }, { status: 500 })
   }
 
   return NextResponse.json({ tenant: updated })
