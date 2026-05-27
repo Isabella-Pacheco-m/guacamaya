@@ -28,7 +28,6 @@ export function CreateTenantForm() {
   const [nombre, setNombre] = useState('')
   const [slug, setSlug] = useState('')
   const [emailDueno, setEmailDueno] = useState('')
-  const [puntosPorMil, setPuntosPorMil] = useState('1')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{
@@ -42,10 +41,7 @@ export function CreateTenantForm() {
   const slugValido =
     slugClean.length >= 2 && SLUG_RE.test(slugClean) && !slugClean.includes('--')
   const emailValido = EMAIL_RE.test(emailDueno.trim().toLowerCase())
-  const ppmInt = parseInt(puntosPorMil, 10)
-  const ppmValido = Number.isInteger(ppmInt) && ppmInt >= 1 && ppmInt <= 100
-  const formValido =
-    nombre.trim().length > 0 && slugValido && emailValido && ppmValido
+  const formValido = nombre.trim().length > 0 && slugValido && emailValido
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -58,7 +54,6 @@ export function CreateTenantForm() {
       const data = await createTenantAction({
         nombre: nombre.trim(),
         slug: slugClean,
-        puntos_por_mil: ppmInt,
         email_dueno: emailDueno.trim().toLowerCase(),
       })
       if (!data.ok || !data.tenant || !data.invitation) {
@@ -205,22 +200,6 @@ export function CreateTenantForm() {
         value={emailDueno}
         onChange={(e) => setEmailDueno(e.target.value)}
         hint="Solo se muestra como referencia — el enlace de invitación es lo que da acceso."
-        required
-      />
-
-      <Input
-        name="puntos_por_mil"
-        label="Puntos por cada $1.000 COP"
-        type="number"
-        min={1}
-        max={100}
-        step={1}
-        value={puntosPorMil}
-        onChange={(e) => setPuntosPorMil(e.target.value)}
-        hint="El dueño puede ajustarlo después desde su panel de marca."
-        error={
-          puntosPorMil && !ppmValido ? 'Entero entre 1 y 100' : undefined
-        }
         required
       />
 

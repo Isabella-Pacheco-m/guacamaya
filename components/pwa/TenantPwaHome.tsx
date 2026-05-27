@@ -50,7 +50,7 @@ export function TenantPwaHome({
               <img
                 src={tenant.logo_url}
                 alt={tenant.nombre}
-                className="h-11 w-11 lg:h-14 lg:w-14 rounded-md object-contain shrink-0"
+                className="h-16 w-16 lg:h-20 lg:w-20 rounded-md object-contain shrink-0"
               />
             )}
             <div className="min-w-0">

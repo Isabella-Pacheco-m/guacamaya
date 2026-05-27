@@ -33,10 +33,10 @@ export default async function SuperadminLayout({
             <Image
               src="/logo-dark.png"
               alt="Guacamaya"
-              width={140}
-              height={60}
+              width={180}
+              height={78}
               priority
-              className="h-7 w-auto"
+              className="h-10 w-auto"
             />
             <span className="text-xs text-white/50 border-l border-white/15 pl-3 hidden sm:inline">
               Superadmin
