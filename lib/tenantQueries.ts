@@ -173,6 +173,23 @@ export async function updateRecompensa(
   return data as Recompensa
 }
 
+// Borrado duro, tenant-scoped. Es seguro: ninguna tabla referencia
+// recompensas por FK — el canje denormaliza el nombre en transacciones.nota,
+// así que el historial se conserva aunque se borre la recompensa.
+export async function deleteRecompensa(
+  tenantId: string,
+  id: string
+): Promise<void> {
+  const { data, error } = await supabaseAdmin
+    .from('recompensas')
+    .delete()
+    .eq('tenant_id', tenantId)
+    .eq('id', id)
+    .select('id')
+  if (error) throw error
+  if (!data || data.length === 0) throw new RecompensaNotFoundError()
+}
+
 // =====================================================================
 // Canjes
 // =====================================================================

@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { CreateRecompensaForm } from '@/components/admin/CreateRecompensaForm'
 import { ToggleRecompensaActiva } from '@/components/admin/ToggleRecompensaActiva'
+import { DeleteRecompensa } from '@/components/admin/DeleteRecompensa'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,8 +59,11 @@ export default async function RecompensasPage() {
                     <td className="px-6 py-4">
                       <StatusBadge active={r.activa} />
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <ToggleRecompensaActiva id={r.id} activa={r.activa} />
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-4">
+                        <ToggleRecompensaActiva id={r.id} activa={r.activa} />
+                        <DeleteRecompensa id={r.id} />
+                      </div>
                     </td>
                   </tr>
                 ))}

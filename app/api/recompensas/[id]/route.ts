@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminTenantId } from '@/lib/api-auth'
 import {
   updateRecompensa,
+  deleteRecompensa,
   RecompensaNotFoundError,
 } from '@/lib/tenantQueries'
 
@@ -86,6 +87,29 @@ export async function PATCH(
       return NextResponse.json({ error: err.message }, { status: 404 })
     }
     console.error('PATCH /api/recompensas/[id]', err)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const auth = await requireAdminTenantId(req)
+  if (!auth.ok) return auth.res
+
+  if (!UUID_RE.test(params.id)) {
+    return NextResponse.json({ error: 'id inválido' }, { status: 400 })
+  }
+
+  try {
+    await deleteRecompensa(auth.tenantId, params.id)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    if (err instanceof RecompensaNotFoundError) {
+      return NextResponse.json({ error: err.message }, { status: 404 })
+    }
+    console.error('DELETE /api/recompensas/[id]', err)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
