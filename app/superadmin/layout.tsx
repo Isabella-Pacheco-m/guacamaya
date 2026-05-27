@@ -7,7 +7,7 @@ import { requireSuperadmin } from '@/lib/superadmin-auth'
 export const dynamic = 'force-dynamic'
 
 const NAV = [
-  { href: '/superadmin', label: 'Tenants' },
+  { href: '/superadmin', label: 'Dashboard' },
 ]
 
 export default async function SuperadminLayout({
@@ -28,9 +28,19 @@ export default async function SuperadminLayout({
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
           <Link
             href="/superadmin"
-            className="text-lime font-medium tracking-tight"
+            className="flex items-center gap-3 shrink-0"
           >
-            Guacamaya · Superadmin
+            <Image
+              src="/logo-dark.png"
+              alt="Guacamaya"
+              width={140}
+              height={60}
+              priority
+              className="h-7 w-auto"
+            />
+            <span className="text-xs text-white/50 border-l border-white/15 pl-3 hidden sm:inline">
+              Superadmin
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">

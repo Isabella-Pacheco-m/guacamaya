@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getSession } from '@auth0/nextjs-auth0'
@@ -151,12 +152,17 @@ async function renderRootHome(errorCode: string | undefined) {
   return (
     <main className="min-h-screen bg-tenant-halo flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-4">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-6">
           SaaS multi-tenant
         </p>
-        <h1 className="text-[56px] font-light leading-[0.95] tracking-tight mb-4">
-          Guacamaya
-        </h1>
+        <Image
+          src="/logo-light.png"
+          alt="Guacamaya"
+          width={280}
+          height={120}
+          priority
+          className="h-auto w-[220px] mx-auto mb-6"
+        />
         <p className="text-muted mb-10 text-sm max-w-xs mx-auto">
           Club de miembros con marca propia para tu negocio.
         </p>

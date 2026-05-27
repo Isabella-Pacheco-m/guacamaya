@@ -101,11 +101,15 @@ export default async function AdminLayout({
       {/* Sidebar — desktop */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-graphite text-white lg:sticky lg:top-0 lg:h-screen">
         <div className="px-6 py-6">
-          <Link
-            href="/admin/dashboard"
-            className="text-lime text-lg font-medium tracking-tight"
-          >
-            Guacamaya
+          <Link href="/admin/dashboard" className="inline-flex">
+            <Image
+              src="/logo-dark.png"
+              alt="Guacamaya"
+              width={140}
+              height={60}
+              priority
+              className="h-7 w-auto"
+            />
           </Link>
         </div>
 
@@ -156,11 +160,14 @@ export default async function AdminLayout({
       {/* Top bar — móvil */}
       <header className="lg:hidden bg-graphite text-white sticky top-0 z-20">
         <div className="px-5 py-3 flex items-center justify-between">
-          <Link
-            href="/admin/dashboard"
-            className="text-lime font-medium tracking-tight"
-          >
-            Guacamaya
+          <Link href="/admin/dashboard" className="inline-flex">
+            <Image
+              src="/logo-dark.png"
+              alt="Guacamaya"
+              width={140}
+              height={60}
+              className="h-6 w-auto"
+            />
           </Link>
           <a
             href="/api/auth/logout"
