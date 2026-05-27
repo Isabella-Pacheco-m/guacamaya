@@ -1,33 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
 const ROOT_DOMAIN = 'guacamaya.net'
 
-// Rate limiting básico en memoria, solo para /api. Es best-effort: el estado
-// vive por isolate del edge, no es compartido. Para límites distribuidos y
-// persistentes, mover a Vercel WAF o Upstash Redis.
-const RATE_WINDOW_MS = 20_000
-const RATE_MAX = 60
-const rateHits = new Map<string, { count: number; resetAt: number }>()
+// Rate limiting por IP en /api con Upstash Redis (distribuido entre instancias).
+// Límite estricto en el redeem de invitaciones por ser objetivo de fuerza bruta
+// de tokens. Si faltan las env vars (dev sin credenciales), cae a un limitador
+// en memoria best-effort para no bloquear el desarrollo local.
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null
 
-function isRateLimited(ip: string): boolean {
+const apiLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(100, '60 s'),
+      prefix: 'rl:api',
+      ephemeralCache: new Map(),
+    })
+  : null
+
+const redeemLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, '60 s'),
+      prefix: 'rl:redeem',
+      ephemeralCache: new Map(),
+    })
+  : null
+
+// Fallback en memoria (best-effort, por isolate) cuando no hay Upstash.
+const memHits = new Map<string, { count: number; resetAt: number }>()
+function memLimited(ip: string, max: number, windowMs: number): boolean {
   const now = Date.now()
-  const entry = rateHits.get(ip)
+  const entry = memHits.get(ip)
   if (!entry || now > entry.resetAt) {
-    rateHits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS })
-    if (rateHits.size > 10_000) {
-      for (const [k, v] of rateHits) if (now > v.resetAt) rateHits.delete(k)
+    memHits.set(ip, { count: 1, resetAt: now + windowMs })
+    if (memHits.size > 10_000) {
+      for (const [k, v] of memHits) if (now > v.resetAt) memHits.delete(k)
     }
     return false
   }
   entry.count += 1
-  return entry.count > RATE_MAX
+  return entry.count > max
 }
 
-export function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname.startsWith('/api/')) {
-    const ip =
-      req.ip ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-    if (isRateLimited(ip)) {
+function clientIp(req: NextRequest): string {
+  return req.ip ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+}
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
+
+  if (pathname.startsWith('/api/')) {
+    const ip = clientIp(req)
+    const isRedeem = pathname.startsWith('/api/invitaciones/redeem')
+    const limiter = isRedeem ? redeemLimiter : apiLimiter
+
+    let limited: boolean
+    if (limiter) {
+      limited = !(await limiter.limit(ip)).success
+    } else {
+      limited = isRedeem ? memLimited(`r:${ip}`, 10, 60_000) : memLimited(ip, 100, 60_000)
+    }
+    if (limited) {
       return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
     }
   }
