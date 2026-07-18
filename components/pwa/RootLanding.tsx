@@ -228,8 +228,10 @@ export function RootLanding({
                 ))}
               </div>
 
+              {/* Altura fija: las dos caras miden lo mismo, así la tarjeta no
+                  salta de tamaño al alternar entre Puntos y Comunidad. */}
               {cara === 'puntos' ? (
-                <div className="relative">
+                <div className="relative min-h-[430px] flex flex-col">
                   <div className="flex items-center justify-between mb-5">
                     <span className="text-[11px] uppercase tracking-[0.18em] text-white/45">
                       Tu tarjeta
@@ -276,7 +278,7 @@ export function RootLanding({
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-6">
+                  <div className="space-y-2 mb-6 flex-1">
                     {RECOMPENSAS.map((r) => {
                       const ok = puntos >= r.costo
                       return (
@@ -331,7 +333,7 @@ export function RootLanding({
                   </p>
                 </div>
               ) : (
-                <div className="relative">
+                <div className="relative min-h-[430px] flex flex-col">
                   <span className="text-[11px] uppercase tracking-[0.18em] text-white/45">
                     Su comunidad
                   </span>
@@ -379,7 +381,7 @@ export function RootLanding({
                     </div>
                   </div>
 
-                  <p className="text-[13px] text-white/70 leading-relaxed mt-5">
+                  <p className="text-[13px] text-white/70 leading-relaxed mt-auto pt-5">
                     Una tarjeta de sellos premia la compra.{' '}
                     <span className="text-lime">Una comunidad crea el vínculo</span>{' '}
                     que hace que vuelvan.
@@ -425,34 +427,32 @@ export function RootLanding({
           </div>
 
           <div className="grid gap-8 sm:gap-6 sm:grid-cols-3">
+            {/* El desfase editorial se aplica al ARTICLE completo, no por
+                separado a imagen y texto: así la distancia imagen→texto es
+                idéntica en las tres tarjetas. */}
             {PILARES.map((p, i) => (
-              <article key={p.src} className="flex flex-col">
-                <div
-                  className={
-                    'relative overflow-hidden rounded-lg ring-1 ring-graphite/[0.06] shadow-card mb-5 ' +
-                    // Alturas alternas: ritmo editorial en vez de tres cajas iguales.
-                    (i === 1 ? 'sm:mt-10' : '')
-                  }
-                >
+              <article
+                key={p.src}
+                className={'flex flex-col ' + (i === 1 ? 'sm:mt-12' : '')}
+              >
+                <div className="relative overflow-hidden rounded-lg ring-1 ring-graphite/[0.06] shadow-card mb-5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.src}
                     alt={p.alt}
                     loading="lazy"
-                    className="h-full w-full object-cover aspect-[4/5] transition-transform duration-700 hover:scale-[1.04]"
+                    className="h-full w-full object-cover aspect-[5/4] transition-transform duration-700 hover:scale-[1.04]"
                   />
                   <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-graphite bg-lime rounded-full px-3 py-1.5">
                     {p.kicker}
                   </span>
                 </div>
-                <div className={i === 1 ? 'sm:mt-10' : ''}>
-                  <h3 className="text-xl font-medium leading-tight tracking-tight mb-2">
-                    {p.titulo}
-                  </h3>
-                  <p className="text-[15px] text-muted leading-relaxed">
-                    {p.texto}
-                  </p>
-                </div>
+                <h3 className="text-xl font-medium leading-tight tracking-tight mb-2">
+                  {p.titulo}
+                </h3>
+                <p className="text-[15px] text-muted leading-relaxed">
+                  {p.texto}
+                </p>
               </article>
             ))}
           </div>
@@ -461,23 +461,75 @@ export function RootLanding({
 
       {/* ══════════ Cierre ══════════ */}
       <section className="px-6 pb-24">
-        <div className="max-w-4xl mx-auto rounded-lg bg-graphite text-white px-8 py-14 text-center relative overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full opacity-20 blur-3xl"
-            style={{ background: 'var(--color-lime, #EBBA4F)' }}
-          />
-          <div className="relative">
-            <h2 className="text-[28px] sm:text-[36px] font-light leading-tight tracking-tight mb-4">
-              Tu club, tu marca, tu subdominio.
-            </h2>
-            <p className="text-white/60 text-[15px] leading-relaxed max-w-md mx-auto mb-8">
-              Tus clientes lo instalan en su celular y entran con tu nombre
-              arriba — no con el nuestro.
-            </p>
-            <a href="/api/auth/login" className="inline-block">
-              <Button className="px-10">Ingresar</Button>
-            </a>
+        <div className="max-w-4xl mx-auto">
+          {/* La pieza es el propio subdominio: en vez de un banner con botón,
+              se muestra la URL del club como si ya existiera. */}
+          <div className="relative rounded-lg bg-graphite text-white overflow-hidden">
+            <div
+              aria-hidden
+              className="absolute -top-20 -right-10 h-72 w-72 rounded-full opacity-[0.18] blur-3xl"
+              style={{ background: 'var(--color-lime, #EBBA4F)' }}
+            />
+
+            <div className="relative px-7 sm:px-12 py-12 sm:py-16">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-lime/80 mb-5">
+                Y así se ve el tuyo
+              </p>
+
+              {/* Barra de navegador con el subdominio del club */}
+              <div className="inline-flex items-center gap-2.5 rounded-full bg-white/[0.07] ring-1 ring-white/10 pl-3 pr-4 py-2 mb-7 max-w-full">
+                <span className="flex gap-1.5 shrink-0" aria-hidden>
+                  <span className="h-2 w-2 rounded-full bg-white/20" />
+                  <span className="h-2 w-2 rounded-full bg-white/20" />
+                  <span className="h-2 w-2 rounded-full bg-white/20" />
+                </span>
+                <span className="text-sm font-mono truncate">
+                  <span className="text-lime">tunegocio</span>
+                  <span className="text-white/45">.guacamaya.net</span>
+                </span>
+              </div>
+
+              <h2 className="text-[30px] sm:text-[40px] font-light leading-[1.08] tracking-tight mb-4 max-w-2xl">
+                Tu nombre arriba.
+                <br />
+                El nuestro, en ninguna parte.
+              </h2>
+
+              <p className="text-white/60 text-[15px] leading-relaxed max-w-lg mb-9">
+                Tus clientes lo instalan en el celular como cualquier app y
+                entran a <span className="text-white/90">tu</span> club — con tu
+                logo, tus colores y tu comunidad adentro.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <a href="/api/auth/login">
+                  <Button className="px-10">Ingresar</Button>
+                </a>
+                <p className="text-[13px] text-white/45">
+                  ¿Ya tienes club? Entra con el correo de tu negocio.
+                </p>
+              </div>
+            </div>
+
+            {/* Cinta inferior: el guiño artesanal de la marca */}
+            <div className="relative border-t border-white/10 py-4 overflow-hidden">
+              <div className="flex w-max animate-marquee">
+                {[0, 1].map((copy) => (
+                  <div key={copy} className="flex shrink-0" aria-hidden={copy === 1}>
+                    {['Puntos', 'Sellos', 'Comunidad', 'Retos', 'Galería', 'Sorteos'].map(
+                      (w) => (
+                        <span
+                          key={`${copy}-${w}`}
+                          className="mx-5 text-[13px] uppercase tracking-[0.18em] text-white/35 whitespace-nowrap"
+                        >
+                          {w} <span className="text-lime/50">✦</span>
+                        </span>
+                      )
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -41,19 +41,21 @@ export function NotasBoard({
           return (
             <div
               key={n.id}
-              className={`flex flex-col rounded-xl p-4 shadow-[0_6px_16px_-8px_rgba(42,35,32,0.3)] transition-transform hover:rotate-0 ${rot}`}
+              // aspect-square: un post-it real es cuadrado. El texto se recorta
+              // si no cabe, en vez de estirar la nota.
+              className={`aspect-square flex flex-col overflow-hidden rounded-xl p-4 shadow-[0_6px_16px_-8px_rgba(42,35,32,0.3)] transition-transform hover:rotate-0 ${rot}`}
               style={{ background: s.bg, border: `1px solid ${s.border}` }}
             >
               {n.pinned && (
                 <span
-                  className="self-start mb-1.5 text-[9px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5"
+                  className="self-start mb-1.5 text-[9px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0"
                   style={{ background: s.text, color: s.bg }}
                 >
                   Fijada
                 </span>
               )}
               <p
-                className="text-[13px] leading-relaxed whitespace-pre-wrap flex-1"
+                className="text-[13px] leading-relaxed whitespace-pre-wrap flex-1 min-h-0 overflow-hidden"
                 style={{ color: s.text }}
               >
                 {n.cuerpo}

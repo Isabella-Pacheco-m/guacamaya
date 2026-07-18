@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { estaRevelado, type Lanzamiento } from '@/lib/lanzamientos'
+// Desde el cliente SIEMPRE se importa del módulo shared: `lib/lanzamientos`
+// arrastra supabase-admin y rompería el bundle del navegador.
+import { estaRevelado, type Lanzamiento } from '@/lib/lanzamientos-shared'
 
 function parts(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000))
