@@ -33,17 +33,19 @@ const RECOMPENSAS = [
   { nombre: 'Combo VIP', costo: 2000 },
 ]
 
-const FEATURES = [
-  'Puntos',
-  'Niveles',
-  'Recompensas',
-  'Tarjeta de sellos',
-  'Sorteos',
-  'Retos',
-  'Galería',
-  'Lanzamientos',
-  'Notas',
-  'Cumpleaños',
+// Cada funcionalidad lleva su punto de color: la marquesina deja de ser una
+// tira gris y se vuelve parte de la paleta.
+const FEATURES: { label: string; color: string }[] = [
+  { label: 'Puntos', color: '#EBBA4F' },
+  { label: 'Niveles', color: '#C2603C' },
+  { label: 'Recompensas', color: '#D89B7A' },
+  { label: 'Tarjeta de sellos', color: '#7E8C5A' },
+  { label: 'Sorteos', color: '#EBBA4F' },
+  { label: 'Retos', color: '#C2603C' },
+  { label: 'Galería', color: '#D89B7A' },
+  { label: 'Lanzamientos', color: '#7E8C5A' },
+  { label: 'Notas', color: '#EBBA4F' },
+  { label: 'Cumpleaños', color: '#C2603C' },
 ]
 
 // Cada foto ilustra una capacidad concreta — no son decoración.
@@ -202,15 +204,11 @@ export function RootLanding({
 
           {/* ── Demo de dos caras ── */}
           <div className="w-full max-w-sm mx-auto">
-            <div className="relative rounded-[28px] bg-graphite text-white p-6 shadow-[0_20px_60px_-20px_rgba(42,35,32,0.55)] overflow-hidden">
-              <div
-                aria-hidden
-                className="absolute -top-20 -right-16 h-52 w-52 rounded-full opacity-25 blur-3xl"
-                style={{ background: 'var(--color-lime, #EBBA4F)' }}
-              />
-
+            {/* Plana a propósito: sin halos ni degradados. El contraste lo pone
+                el color sólido contra el crema de la página. */}
+            <div className="relative rounded-[28px] bg-graphite text-white p-6 ring-1 ring-graphite/20 shadow-[0_16px_40px_-24px_rgba(42,35,32,0.5)]">
               {/* Selector de cara: el mensaje es que hay más que sellos */}
-              <div className="relative flex gap-1 p-1 rounded-full bg-white/[0.07] mb-6">
+              <div className="relative flex gap-1 p-1 rounded-full bg-white/[0.06] mb-7">
                 {(['puntos', 'comunidad'] as const).map((c) => (
                   <button
                     key={c}
@@ -220,7 +218,7 @@ export function RootLanding({
                       'flex-1 rounded-full px-3 py-2 text-xs font-medium transition-colors ' +
                       (cara === c
                         ? 'bg-lime text-graphite'
-                        : 'text-white/60 hover:text-white')
+                        : 'text-white/55 hover:text-white')
                     }
                   >
                     {c === 'puntos' ? 'Puntos y premios' : 'Comunidad'}
@@ -278,34 +276,33 @@ export function RootLanding({
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-6 flex-1">
+                  {/* Lista con hairlines en vez de cajas rellenas: más limpia
+                      y deja respirar la tarjeta. */}
+                  <div className="mb-7 flex-1 divide-y divide-white/[0.08] border-y border-white/[0.08]">
                     {RECOMPENSAS.map((r) => {
                       const ok = puntos >= r.costo
                       return (
                         <div
                           key={r.nombre}
-                          className={
-                            'flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-colors ' +
-                            (ok ? 'bg-white/10' : 'bg-white/[0.03]')
-                          }
+                          className="flex items-center justify-between py-3 text-sm"
                         >
-                          <span className="flex items-center gap-2.5">
+                          <span className="flex items-center gap-3">
                             <span
                               className={
-                                'grid place-items-center h-5 w-5 rounded-full text-[11px] transition-colors ' +
+                                'grid place-items-center h-[18px] w-[18px] rounded-full text-[10px] transition-colors ' +
                                 (ok
                                   ? 'bg-lime text-graphite'
-                                  : 'bg-white/10 text-white/40')
+                                  : 'border border-white/20 text-transparent')
                               }
                             >
-                              {ok ? '✓' : '·'}
+                              ✓
                             </span>
-                            <span className={ok ? 'text-white' : 'text-white/45'}>
+                            <span className={ok ? 'text-white' : 'text-white/40'}>
                               {r.nombre}
                             </span>
                           </span>
-                          <span className="tabular-nums text-xs text-white/40">
-                            {nf.format(r.costo)} pts
+                          <span className="tabular-nums text-xs text-white/35">
+                            {nf.format(r.costo)}
                           </span>
                         </div>
                       )
@@ -394,17 +391,22 @@ export function RootLanding({
       </section>
 
       {/* ══════════ Marquesina de funcionalidades ══════════ */}
-      <section className="py-6 border-y border-border/70 bg-white/40 overflow-hidden">
+      <section className="py-7 border-y border-border/70 bg-white/40 overflow-hidden marquee-fade">
         <div className="flex w-max animate-marquee">
           {/* Duplicado: permite el bucle sin costura (ver @keyframes marquee) */}
           {[0, 1].map((copy) => (
             <div key={copy} className="flex shrink-0" aria-hidden={copy === 1}>
               {FEATURES.map((f) => (
                 <span
-                  key={`${copy}-${f}`}
-                  className="mx-2 whitespace-nowrap text-sm font-medium text-graphite/75 bg-white border border-border rounded-full px-5 py-2"
+                  key={`${copy}-${f.label}`}
+                  className="mx-2 inline-flex items-center gap-2.5 whitespace-nowrap text-sm font-medium text-graphite/80 bg-white border border-border rounded-full pl-3.5 pr-5 py-2"
                 >
-                  {f}
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 rounded-full shrink-0"
+                    style={{ background: f.color }}
+                  />
+                  {f.label}
                 </span>
               ))}
             </div>
@@ -491,6 +493,33 @@ export function RootLanding({
                 </div>
               </div>
 
+              {/* Guacamaya en vuelo con su estela: el guiño de correo aéreo que
+                  ata la postal con la marca. Decorativa, se oculta en móvil. */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute right-6 bottom-4 hidden lg:block w-[230px]"
+              >
+                <svg
+                  viewBox="0 0 220 90"
+                  fill="none"
+                  className="absolute -left-24 top-8 w-[190px] text-electric/50"
+                >
+                  <path
+                    d="M2 76C40 76 52 14 96 14c30 0 40 40 74 40"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray="1 9"
+                  />
+                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/img/guacamaya-volando.png"
+                  alt=""
+                  className="relative w-[130px] h-auto opacity-90 -rotate-6"
+                />
+              </div>
+
               <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-5">
                 Para quien abre cada mañana
               </p>
@@ -518,7 +547,8 @@ export function RootLanding({
                 por ningún lado.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {/* lg:pr-64 reserva el carril de la guacamaya en vuelo */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:pr-64">
                 <a href="/api/auth/login">
                   <Button className="px-10">Ingresar</Button>
                 </a>
