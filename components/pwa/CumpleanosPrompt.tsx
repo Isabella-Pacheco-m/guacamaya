@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 
@@ -64,12 +65,24 @@ export function CumpleanosPrompt({
   if (savedMes != null) {
     return (
       <Card className="mb-6">
-        <p className="text-xs uppercase tracking-wider text-muted mb-1">
-          Mes de cumpleaños
-        </p>
-        <p className="text-graphite">
-          {MESES[savedMes - 1]} — recibirás ofertas especiales ese mes.
-        </p>
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-wider text-muted mb-1">
+              Mes de cumpleaños
+            </p>
+            <p className="text-graphite">
+              {MESES[savedMes - 1]} — recibirás ofertas especiales ese mes.
+            </p>
+          </div>
+          <Image
+            src="/img/cake.png"
+            alt=""
+            width={153}
+            height={160}
+            className="h-12 w-auto shrink-0"
+            aria-hidden
+          />
+        </div>
       </Card>
     )
   }

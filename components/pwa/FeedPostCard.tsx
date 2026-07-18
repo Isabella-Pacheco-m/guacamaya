@@ -43,12 +43,14 @@ export function FeedPostCard({
       {/* Encabezado: autor */}
       <div className="flex items-center gap-3 px-5 pt-5 pb-4">
         {!esMiembro && tenant.logo_url ? (
-          <span className="h-11 w-11 rounded-full bg-surface ring-1 ring-black/[0.06] shrink-0 overflow-hidden flex items-center justify-center">
+          <span className="h-11 w-11 rounded-full bg-white ring-1 ring-black/[0.06] shrink-0 overflow-hidden flex items-center justify-center">
+            {/* object-cover sin padding: el logo llena el círculo completo,
+                como una foto de perfil — con contain quedaba un margen. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={tenant.logo_url}
               alt=""
-              className="h-full w-full object-contain p-1.5"
+              className="h-full w-full object-cover"
             />
           </span>
         ) : esMiembro ? (
