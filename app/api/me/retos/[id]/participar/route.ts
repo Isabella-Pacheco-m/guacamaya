@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { randomUUID } from 'node:crypto'
 import { requireClienteContext } from '@/lib/api-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { esImagenValida } from '@/lib/imagen'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
   participarReto,
@@ -61,6 +62,12 @@ export async function POST(
     // público y con miembroId+timestamp la URL era semi-adivinable.
     const path = `${retoEvidenciaPrefix(auth.tenant.id, params.id)}${auth.miembro.id}-${randomUUID()}.${ext}`
     const buf = Buffer.from(await file.arrayBuffer())
+    if (!esImagenValida(buf, file.type)) {
+      return NextResponse.json(
+        { error: 'El archivo no es una imagen válida' },
+        { status: 400 }
+      )
+    }
     const { error: upErr } = await supabaseAdmin.storage
       .from(RETOS_BUCKET)
       .upload(path, buf, { contentType: file.type, upsert: false, cacheControl: '3600' })

@@ -15,6 +15,7 @@ import { CumpleanosPrompt } from '@/components/pwa/CumpleanosPrompt'
 import { TarjetaCliente } from '@/components/pwa/TarjetaCliente'
 import { AvatarUploader } from '@/components/pwa/AvatarUploader'
 import { notaColorStyle } from '@/lib/notas'
+import { NIVEL_PROGRESO } from '@/lib/business'
 
 const COP = new Intl.NumberFormat('es-CO')
 const venceFmt = new Intl.DateTimeFormat('es-CO', {
@@ -23,11 +24,6 @@ const venceFmt = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
 })
 
-const NIVEL_PROGRESO: Record<Miembro['nivel'], { siguiente: string | null; meta: number | null }> = {
-  BRONCE: { siguiente: 'PLATA', meta: 500 },
-  PLATA: { siguiente: 'ORO', meta: 2000 },
-  ORO: { siguiente: null, meta: null },
-}
 
 /** Anticipo de la comunidad que se muestra en la home. */
 export interface ComunidadPreview {

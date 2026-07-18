@@ -3,6 +3,7 @@
 // BUILD en vez de reventar en el navegador con "supabaseKey is required".
 import 'server-only'
 
+import { cache } from 'react'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import {
   DEFAULT_TENANT_FEATURES,
@@ -28,7 +29,13 @@ const DEFAULT_FLAGS = DEFAULT_TENANT_FEATURES
 const SELECT =
   'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, notas_enabled, galeria_enabled, galeria_puntos, lanzamientos_enabled, retos_enabled, ranking_enabled, feed_miembros_pueden_publicar, registro_abierto, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello, tarjeta_fondo_tipo, tarjeta_color_fondo2, tarjeta_sello_url'
 
-export async function getTenantFeatures(tenantId: string): Promise<TenantFeatures> {
+// Memoizada POR REQUEST (React cache): el layout admin y casi todas las
+// páginas la piden en el mismo render. Solo lectura — updateTenantFeatures
+// corre en requests separados (PATCH), así que no hay riesgo de leer stale
+// después de mutar.
+export const getTenantFeatures = cache(_getTenantFeatures)
+
+async function _getTenantFeatures(tenantId: string): Promise<TenantFeatures> {
   const { data, error } = await supabaseAdmin
     .from('tenant_features')
     .select(SELECT)

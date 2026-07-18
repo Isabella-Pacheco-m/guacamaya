@@ -4,6 +4,7 @@
 import 'server-only'
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { esImagenValida } from '@/lib/imagen'
 import {
   estaRevelado,
   type Lanzamiento,
@@ -54,6 +55,9 @@ export async function uploadLanzamientoBanner(
     throw new LanzamientoError('Imagen demasiado grande (máximo 4 MB)', 413)
   const path = `${lanzamientoPrefix(tenantId)}${Date.now()}.${ext}`
   const buf = Buffer.from(await file.arrayBuffer())
+  if (!esImagenValida(buf, file.type)) {
+    throw new LanzamientoError('El archivo no es una imagen válida', 400)
+  }
   const { error } = await supabaseAdmin.storage
     .from(LANZAMIENTO_BUCKET)
     .upload(path, buf, { contentType: file.type, upsert: false, cacheControl: '3600' })

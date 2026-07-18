@@ -4,6 +4,7 @@
 import 'server-only'
 
 import crypto from 'node:crypto'
+import { cache } from 'react'
 import { headers } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureTenantFeaturesRow } from '@/lib/tenant-features'
@@ -68,13 +69,17 @@ async function selectTenant(
   }
 }
 
-export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
-  return selectTenant('slug', slug)
-}
+// cache() de React: memoiza POR REQUEST (no entre requests). Una página admin
+// típica resuelve el tenant 2–3 veces (guard + layout + página); con esto la
+// segunda llamada con el mismo argumento no vuelve a la DB. Solo lecturas —
+// las mutaciones (updateTenant, etc.) no se envuelven jamás.
+export const getTenantBySlug = cache(
+  async (slug: string): Promise<Tenant | null> => selectTenant('slug', slug)
+)
 
-export async function getTenantById(id: string): Promise<Tenant | null> {
-  return selectTenant('id', id)
-}
+export const getTenantById = cache(
+  async (id: string): Promise<Tenant | null> => selectTenant('id', id)
+)
 
 export async function getTenantFromRequest(): Promise<Tenant> {
   const slug = headers().get('x-tenant-slug')
@@ -188,21 +193,22 @@ export async function findTenantByAdminEmail(
   return (data as { id: string; slug: string } | null) ?? null
 }
 
-export async function isAdminOfTenant(
-  tenantId: string,
-  email: string
-): Promise<boolean> {
-  const e = email.trim().toLowerCase()
-  if (!e) return false
-  const { data, error } = await supabaseAdmin
-    .from('tenants')
-    .select('id')
-    .eq('id', tenantId)
-    .eq('admin_email', e)
-    .maybeSingle()
-  if (error) throw error
-  return Boolean(data)
-}
+// Memoizada por request (React cache): los guards de página y de API la
+// llaman con los mismos argumentos dentro del mismo render.
+export const isAdminOfTenant = cache(
+  async (tenantId: string, email: string): Promise<boolean> => {
+    const e = email.trim().toLowerCase()
+    if (!e) return false
+    const { data, error } = await supabaseAdmin
+      .from('tenants')
+      .select('id')
+      .eq('id', tenantId)
+      .eq('admin_email', e)
+      .maybeSingle()
+    if (error) throw error
+    return Boolean(data)
+  }
+)
 
 // =====================================================================
 // Enlace de invitación a la comunidad (join_code reusable por tenant)
