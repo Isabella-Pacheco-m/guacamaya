@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { CADUCIDAD_MESES, caducidadLabel } from '@/lib/caducidad'
 
 const HEX_RE = /^#[0-9a-f]{6}$/i
 
@@ -11,12 +12,14 @@ export function MarcaForm({
   initialNombre,
   initialColor,
   initialPuntosCumpleanos,
+  initialPuntosCaducidadMeses,
   initialLogoUrl,
   initialBannerUrl,
 }: {
   initialNombre: string
   initialColor: string
   initialPuntosCumpleanos: number | null
+  initialPuntosCaducidadMeses: number | null
   initialLogoUrl: string | null
   initialBannerUrl: string | null
 }) {
@@ -32,6 +35,9 @@ export function MarcaForm({
     initialPuntosCumpleanos != null && initialPuntosCumpleanos > 0
       ? String(initialPuntosCumpleanos)
       : '100'
+  )
+  const [caducidad, setCaducidad] = useState<number | null>(
+    initialPuntosCaducidadMeses
   )
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl)
   const [logoLoading, setLogoLoading] = useState(false)
@@ -49,7 +55,8 @@ export function MarcaForm({
   const dirty =
     nombre.trim() !== initialNombre ||
     color.toUpperCase() !== initialColor.toUpperCase() ||
-    cumpleValor !== initialPuntosCumpleanos
+    cumpleValor !== initialPuntosCumpleanos ||
+    caducidad !== initialPuntosCaducidadMeses
   const colorValido = HEX_RE.test(color)
   const nombreValido = nombre.trim().length > 0
   const formValido = colorValido && nombreValido && cumpleValido
@@ -153,6 +160,7 @@ export function MarcaForm({
           nombre: nombre.trim(),
           color_primario: color,
           puntos_cumpleanos: cumpleValor,
+          puntos_caducidad_meses: caducidad,
         }),
       })
       const data = await res.json()
@@ -383,6 +391,48 @@ export function MarcaForm({
               </p>
             )}
           </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 border-t border-border pt-6">
+        <div>
+          <span className="text-sm font-medium text-graphite block">
+            Vencimiento de puntos
+          </span>
+          <span className="text-xs text-muted block mt-0.5">
+            Cada punto vence pasado este tiempo desde que se ganó. Se gastan
+            primero los más antiguos, así que a un cliente que visita seguido
+            casi nunca le vence nada. El nivel (Bronce/Plata/Oro) no se pierde.
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {[null, ...CADUCIDAD_MESES].map((op) => {
+            const activo = caducidad === op
+            return (
+              <button
+                key={op ?? 'nunca'}
+                type="button"
+                onClick={() => setCaducidad(op)}
+                aria-pressed={activo}
+                className={
+                  'rounded-full px-4 py-2 text-sm font-medium transition-colors border ' +
+                  (activo
+                    ? 'bg-graphite text-white border-graphite'
+                    : 'bg-white text-graphite border-border hover:border-graphite/40')
+                }
+              >
+                {op === null ? 'Nunca vencen' : caducidadLabel(op)}
+              </button>
+            )
+          })}
+        </div>
+
+        {caducidad !== null && (
+          <p className="text-xs text-muted bg-surface border border-border rounded-md px-3 py-2">
+            Tus clientes verán en su PWA cuántos puntos les vencen y en qué
+            fecha. El barrido corre una vez al día.
+          </p>
         )}
       </div>
 

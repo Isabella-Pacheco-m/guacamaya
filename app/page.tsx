@@ -4,9 +4,18 @@ import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
 import { isSuperadmin } from '@/lib/superadmin-auth'
 import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
-import { getTenantBySlug, findTenantByAdminEmail } from '@/lib/tenant'
+import {
+  getTenantBySlug,
+  findTenantByAdminEmail,
+  countMiembros,
+} from '@/lib/tenant'
 import { getTenantFeatures } from '@/lib/tenant-features'
-import { listTarjetaPremiosForMiembro, listNotas } from '@/lib/tenantQueries'
+import {
+  listTarjetaPremiosForMiembro,
+  listNotas,
+  getProximaCaducidad,
+  listRecompensasActivas,
+} from '@/lib/tenantQueries'
 import { listFeedPosts } from '@/lib/feed'
 import { listGaleriaAprobadas } from '@/lib/galeria'
 import { listRetosPwa } from '@/lib/retos'
@@ -14,11 +23,14 @@ import { tenantBaseUrl } from '@/lib/config'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { TenantPwaHome } from '@/components/pwa/TenantPwaHome'
-import { TenantTheme } from '@/components/pwa/TenantTheme'
 import { TenantJoin } from '@/components/pwa/TenantJoin'
+import { TenantWelcome } from '@/components/pwa/TenantWelcome'
 import { RootLanding } from '@/components/pwa/RootLanding'
 
 export const dynamic = 'force-dynamic'
+
+/** Días de antelación con los que la home avisa de puntos por vencer. */
+const AVISO_CADUCIDAD_DIAS = 45
 
 export default async function Home({
   searchParams,
@@ -43,40 +55,20 @@ async function renderTenantHome(slug: string) {
 
   const session = await getSession()
   if (!session?.user) {
+    // Landing pre-login: se arma con lo que el negocio ya configuró para que
+    // el visitante sepa qué hay adentro antes de decidir entrar.
+    const [features, recompensas, miembrosCount] = await Promise.all([
+      getTenantFeatures(tenant.id),
+      listRecompensasActivas(tenant.id),
+      countMiembros(tenant.id),
+    ])
     return (
-      <main className="min-h-screen bg-tenant-halo flex items-center justify-center px-6">
-        <TenantTheme color={tenant.color_primario} />
-        <div className="max-w-md w-full text-center">
-          {tenant.banner_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={tenant.banner_url}
-              alt=""
-              className="w-full aspect-[16/6] object-cover rounded-lg shadow-card mb-8"
-            />
-          )}
-          {tenant.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={tenant.logo_url}
-              alt={tenant.nombre}
-              className="h-20 w-20 rounded-md object-contain mx-auto mb-8"
-            />
-          )}
-          <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-4">
-            Club de miembros
-          </p>
-          <h1 className="text-[44px] font-light leading-[1.05] tracking-tight mb-6">
-            {tenant.nombre}
-          </h1>
-          <p className="text-muted text-sm mb-10 max-w-xs mx-auto">
-            Acumula puntos por cada compra y canjea recompensas que te encantarán.
-          </p>
-          <a href="/api/auth/login">
-            <Button className="w-full">Ingresar</Button>
-          </a>
-        </div>
-      </main>
+      <TenantWelcome
+        tenant={tenant}
+        features={features}
+        recompensas={recompensas}
+        miembrosCount={miembrosCount}
+      />
     )
   }
 
@@ -116,7 +108,7 @@ async function renderTenantHome(slug: string) {
   }
 
   const features = await getTenantFeatures(tenant.id)
-  const [tarjetaPremios, ultimoPost, notas, fotos, retos] = await Promise.all([
+  const [tarjetaPremios, ultimoPost, notas, fotos, retos, caducidad] = await Promise.all([
     features.tarjeta_enabled
       ? listTarjetaPremiosForMiembro(tenant.id, miembro.id)
       : Promise.resolve([]),
@@ -128,7 +120,25 @@ async function renderTenantHome(slug: string) {
       ? listGaleriaAprobadas(tenant.id, 4)
       : Promise.resolve([]),
     features.retos_enabled ? listRetosPwa(tenant.id) : Promise.resolve([]),
+    getProximaCaducidad(tenant.id, miembro.id),
   ])
+
+  // Solo se avisa en la home cuando el vencimiento ya está cerca; el detalle
+  // completo (siempre visible) está en /puntos.
+  const diasParaVencer =
+    caducidad.fecha !== null
+      ? Math.ceil(
+          (new Date(`${caducidad.fecha}T12:00:00Z`).getTime() - Date.now()) /
+            86_400_000
+        )
+      : null
+  const caducidadProxima =
+    caducidad.puntos > 0 &&
+    caducidad.fecha !== null &&
+    diasParaVencer !== null &&
+    diasParaVencer <= AVISO_CADUCIDAD_DIAS
+      ? { puntos: caducidad.puntos, fecha: caducidad.fecha }
+      : null
 
   const retoActivo = retos.find((r) => r.estado === 'ABIERTO') ?? null
   const comunidad = {
@@ -142,7 +152,8 @@ async function renderTenantHome(slug: string) {
       ultimoPost !== null ||
       retoActivo !== null ||
       features.sorteos_enabled ||
-      features.lanzamientos_enabled,
+      features.lanzamientos_enabled ||
+      features.ranking_enabled,
   }
 
   return (
@@ -152,6 +163,7 @@ async function renderTenantHome(slug: string) {
       features={features}
       tarjetaPremios={tarjetaPremios}
       comunidad={comunidad}
+      caducidadProxima={caducidadProxima}
     />
   )
 }

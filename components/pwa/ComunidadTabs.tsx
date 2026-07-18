@@ -7,6 +7,7 @@ import type { Nota } from '@/lib/notas'
 import type { GaleriaPostPublic } from '@/lib/galeria'
 import type { Reto } from '@/lib/retos'
 import type { Lanzamiento } from '@/lib/lanzamientos-shared'
+import type { RankingRow, RankingPosicion } from '@/lib/ranking'
 import { Card } from '@/components/ui/Card'
 import { FeedPostCard } from '@/components/pwa/FeedPostCard'
 import { FeedComposer } from '@/components/pwa/FeedComposer'
@@ -14,6 +15,7 @@ import { GaleriaGrid } from '@/components/pwa/GaleriaGrid'
 import { GaleriaComposer } from '@/components/pwa/GaleriaComposer'
 import { LanzamientoCard } from '@/components/pwa/LanzamientoCard'
 import { NotasBoard } from '@/components/pwa/NotasBoard'
+import { RankingList } from '@/components/pwa/RankingList'
 
 export type TabId =
   | 'todo'
@@ -22,6 +24,7 @@ export type TabId =
   | 'retos'
   | 'sorteos'
   | 'lanzamientos'
+  | 'ranking'
 
 export interface ComunidadData {
   notas: Nota[]
@@ -30,6 +33,7 @@ export interface ComunidadData {
   retos: Reto[]
   sorteos: Sorteo[]
   lanzamientos: Lanzamiento[]
+  ranking: { filas: RankingRow[]; yo: RankingPosicion }
 }
 
 const dateFmt = new Intl.DateTimeFormat('es-CO', {
@@ -65,6 +69,7 @@ export function ComunidadTabs({
       { id: 'retos', label: 'Retos' },
       { id: 'sorteos', label: 'Sorteos' },
       { id: 'lanzamientos', label: 'Lanzamientos' },
+      { id: 'ranking', label: 'Ranking' },
     ]
     return all.filter(
       (t) => t.id === 'todo' || enabled[t.id as Exclude<TabId, 'todo'>]
@@ -235,6 +240,28 @@ export function ComunidadTabs({
                 ))}
               </div>
             )}
+          </section>
+        )}
+        {/* ── Ranking ── */}
+        {enabled.ranking && show('ranking') && (
+          <section className="flex flex-col gap-4">
+            {tab === 'todo' ? (
+              <SectionHeader
+                titulo="Ranking"
+                onVerTodo={() => setTab('ranking')}
+              />
+            ) : (
+              <p className="text-sm text-muted -mb-1">
+                Quiénes acumulan más puntos en {tenant.nombre}. Cuenta el total
+                histórico: canjear tus puntos no te baja puestos.
+              </p>
+            )}
+            <RankingList
+              filas={data.ranking.filas}
+              yo={data.ranking.yo}
+              miembroId={miembro.id}
+              compacto={tab === 'todo'}
+            />
           </section>
         )}
       </div>

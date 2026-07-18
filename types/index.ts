@@ -10,6 +10,7 @@ export type TipoTransaccion =
   | 'SELLO_CANJE'
   | 'GALERIA'
   | 'RETO'
+  | 'CADUCIDAD'
 
 export interface Tenant {
   id: string
@@ -20,6 +21,8 @@ export interface Tenant {
   color_primario: string
   puntos_por_mil: number
   puntos_cumpleanos: number | null
+  // Meses tras los que vence un punto ganado. null = nunca vencen.
+  puntos_caducidad_meses: number | null
 }
 
 export interface Miembro {

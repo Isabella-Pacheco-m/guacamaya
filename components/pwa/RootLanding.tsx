@@ -164,14 +164,19 @@ export function RootLanding({
               Convierte cada compra
               <br />
               en una razón para{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10">volver</span>
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 bottom-1 h-3 -z-0 rounded-full bg-lime/60"
-                />
+              {/* "volver" + punto en una sola caja inquebrable: el punto se
+                  iba solo a la línea siguiente y parecía un margen enorme
+                  entre el título y el párrafo. */}
+              <span className="whitespace-nowrap">
+                <span className="relative inline-block">
+                  <span className="relative z-10">volver</span>
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-1 h-3 -z-0 rounded-full bg-lime/60"
+                  />
+                </span>
+                .
               </span>
-              .
             </h1>
 
             <p className="text-muted text-[15px] leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">
@@ -358,11 +363,15 @@ export function RootLanding({
                       <p className="text-[10px] opacity-70 shrink-0">hoy</p>
                     </div>
 
-                    {/* Polaroid de un cliente, al lado */}
+                    {/* Polaroid de un cliente, al lado. Foto real: el bloque de
+                        color plano se leía como un placeholder sin cargar. */}
                     <div className="bg-white p-1.5 pb-5 rounded-[3px] rotate-2 shadow-lg shrink-0">
-                      <div
-                        className="h-[92px] w-[92px] rounded-[2px]"
-                        style={{ background: '#C2603C' }}
+                      <Image
+                        src="/img/cliente-hamburguesa.jpg"
+                        alt=""
+                        width={184}
+                        height={184}
+                        className="h-[92px] w-[92px] rounded-[2px] object-cover"
                       />
                     </div>
                   </div>
@@ -401,7 +410,10 @@ export function RootLanding({
       </section>
 
       {/* ══════════ Marquesina de funcionalidades ══════════ */}
-      <section className="py-7 border-y border-border/70 bg-white/40 overflow-hidden marquee-fade">
+      {/* Sin fondo propio: la franja comparte el crema del resto de la página y
+          se separa solo con los filetes. El velo blanco la recortaba como una
+          banda ajena. */}
+      <section className="py-7 border-y border-border/70 overflow-hidden marquee-fade">
         <div className="flex w-max animate-marquee">
           {/* Cuatro copias: garantizan que el track siempre exceda el ancho de
               pantalla, incluso en monitores anchos (ver @keyframes marquee). */}

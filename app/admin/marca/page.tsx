@@ -35,6 +35,7 @@ export default async function MarcaPage() {
           initialNombre={tenant.nombre}
           initialColor={tenant.color_primario}
           initialPuntosCumpleanos={tenant.puntos_cumpleanos}
+          initialPuntosCaducidadMeses={tenant.puntos_caducidad_meses}
           initialLogoUrl={tenant.logo_url}
           initialBannerUrl={tenant.banner_url}
         />

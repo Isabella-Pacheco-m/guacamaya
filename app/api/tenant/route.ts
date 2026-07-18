@@ -33,11 +33,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Body inválido' }, { status: 400 })
   }
 
-  const { nombre, color_primario, puntos_cumpleanos } = (body ?? {}) as {
-    nombre?: unknown
-    color_primario?: unknown
-    puntos_cumpleanos?: unknown
-  }
+  const { nombre, color_primario, puntos_cumpleanos, puntos_caducidad_meses } =
+    (body ?? {}) as {
+      nombre?: unknown
+      color_primario?: unknown
+      puntos_cumpleanos?: unknown
+      puntos_caducidad_meses?: unknown
+    }
 
   if (nombre !== undefined && typeof nombre !== 'string') {
     return NextResponse.json(
@@ -62,11 +64,26 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
+  if (
+    puntos_caducidad_meses !== undefined &&
+    puntos_caducidad_meses !== null &&
+    typeof puntos_caducidad_meses !== 'number'
+  ) {
+    return NextResponse.json(
+      { error: 'puntos_caducidad_meses debe ser número o null' },
+      { status: 400 }
+    )
+  }
+
   try {
     const tenant = await updateTenant(auth.tenantId, {
       nombre: nombre as string | undefined,
       color_primario: color_primario as string | undefined,
       puntos_cumpleanos: puntos_cumpleanos as number | null | undefined,
+      puntos_caducidad_meses: puntos_caducidad_meses as
+        | number
+        | null
+        | undefined,
     })
     return NextResponse.json({ tenant })
   } catch (err) {
