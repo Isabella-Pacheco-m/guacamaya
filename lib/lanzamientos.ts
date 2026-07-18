@@ -1,7 +1,21 @@
-import { supabaseAdmin } from '@/lib/supabase-admin'
+// Solo servidor: este módulo usa la service-role key. El import de
+// 'server-only' hace que importarlo desde un componente cliente falle en
+// BUILD en vez de reventar en el navegador con "supabaseKey is required".
+import 'server-only'
 
-// Tipos importables con `import type` desde componentes cliente. No importar
-// VALORES de este módulo en 'use client'.
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import {
+  estaRevelado,
+  type Lanzamiento,
+  type LanzamientoEstado,
+} from '@/lib/lanzamientos-shared'
+
+// Los tipos y helpers puros viven en lib/lanzamientos-shared.ts. Se reexportan
+// aquí para no romper los imports del servidor, pero un componente 'use client'
+// debe importarlos SIEMPRE del módulo shared: este archivo arrastra
+// supabase-admin y rompería el bundle del navegador.
+export { estaRevelado }
+export type { Lanzamiento, LanzamientoEstado }
 
 export const LANZAMIENTO_BUCKET = 'business_media'
 export const LANZAMIENTO_MAX_BYTES = 4 * 1024 * 1024
@@ -11,39 +25,11 @@ export const LANZAMIENTO_MIME_TO_EXT: Record<string, string> = {
   'image/webp': 'webp',
 }
 
-export type LanzamientoEstado = 'teaser' | 'activo' | 'finalizado'
-
-export interface Lanzamiento {
-  id: string
-  tenant_id: string
-  titulo: string
-  teaser: string | null
-  descripcion: string | null
-  banner_url: string | null
-  cta_url: string | null
-  cta_label: string | null
-  estado: LanzamientoEstado
-  revela_at: string | null
-  created_at: string
-}
-
 export class LanzamientoError extends Error {
   constructor(message: string, public readonly status: number) {
     super(message)
     this.name = 'LanzamientoError'
   }
-}
-
-// ¿Ya se reveló? Activo siempre; teaser cuando su revela_at ya pasó. Lo usan
-// tanto el server (render) como el cliente (para pasar de countdown a revelado
-// sin recargar). Devuelve false para finalizados.
-export function estaRevelado(l: Pick<Lanzamiento, 'estado' | 'revela_at'>): boolean {
-  if (l.estado === 'activo') return true
-  if (l.estado === 'teaser') {
-    if (!l.revela_at) return false
-    return new Date(l.revela_at).getTime() <= Date.now()
-  }
-  return false
 }
 
 export function lanzamientoPrefix(tenantId: string): string {

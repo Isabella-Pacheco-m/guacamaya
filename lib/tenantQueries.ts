@@ -1,3 +1,8 @@
+// Solo servidor: este módulo usa la service-role key. El import de
+// 'server-only' hace que importarlo desde un componente cliente falle en
+// BUILD en vez de reventar en el navegador con "supabaseKey is required".
+import 'server-only'
+
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Miembro, Recompensa, Transaccion } from '@/types'
 import type { Nota } from '@/lib/notas'

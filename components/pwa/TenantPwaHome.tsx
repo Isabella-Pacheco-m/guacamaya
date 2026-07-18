@@ -81,13 +81,16 @@ export function TenantPwaHome({
             />
           )}
 
-          <div className="absolute left-0 right-0 bottom-0 px-6 pb-4 flex items-center gap-3">
+          {/* La marca va ARRIBA de la portada: el borde inferior queda libre
+              para el avatar del miembro, que se monta sobre él. Antes ambos
+              vivían abajo y en móvil se cruzaban. */}
+          <div className="absolute left-0 right-0 top-0 px-6 pt-5 flex items-center gap-3">
             {tenant.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={tenant.logo_url}
                 alt={tenant.nombre}
-                className="h-12 w-12 rounded-xl object-contain bg-white/95 p-1.5 shadow-md ring-1 ring-white/40 shrink-0"
+                className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl object-contain bg-white/95 p-1.5 shadow-md ring-1 ring-white/40 shrink-0"
               />
             )}
             <div className="min-w-0">
@@ -241,8 +244,9 @@ export function TenantPwaHome({
                         return (
                           <div
                             key={n.id}
+                            // Cuadradas, como el post-it real del tablero.
                             className={
-                              'flex-1 min-w-0 rounded-xl p-3 text-[13px] leading-snug line-clamp-3 ' +
+                              'flex-1 min-w-0 aspect-square overflow-hidden rounded-xl p-3 text-[13px] leading-snug ' +
                               (i % 2 === 0 ? '-rotate-1' : 'rotate-1')
                             }
                             style={{
