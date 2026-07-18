@@ -341,12 +341,14 @@ export function TenantPwaHome({
                           Avatar con avatar_url null y quedaba un hueco. */}
                       {comunidad.ultimoPost.autor_miembro_id == null &&
                       tenant.logo_url ? (
-                        <span className="h-8 w-8 rounded-full bg-surface ring-1 ring-black/[0.06] shrink-0 overflow-hidden flex items-center justify-center">
+                        <span className="h-8 w-8 rounded-full bg-white ring-1 ring-black/[0.06] shrink-0 overflow-hidden flex items-center justify-center">
+                          {/* object-cover: llena el círculo como foto de
+                              perfil, sin el margen del contain. */}
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={tenant.logo_url}
                             alt=""
-                            className="h-full w-full object-contain p-1"
+                            className="h-full w-full object-cover"
                           />
                         </span>
                       ) : (
