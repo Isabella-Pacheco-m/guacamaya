@@ -236,17 +236,20 @@ export function TenantPwaHome({
                 className="overflow-hidden transition-shadow group-hover:shadow-[0_2px_4px_rgba(42,35,32,0.06),0_10px_28px_rgba(42,35,32,0.08)]"
               >
                 <div className="flex flex-col gap-4">
-                  {/* Notas recientes */}
+                  {/* Notas recientes — SIEMPRE en dos columnas: con `flex-1` una
+                      nota sola ocupaba todo el ancho y, al ser cuadrada, se
+                      volvía un bloque gigante. */}
                   {comunidad.notas.length > 0 && (
-                    <div className="flex gap-3 overflow-hidden">
+                    <div className="grid grid-cols-2 gap-3">
                       {comunidad.notas.slice(0, 2).map((n, i) => {
                         const s = notaColorStyle(n.color)
                         return (
                           <div
                             key={n.id}
-                            // Cuadradas, como el post-it real del tablero.
+                            // Cuadradas como un post-it real, pero con tope: sin
+                            // el max-w crecen demasiado en pantallas anchas.
                             className={
-                              'flex-1 min-w-0 aspect-square overflow-hidden rounded-xl p-3 text-[13px] leading-snug ' +
+                              'min-w-0 w-full max-w-[220px] aspect-square overflow-hidden rounded-xl p-3 text-[13px] leading-snug ' +
                               (i % 2 === 0 ? '-rotate-1' : 'rotate-1')
                             }
                             style={{

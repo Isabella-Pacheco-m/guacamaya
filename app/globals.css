@@ -115,3 +115,14 @@ body {
 /* Oculta la barra de scroll manteniendo el desplazamiento (chips, carruseles). */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Desvanecido en los extremos de una marquesina: sin esto los chips se ven
+   "cortados" a media palabra contra el borde del contenedor. */
+.marquee-fade {
+  -webkit-mask-image: linear-gradient(
+    to right, transparent, #000 8%, #000 92%, transparent
+  );
+  mask-image: linear-gradient(
+    to right, transparent, #000 8%, #000 92%, transparent
+  );
+}
