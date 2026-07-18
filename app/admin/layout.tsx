@@ -12,6 +12,10 @@ type FeatureFlag =
   | 'feed_enabled'
   | 'sorteos_enabled'
   | 'tarjeta_enabled'
+  | 'notas_enabled'
+  | 'galeria_enabled'
+  | 'lanzamientos_enabled'
+  | 'retos_enabled'
 
 interface NavItem {
   href: string
@@ -63,10 +67,34 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: '/admin/feed', label: 'Feed', icon: 'feed', requires: 'feed_enabled' },
       {
+        href: '/admin/notas',
+        label: 'Notas',
+        icon: 'notas',
+        requires: 'notas_enabled',
+      },
+      {
+        href: '/admin/galeria',
+        label: 'Galería',
+        icon: 'galeria',
+        requires: 'galeria_enabled',
+      },
+      {
+        href: '/admin/lanzamientos',
+        label: 'Lanzamientos',
+        icon: 'lanzamientos',
+        requires: 'lanzamientos_enabled',
+      },
+      {
         href: '/admin/sorteos',
         label: 'Sorteos',
         icon: 'sorteos',
         requires: 'sorteos_enabled',
+      },
+      {
+        href: '/admin/retos',
+        label: 'Retos',
+        icon: 'retos',
+        requires: 'retos_enabled',
       },
     ],
   },

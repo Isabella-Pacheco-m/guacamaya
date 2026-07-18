@@ -10,6 +10,10 @@ export type AdminIconName =
   | 'tarjeta'
   | 'feed'
   | 'sorteos'
+  | 'notas'
+  | 'galeria'
+  | 'lanzamientos'
+  | 'retos'
   | 'funcionalidades'
   | 'marca'
 
@@ -83,6 +87,37 @@ const PATHS: Record<AdminIconName, React.ReactNode> = {
       <path d="M12 12v3" />
       <path d="M8.5 20h7" />
       <path d="M10 17h4l1 3H9Z" />
+    </>
+  ),
+  notas: (
+    <>
+      <path d="M4 4h16v11l-5 5H4Z" />
+      <path d="M20 15h-5v5" />
+      <path d="M8 9h8" />
+      <path d="M8 12.5h5" />
+    </>
+  ),
+  galeria: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="8.5" cy="10" r="1.5" />
+      <path d="m5 17 4-4 3 3 3-3 4 4" />
+    </>
+  ),
+  lanzamientos: (
+    <>
+      <path d="M12 3c3 1.5 5 4.5 5 8 0 2-.7 3.6-1.7 5H8.7C7.7 14.6 7 13 7 11c0-3.5 2-6.5 5-8Z" />
+      <circle cx="12" cy="10" r="1.6" />
+      <path d="M8.7 16c-1 .8-1.7 2-1.7 3.5M15.3 16c1 .8 1.7 2 1.7 3.5" />
+    </>
+  ),
+  retos: (
+    <>
+      <path d="M6 3h12v4a6 6 0 0 1-12 0Z" />
+      <path d="M9 13.5V17h6v-3.5" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="M6 5H4a2 2 0 0 0 2 4M18 5h2a2 2 0 0 1-2 4" />
     </>
   ),
   funcionalidades: (

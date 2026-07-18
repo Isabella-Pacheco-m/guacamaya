@@ -7,6 +7,7 @@ import {
   updateTenantFeatures,
   TenantFeaturesError,
   type TarjetaEstilo,
+  type TarjetaFondoTipo,
   type TenantFeaturesPatch,
 } from '@/lib/tenant-features'
 
@@ -76,6 +77,16 @@ export async function PATCH(req: NextRequest) {
     }
     patch.tarjeta_size = v
   }
+  if ('galeria_puntos' in raw) {
+    const v = raw.galeria_puntos
+    if (typeof v !== 'number' || !Number.isInteger(v)) {
+      return NextResponse.json(
+        { error: 'galeria_puntos debe ser entero' },
+        { status: 400 }
+      )
+    }
+    patch.galeria_puntos = v
+  }
   if ('sello_valor_cop' in raw) {
     const v = raw.sello_valor_cop
     if (v === null) {
@@ -96,6 +107,29 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: `${k} debe ser string` }, { status: 400 })
       }
       patch[k] = v
+    }
+  }
+  if ('tarjeta_fondo_tipo' in raw) {
+    const v = raw.tarjeta_fondo_tipo
+    if (typeof v !== 'string') {
+      return NextResponse.json(
+        { error: 'tarjeta_fondo_tipo debe ser string' },
+        { status: 400 }
+      )
+    }
+    patch.tarjeta_fondo_tipo = v as TarjetaFondoTipo
+  }
+  if ('tarjeta_color_fondo2' in raw) {
+    const v = raw.tarjeta_color_fondo2
+    if (v === null) {
+      patch.tarjeta_color_fondo2 = null
+    } else if (typeof v === 'string') {
+      patch.tarjeta_color_fondo2 = v
+    } else {
+      return NextResponse.json(
+        { error: 'tarjeta_color_fondo2 debe ser string o null' },
+        { status: 400 }
+      )
     }
   }
   if ('tarjeta_estilo_sello' in raw) {

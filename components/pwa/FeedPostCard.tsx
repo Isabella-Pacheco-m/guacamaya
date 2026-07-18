@@ -1,4 +1,5 @@
 import type { FeedPost, Tenant } from '@/types'
+import { Avatar } from '@/components/ui/Avatar'
 
 const dateFmt = new Intl.DateTimeFormat('es-CO', {
   day: '2-digit',
@@ -50,15 +51,10 @@ export function FeedPostCard({
               className="h-full w-full object-contain p-1.5"
             />
           </span>
+        ) : esMiembro ? (
+          <Avatar name={autorNombre} src={post.autor_avatar_url} size={44} />
         ) : (
-          <span
-            className={
-              'h-11 w-11 rounded-full shrink-0 flex items-center justify-center text-base font-semibold ' +
-              (esMiembro
-                ? 'bg-gradient-to-br from-electric to-sky text-white'
-                : 'bg-graphite text-lime')
-            }
-          >
+          <span className="h-11 w-11 rounded-full shrink-0 flex items-center justify-center text-base font-semibold bg-graphite text-lime">
             {initial(autorNombre)}
           </span>
         )}

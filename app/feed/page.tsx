@@ -53,7 +53,12 @@ export default async function FeedPwaPage() {
         </header>
 
         <div className="flex flex-col gap-4">
-          {puedePublicar && <FeedComposer miembroNombre={miembro.nombre} />}
+          {puedePublicar && (
+            <FeedComposer
+              miembroNombre={miembro.nombre}
+              miembroAvatarUrl={miembro.avatar_url}
+            />
+          )}
 
           {posts.length === 0 ? (
             <Card className="text-center" padding="lg">

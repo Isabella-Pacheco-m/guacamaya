@@ -4,6 +4,7 @@ import {
   ESTILO_CLIP,
   estiloRadiusClass,
   type TarjetaEstilo,
+  type TarjetaFondoTipo,
 } from '@/lib/tarjeta'
 
 // Devuelve un color de texto legible (blanco u oscuro) para un fondo hex
@@ -16,7 +17,7 @@ function readableTextOn(hex: string): string {
   const lin = (c: number) =>
     c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
   const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-  return L > 0.55 ? '#1A1A1E' : '#FFFFFF'
+  return L > 0.55 ? '#2A2320' : '#FFFFFF'
 }
 
 // Iconos del sello como SVG: se centran de forma determinística (sin los
@@ -90,6 +91,44 @@ function EmblemIcon({
   return <CheckIcon className={className} />
 }
 
+// Estampilla PNG de la marca. Marcada: la imagen a color. No marcada: la misma
+// figura como silueta monocroma (se usa el PNG como máscara y se pinta con el
+// color `silueta`), que se ve oscura sobre tarjetas claras y clara sobre
+// oscuras — siempre legible.
+function PngStamp({
+  url,
+  filled,
+  silueta,
+}: {
+  url: string
+  filled: boolean
+  silueta: string
+}) {
+  if (filled) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={url} alt="" className="w-[82%] h-[82%] object-contain" />
+    )
+  }
+  return (
+    <span
+      aria-hidden
+      className="w-[82%] h-[82%]"
+      style={{
+        backgroundColor: silueta,
+        WebkitMaskImage: `url(${url})`,
+        maskImage: `url(${url})`,
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+      }}
+    />
+  )
+}
+
 export function TarjetaCliente({
   tenantNombre,
   miembroNombre,
@@ -99,6 +138,9 @@ export function TarjetaCliente({
   colorFondo,
   colorSello,
   estiloSello,
+  fondoTipo = 'solid',
+  colorFondo2 = null,
+  selloUrl = null,
 }: {
   tenantNombre: string
   miembroNombre: string
@@ -108,6 +150,9 @@ export function TarjetaCliente({
   colorFondo: string
   colorSello: string
   estiloSello: TarjetaEstilo
+  fondoTipo?: TarjetaFondoTipo
+  colorFondo2?: string | null
+  selloUrl?: string | null
 }) {
   const cells = Array.from({ length: tarjetaSize }, (_, i) => i + 1)
   const premioPorUmbral = new Map(premios.map((p) => [p.threshold, p]))
@@ -128,13 +173,21 @@ export function TarjetaCliente({
   const cellWidth = `calc((100% - ${(cols - 1) * 0.5}rem) / ${cols})`
   const stampShape = estiloRadiusClass(estiloSello)
   const clipPath = ESTILO_CLIP[estiloSello]
+  const hasPng = Boolean(selloUrl)
+
+  // Fondo: degradado explícito entre dos colores si el admin lo activó; si no,
+  // un degradado sutil hacia una versión un poco más oscura del mismo color.
+  const cardBackground =
+    fondoTipo === 'gradient' && colorFondo2
+      ? `linear-gradient(135deg, ${colorFondo} 0%, ${colorFondo2} 100%)`
+      : `linear-gradient(135deg, ${colorFondo} 0%, ${colorFondo} 60%, ${shade(colorFondo, 18)} 100%)`
 
   return (
     <div className="mb-6">
       <div
         className="rounded-[24px] p-6 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.35)] relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, ${colorFondo} 0%, ${colorFondo} 60%, ${shade(colorFondo, 18)} 100%)`,
+          background: cardBackground,
           color: cardText,
         }}
       >
@@ -173,7 +226,11 @@ export function TarjetaCliente({
             const esPremio = premioPorUmbral.has(n)
 
             let cellStyle: CSSProperties
-            if (filled) {
+            if (hasPng) {
+              // Con estampilla PNG el recuadro es solo el lienzo: la figura la
+              // pinta la propia imagen (a color si está marcada, silueta si no).
+              cellStyle = { background: 'transparent' }
+            } else if (filled) {
               cellStyle = {
                 background: colorSello,
                 color: readableTextOn(colorSello),
@@ -202,10 +259,16 @@ export function TarjetaCliente({
             return (
               <div
                 key={n}
-                className={`aspect-square ${stampShape} flex items-center justify-center transition-transform [container-type:inline-size]`}
+                className={`aspect-square ${hasPng ? '' : stampShape} flex items-center justify-center transition-transform [container-type:inline-size]`}
                 style={cellStyle}
               >
-                {esPremio ? (
+                {hasPng ? (
+                  <PngStamp
+                    url={selloUrl as string}
+                    filled={filled}
+                    silueta={muted}
+                  />
+                ) : esPremio ? (
                   <GiftIcon className="w-[46%] h-[46%]" />
                 ) : filled ? (
                   <EmblemIcon
@@ -243,7 +306,7 @@ export function TarjetaCliente({
           {reclamables.length > 0 && (
             <div
               className="mb-3 rounded-md px-3 py-2 text-xs"
-              style={{ background: `${colorSello}33`, color: '#1A1A1E' }}
+              style={{ background: `${colorSello}33`, color: '#2A2320' }}
             >
               Tienes {reclamables.length === 1 ? 'un premio' : `${reclamables.length} premios`} listos para reclamar en mostrador.
             </div>

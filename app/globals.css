@@ -4,26 +4,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Paleta "cozy" — beige cálido, autenticidad, acentos suaves.
+   Los NOMBRES de los tokens se conservan (graphite/lime/sky) porque están
+   usados en ~300 sitios; lo que cambió son sus VALORES. Leer así:
+     graphite → espresso (marrón oscuro cálido, no negro frío)
+     lime     → sol      (mostaza cálida, el acento principal)
+     sky      → arcilla  (terracota suave, acento secundario)
+   ============================================================ */
 :root {
   --font-base: 'Manrope', sans-serif;
 
-  --color-graphite: #1A1A1E;
-  --color-lime: #B8FA4E;
+  --color-graphite: #2A2320;
+  --color-lime: #EBBA4F;
   /* RGB triplet (sin rgb()) para poder componer alpha en runtime.
      TenantTheme sobreescribe esta variable con el color del tenant. */
-  --color-electric: 48 92 255;
-  --color-sky: #84A6FF;
-  --color-surface: #F5F5F3;
-  --color-white: #FFFFFF;
-  --color-border: #E8E8E6;
-  --color-text-muted: #6B6B6B;
+  --color-electric: 194 96 60;
+  --color-sky: #D89B7A;
+  --color-surface: #F3EEE5;
+  --color-white: #FCFAF6;
+  --color-border: #E3DACB;
+  --color-text-muted: #736658;
 
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-full: 9999px;
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  /* Sombras cálidas (tinte espresso) en vez de negro puro. */
+  --shadow-card: 0 1px 3px rgba(42, 35, 32, 0.05), 0 4px 16px rgba(42, 35, 32, 0.05);
 }
 
 body {
@@ -58,12 +67,26 @@ body {
   }
 
   /* Halo radial sutil para hero/states de bienvenida. Usa el tenant color
-     vía la CSS var, así reacciona al theming. */
+     vía la CSS var, así reacciona al theming. Se le suma un velo de sol
+     (mostaza) para el aire cálido de la marca. */
   .bg-tenant-halo {
     background:
-      radial-gradient(120% 80% at 80% 0%, rgb(var(--color-electric) / 0.08), transparent 60%),
-      radial-gradient(80% 60% at 0% 100%, rgb(var(--color-electric) / 0.05), transparent 60%),
+      radial-gradient(120% 80% at 80% 0%, rgb(var(--color-electric) / 0.10), transparent 60%),
+      radial-gradient(90% 70% at 0% 100%, rgba(235, 186, 79, 0.14), transparent 60%),
       var(--color-surface);
+  }
+
+  /* Grano de papel — textura muy sutil que da el acabado "impreso"/artesanal
+     de las referencias. Se aplica como capa sobre el fondo, sin tapar el
+     contenido (queda detrás por z-index negativo). */
+  .bg-paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.42;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   }
 }
 

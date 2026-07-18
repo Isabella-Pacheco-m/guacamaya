@@ -58,16 +58,22 @@ body {
 
 ```css
 :root {
-  --color-graphite:     #1A1A1E; /* Deep Graphite — fondo oscuro, textos principales */
-  --color-lime:         #B8FA4E; /* Growth Lime   — CTA principal, acentos activos  */
-  --color-electric:     #305CFF; /* Electric Blue  — links, estados, información     */
-  --color-sky:          #84A6FF; /* Sky Blue       — estados secundarios, hover      */
-  --color-surface:      #F5F5F3; /* Off-white      — fondo general de la app         */
-  --color-white:        #FFFFFF;
-  --color-border:       #E8E8E6;
-  --color-text-muted:   #6B6B6B;
+  --color-graphite:     #2A2320; /* Espresso   — fondo oscuro, textos principales   */
+  --color-lime:         #EBBA4F; /* Sol        — CTA principal, acentos activos     */
+  --color-electric:     #C2603C; /* Terracota  — links, estados, información        */
+  --color-sky:          #D89B7A; /* Arcilla    — estados secundarios, hover         */
+  --color-surface:      #F3EEE5; /* Crema      — fondo general de la app            */
+  --color-white:        #FCFAF6; /* Blanco papel — tarjetas sobre el crema          */
+  --color-border:       #E3DACB; /* Arena                                           */
+  --color-text-muted:   #736658; /* Taupe                                           */
 }
 ```
+
+> **Nota sobre los nombres de token.** La marca pasó a una paleta *cozy* (beige
+> cálido). Los NOMBRES `graphite` / `lime` / `sky` se conservaron porque están
+> usados en ~300 sitios; lo que cambió son sus VALORES. Léelos como
+> **espresso**, **sol** y **arcilla**. Si algún día se renombran, hacerlo de una
+> sola vez en `globals.css`, `tailwind.config.ts` y los usos.
 
 ### Tokens de espacio y forma
 
@@ -95,13 +101,14 @@ const config: Config = {
         sans: ['Manrope', 'sans-serif'],
       },
       colors: {
-        graphite:  '#1A1A1E',
-        lime:      '#B8FA4E',
-        electric:  '#305CFF',
-        sky:       '#84A6FF',
-        surface:   '#F5F5F3',
-        border:    '#E8E8E6',
-        muted:     '#6B6B6B',
+        graphite:  '#2A2320', // espresso
+        lime:      '#EBBA4F', // sol
+        electric:  '#C2603C', // terracota (se sobreescribe por tenant)
+        sky:       '#D89B7A', // arcilla
+        surface:   '#F3EEE5', // crema
+        border:    '#E3DACB', // arena
+        muted:     '#736658', // taupe
+        white:     '#FCFAF6', // blanco papel
       },
       borderRadius: {
         sm:   '8px',
@@ -126,12 +133,15 @@ Input:            border border-border rounded-md px-4 py-3 focus:ring-electric
 
 ### Principios de UI
 
-- Fondo general siempre `--color-surface` (#F5F5F3), nunca blanco puro
+- Fondo general siempre `--color-surface` (#F3EEE5, crema), nunca blanco puro
 - Tipografía ligera (weight 300–400) en displays grandes; nunca bold en headings
 - Espaciado generoso — mínimo 24px entre secciones
-- Bordes sutiles, sin sombras pesadas
-- El lima (#B8FA4E) es exclusivo para la acción más importante de cada pantalla
-- El azul eléctrico (#305CFF) para links, estados activos e información
+- Bordes sutiles, sombras cálidas (tinte espresso, nunca negro puro)
+- El sol (#EBBA4F) es exclusivo para la acción más importante de cada pantalla
+- La terracota (#C2603C) para links, estados activos e información
+- Tono *cozy* y auténtico: calidez sobre contraste frío. Fotografía de negocios
+  reales en vez de ilustración corporativa. El grano de papel (`.bg-paper`) es
+  el acabado artesanal de la marca — usarlo con moderación (hero/landing)
 
 ---
 
@@ -484,4 +494,5 @@ GET  /api/metricas/resumen         → (admin)
 - Crear tablas o buckets sin una migración SQL en `supabase/migrations/`
 - Usar fuentes distintas a Manrope
 - Usar blanco puro (`#FFFFFF`) como fondo de página — siempre `--color-surface`
-- Usar el lima (`#B8FA4E`) para más de una acción por pantalla
+- Usar el sol (`#EBBA4F`) para más de una acción por pantalla
+- Reintroducir el verde lima / negro frío de la marca anterior

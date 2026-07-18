@@ -8,12 +8,15 @@ export type TipoTransaccion =
   | 'CUMPLEANOS'
   | 'SELLO'
   | 'SELLO_CANJE'
+  | 'GALERIA'
+  | 'RETO'
 
 export interface Tenant {
   id: string
   nombre: string
   slug: string
   logo_url: string | null
+  banner_url: string | null
   color_primario: string
   puntos_por_mil: number
   puntos_cumpleanos: number | null
@@ -31,6 +34,7 @@ export interface Miembro {
   mes_cumpleanos: number | null
   sellos_actuales: number
   tarjeta_ciclo: number
+  avatar_url: string | null
 }
 
 export interface Transaccion {
@@ -67,6 +71,9 @@ export interface FeedPost {
   // un miembro y autor_nombre trae su nombre para mostrar.
   autor_miembro_id: string | null
   autor_nombre: string | null
+  // Foto ACTUAL del miembro autor (join en list_feed_posts). Null para posts
+  // del negocio o miembros sin foto.
+  autor_avatar_url?: string | null
   created_at: string
 }
 

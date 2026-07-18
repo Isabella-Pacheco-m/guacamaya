@@ -15,13 +15,19 @@ const config: Config = {
       fontFamily: {
         sans: ['Manrope', 'sans-serif'],
       },
+      // Paleta "cozy" (beige cálido). Los nombres de token se conservan por
+      // compatibilidad con ~300 usos; los valores son los nuevos. Ver la nota
+      // en globals.css: graphite=espresso, lime=sol/mostaza, sky=arcilla.
+      // `white` se sobreescribe a un blanco papel para que las tarjetas no
+      // corten en frío sobre el fondo crema.
       colors: {
-        graphite: '#1A1A1E',
-        lime: '#B8FA4E',
-        sky: '#84A6FF',
-        surface: '#F5F5F3',
-        border: '#E8E8E6',
-        muted: '#6B6B6B',
+        graphite: '#2A2320',
+        lime: '#EBBA4F',
+        sky: '#D89B7A',
+        surface: '#F3EEE5',
+        border: '#E3DACB',
+        muted: '#736658',
+        white: '#FCFAF6',
       },
       borderRadius: {
         sm: '8px',
@@ -29,7 +35,7 @@ const config: Config = {
         lg: '24px',
       },
       boxShadow: {
-        card: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
+        card: '0 1px 3px rgba(42,35,32,0.05), 0 4px 16px rgba(42,35,32,0.05)',
       },
     },
   },

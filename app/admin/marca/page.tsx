@@ -36,6 +36,7 @@ export default async function MarcaPage() {
           initialColor={tenant.color_primario}
           initialPuntosCumpleanos={tenant.puntos_cumpleanos}
           initialLogoUrl={tenant.logo_url}
+          initialBannerUrl={tenant.banner_url}
         />
       </Card>
     </div>

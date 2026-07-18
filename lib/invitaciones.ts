@@ -117,7 +117,7 @@ export async function selfRegisterMiembro(
       email: email && email.trim() ? email.trim().toLowerCase() : null,
     })
     .select(
-      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel'
+      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel, avatar_url'
     )
     .single()
   if (error) {
@@ -154,7 +154,7 @@ export async function findMiembroByAuth0(
   const { data, error } = await supabaseAdmin
     .from('miembros')
     .select(
-      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel, tenants ( id, slug, nombre )'
+      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel, avatar_url, tenants ( id, slug, nombre )'
     )
     .eq('auth0_user_id', auth0UserId)
     .limit(1)

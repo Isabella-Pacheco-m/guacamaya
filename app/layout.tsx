@@ -4,10 +4,11 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Guacamaya',
+  description: 'Club de miembros con la marca de tu negocio.',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#1A1A1E',
+  themeColor: '#2A2320',
 }
 
 export default function RootLayout({

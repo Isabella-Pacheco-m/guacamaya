@@ -9,7 +9,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const tenant = slug ? await getTenantBySlug(slug) : null
 
   const name = tenant?.nombre ?? 'Guacamaya'
-  const themeColor = tenant?.color_primario ?? '#1A1A1E'
+  const themeColor = tenant?.color_primario ?? '#2A2320'
 
   return {
     name,
@@ -19,7 +19,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#F5F5F3',
+    background_color: '#F3EEE5',
     theme_color: themeColor,
     icons: [
       {
