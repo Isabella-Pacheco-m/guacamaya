@@ -45,11 +45,20 @@ export function Avatar({
     )
   }
 
+  // El degradado va como estilo inline y NO con `from-electric`: `electric` no
+  // existe en tailwind.config (se define a mano en globals.css para respetar el
+  // theming por tenant), así que la utilidad `from-electric` nunca se genera y
+  // el fondo quedaba transparente — las iniciales flotaban sin nada detrás.
   return (
     <span
       aria-hidden
-      style={{ ...box, fontSize: Math.round(size * 0.4) }}
-      className={`shrink-0 rounded-full flex items-center justify-center font-semibold leading-none text-white bg-gradient-to-br from-electric to-sky select-none ${ringCls} ${className}`}
+      style={{
+        ...box,
+        fontSize: Math.round(size * 0.4),
+        background:
+          'linear-gradient(135deg, rgb(var(--color-electric)) 0%, #D89B7A 100%)',
+      }}
+      className={`shrink-0 rounded-full flex items-center justify-center font-semibold leading-none text-white select-none ${ringCls} ${className}`}
     >
       {initials(name)}
     </span>

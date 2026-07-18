@@ -21,6 +21,7 @@ const TIPO_LABEL: Record<Transaccion['tipo'], string> = {
   SELLO_CANJE: 'Premio canjeado',
   GALERIA: 'Foto en galería',
   RETO: 'Reto cumplido',
+  CADUCIDAD: 'Puntos vencidos',
 }
 
 export function HistorialList({

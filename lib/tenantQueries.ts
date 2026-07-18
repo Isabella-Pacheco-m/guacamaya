@@ -4,8 +4,14 @@
 import 'server-only'
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import {
+  isMissingFunction,
+  isUndefinedColumn,
+  warnSchemaDrift,
+} from '@/lib/schema-drift'
 import type { Miembro, Recompensa, Transaccion } from '@/types'
 import type { Nota } from '@/lib/notas'
+import type { ProximaCaducidad } from '@/lib/caducidad'
 
 export interface CreateMiembroInput {
   nombre: string
@@ -243,6 +249,33 @@ export async function listTransaccionesForMiembro(
   )
   if (error) throw error
   return (data ?? []) as Transaccion[]
+}
+
+// =====================================================================
+// Caducidad de puntos
+// =====================================================================
+
+/**
+ * Próximo lote de puntos por vencer del miembro. Tolera migración pendiente:
+ * si 0032 aún no corrió, la PWA simplemente no muestra el aviso en vez de
+ * romper la pantalla de puntos.
+ */
+export async function getProximaCaducidad(
+  tenantId: string,
+  miembroId: string
+): Promise<ProximaCaducidad> {
+  const { data, error } = await supabaseAdmin.rpc('get_proxima_caducidad', {
+    p_tenant_id: tenantId,
+    p_miembro_id: miembroId,
+  })
+  if (error) {
+    if (isMissingFunction(error) || isUndefinedColumn(error)) {
+      warnSchemaDrift('getProximaCaducidad', error)
+      return { meses: null, puntos: 0, fecha: null }
+    }
+    throw error
+  }
+  return data as ProximaCaducidad
 }
 
 // =====================================================================

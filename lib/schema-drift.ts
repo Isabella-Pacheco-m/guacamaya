@@ -10,13 +10,24 @@
 // hasta que se migre, en vez de romper la app.
 
 const UNDEFINED_COLUMN = '42703'
+// 42883 = undefined_function (Postgres). PGRST202 = PostgREST no encontró la
+// función en su caché de esquema, que es lo que devuelve un .rpc() a una
+// función que todavía no existe.
+const UNDEFINED_FUNCTION = ['42883', 'PGRST202']
+
+function errorCode(error: unknown): unknown {
+  return typeof error === 'object' && error !== null
+    ? (error as { code?: unknown }).code
+    : undefined
+}
 
 export function isUndefinedColumn(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    (error as { code?: unknown }).code === UNDEFINED_COLUMN
-  )
+  return errorCode(error) === UNDEFINED_COLUMN
+}
+
+/** RPC que aún no existe porque su migración no se ha aplicado. */
+export function isMissingFunction(error: unknown): boolean {
+  return UNDEFINED_FUNCTION.includes(errorCode(error) as string)
 }
 
 /** Log único y accionable: qué falta y qué hacer. */

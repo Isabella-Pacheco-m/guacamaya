@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { requireCliente } from '@/lib/page-auth'
-import { listTransaccionesForMiembro } from '@/lib/tenantQueries'
+import {
+  getProximaCaducidad,
+  listTransaccionesForMiembro,
+} from '@/lib/tenantQueries'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { HistorialList } from '@/components/HistorialList'
@@ -9,10 +12,26 @@ import { TenantTheme } from '@/components/pwa/TenantTheme'
 export const dynamic = 'force-dynamic'
 
 const numFmt = new Intl.NumberFormat('es-CO')
+const venceFmt = new Intl.DateTimeFormat('es-CO', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'America/Bogota',
+})
 
 export default async function PuntosPwaPage() {
   const { tenant, miembro } = await requireCliente()
-  const transacciones = await listTransaccionesForMiembro(tenant.id, miembro.id, 100)
+  const [transacciones, caducidad] = await Promise.all([
+    listTransaccionesForMiembro(tenant.id, miembro.id, 100),
+    getProximaCaducidad(tenant.id, miembro.id),
+  ])
+
+  // La fecha viene como YYYY-MM-DD (fecha pura, sin hora). Se le añade el
+  // mediodía UTC para que al formatear en UTC-5 no retroceda un día.
+  const venceEl =
+    caducidad.puntos > 0 && caducidad.fecha
+      ? venceFmt.format(new Date(`${caducidad.fecha}T12:00:00Z`))
+      : null
 
   return (
     <main className="min-h-screen bg-tenant-halo">
@@ -42,6 +61,20 @@ export default async function PuntosPwaPage() {
                 {numFmt.format(miembro.puntos_historicos)}
               </span>
             </div>
+
+            {venceEl && (
+              <div className="mt-4 rounded-md bg-surface border border-border px-3 py-2.5">
+                <p className="text-xs text-graphite leading-relaxed">
+                  <span className="font-medium tabular-nums">
+                    {numFmt.format(caducidad.puntos)} puntos
+                  </span>{' '}
+                  vencen el {venceEl}.
+                </p>
+                <p className="text-[11px] text-muted mt-0.5">
+                  Se usan primero los puntos más antiguos.
+                </p>
+              </div>
+            )}
           </Card>
 
           <HistorialList

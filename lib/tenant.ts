@@ -8,12 +8,13 @@ import { headers } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureTenantFeaturesRow } from '@/lib/tenant-features'
 import { isUndefinedColumn, warnSchemaDrift } from '@/lib/schema-drift'
+import { CADUCIDAD_MESES, esCaducidadValida } from '@/lib/caducidad'
 import type { Tenant } from '@/types'
 
 // Columnas públicas del tenant que se serializan al tipo `Tenant`. Nunca
 // incluir admin_email ni join_code aquí (no deben filtrarse a la PWA).
 const TENANT_COLS =
-  'id, nombre, slug, logo_url, banner_url, color_primario, puntos_por_mil, puntos_cumpleanos'
+  'id, nombre, slug, logo_url, banner_url, color_primario, puntos_por_mil, puntos_cumpleanos, puntos_caducidad_meses'
 
 export class TenantNotFoundError extends Error {
   constructor(public readonly slug: string | null) {
@@ -62,6 +63,8 @@ async function selectTenant(
     color_primario: (row.color_primario as string | null) ?? '#C2603C',
     puntos_por_mil: (row.puntos_por_mil as number | null) ?? 1,
     puntos_cumpleanos: (row.puntos_cumpleanos as number | null) ?? null,
+    puntos_caducidad_meses:
+      (row.puntos_caducidad_meses as number | null) ?? null,
   }
 }
 
@@ -83,10 +86,28 @@ export async function getTenantFromRequest(): Promise<Tenant> {
   return tenant
 }
 
+/**
+ * Cuántos miembros tiene el club. Se usa como prueba social en la landing
+ * pre-login, así que nunca debe tumbar la página: ante cualquier error
+ * devuelve 0 y la landing simplemente no muestra el dato.
+ */
+export async function countMiembros(tenantId: string): Promise<number> {
+  const { count, error } = await supabaseAdmin
+    .from('miembros')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+  if (error) {
+    console.error('countMiembros', error)
+    return 0
+  }
+  return count ?? 0
+}
+
 export interface UpdateTenantInput {
   nombre?: string
   color_primario?: string
   puntos_cumpleanos?: number | null
+  puntos_caducidad_meses?: number | null
 }
 
 export class TenantUpdateError extends Error {
@@ -356,6 +377,20 @@ export async function updateTenant(
       )
     } else {
       patch.puntos_cumpleanos = v
+    }
+  }
+
+  if (input.puntos_caducidad_meses !== undefined) {
+    const v = input.puntos_caducidad_meses
+    if (v === null) {
+      patch.puntos_caducidad_meses = null
+    } else if (!esCaducidadValida(v)) {
+      throw new TenantUpdateError(
+        `puntos_caducidad_meses debe ser uno de: ${CADUCIDAD_MESES.join(', ')} (o null para no vencer)`,
+        400
+      )
+    } else {
+      patch.puntos_caducidad_meses = v
     }
   }
 

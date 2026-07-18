@@ -17,6 +17,11 @@ import { AvatarUploader } from '@/components/pwa/AvatarUploader'
 import { notaColorStyle } from '@/lib/notas'
 
 const COP = new Intl.NumberFormat('es-CO')
+const venceFmt = new Intl.DateTimeFormat('es-CO', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'America/Bogota',
+})
 
 const NIVEL_PROGRESO: Record<Miembro['nivel'], { siguiente: string | null; meta: number | null }> = {
   BRONCE: { siguiente: 'PLATA', meta: 500 },
@@ -39,12 +44,19 @@ export function TenantPwaHome({
   features,
   tarjetaPremios,
   comunidad,
+  caducidadProxima,
 }: {
   tenant: Tenant
   miembro: Miembro
   features: TenantFeatures
   tarjetaPremios: TarjetaPremioEstado[]
   comunidad: ComunidadPreview
+  /**
+   * Aviso de vencimiento SOLO si está cerca (ver AVISO_CADUCIDAD_DIAS en
+   * app/page.tsx). El detalle completo vive en /puntos; en la home un
+   * vencimiento a 11 meses sería ruido.
+   */
+  caducidadProxima: { puntos: number; fecha: string } | null
 }) {
   const progreso = NIVEL_PROGRESO[miembro.nivel]
   const haciaSiguiente =
@@ -105,7 +117,9 @@ export function TenantPwaHome({
         </div>
 
         <div className="px-6 max-w-md lg:max-w-5xl mx-auto">
-          <div className="-mt-8 flex items-end justify-between gap-4">
+          {/* En desktop el avatar solapa menos el banner: con -mt-8 el título
+              quedaba montado sobre la foto y se leía apretado. */}
+          <div className="-mt-8 lg:-mt-4 flex items-end justify-between gap-4 lg:gap-5">
             <div className="flex items-end gap-3 min-w-0">
               <AvatarUploader
                 nombre={miembro.nombre}
@@ -136,10 +150,16 @@ export function TenantPwaHome({
             hint="Tus puntos, tu tarjeta y tus canjes"
           />
 
-          {/* En desktop: puntos y tarjeta lado a lado — el desbalance venía de
-              dejar la columna izquierda corta mientras la derecha se alargaba. */}
+          {/* Desktop: la tarjeta ocupa la columna derecha entera (dos filas) y
+              los accesos rellenan el hueco que dejaba la columna izquierda bajo
+              el card de puntos. La colocación explícita por fila/columna deja
+              intacto el orden en móvil (puntos → tarjeta → accesos), que sí
+              queremos: la tarjeta es lo primero que el cliente busca. */}
           <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-            <Card padding="lg" className="flex flex-col justify-between min-h-[220px]">
+            <Card
+              padding="lg"
+              className="flex flex-col justify-between min-h-[220px] lg:col-start-1 lg:row-start-1"
+            >
               <p className="text-[11px] uppercase tracking-wider text-muted">
                 Tus puntos
               </p>
@@ -179,10 +199,26 @@ export function TenantPwaHome({
               ) : (
                 <p className="text-xs text-muted">Estás en el nivel máximo. ✨</p>
               )}
+
+              {caducidadProxima && (
+                <Link
+                  href="/puntos"
+                  className="mt-4 block rounded-md bg-surface border border-border px-3 py-2 text-xs text-graphite hover:border-graphite/40 transition-colors"
+                >
+                  <span className="font-medium tabular-nums">
+                    {COP.format(caducidadProxima.puntos)} puntos
+                  </span>{' '}
+                  vencen el{' '}
+                  {venceFmt.format(
+                    new Date(`${caducidadProxima.fecha}T12:00:00Z`)
+                  )}
+                  . Úsalos →
+                </Link>
+              )}
             </Card>
 
             {features.tarjeta_enabled ? (
-              <div className="[&>div]:mb-0">
+              <div className="[&>div]:mb-0 lg:col-start-2 lg:row-start-1 lg:row-span-2">
                 <TarjetaCliente
                   tenantNombre={tenant.nombre}
                   miembroNombre={miembro.nombre}
@@ -205,14 +241,16 @@ export function TenantPwaHome({
                 <AccountTile href="/puntos" label="Historial" hint="Tus movimientos" icon={<ClockIcon />} />
               </div>
             )}
-          </div>
 
-          {features.tarjeta_enabled && (
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <AccountTile href="/recompensas" label="Recompensas" hint="Canjea tus puntos" icon={<GiftIcon />} />
-              <AccountTile href="/puntos" label="Historial" hint="Tus movimientos" icon={<ClockIcon />} />
-            </div>
-          )}
+            {features.tarjeta_enabled && (
+              // En desktop se apilan (una columna): dos tiles anchos rellenan
+              // el alto de la tarjeta mucho mejor que cuatro cuartos de ancho.
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:col-start-1 lg:row-start-2">
+                <AccountTile href="/recompensas" label="Recompensas" hint="Canjea tus puntos" icon={<GiftIcon />} />
+                <AccountTile href="/puntos" label="Historial" hint="Tus movimientos" icon={<ClockIcon />} />
+              </div>
+            )}
+          </div>
 
           {features.cumpleanos_enabled && (
             <div className="mt-4">
@@ -302,13 +340,28 @@ export function TenantPwaHome({
                   {/* Última publicación */}
                   {comunidad.ultimoPost && (
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar
-                        name={
-                          comunidad.ultimoPost.autor_nombre ?? tenant.nombre
-                        }
-                        src={comunidad.ultimoPost.autor_avatar_url}
-                        size={32}
-                      />
+                      {/* Post del negocio (sin autor_miembro_id): va el logo de
+                          la marca, igual que en FeedPostCard. Antes caía al
+                          Avatar con avatar_url null y quedaba un hueco. */}
+                      {comunidad.ultimoPost.autor_miembro_id == null &&
+                      tenant.logo_url ? (
+                        <span className="h-8 w-8 rounded-full bg-surface ring-1 ring-black/[0.06] shrink-0 overflow-hidden flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={tenant.logo_url}
+                            alt=""
+                            className="h-full w-full object-contain p-1"
+                          />
+                        </span>
+                      ) : (
+                        <Avatar
+                          name={
+                            comunidad.ultimoPost.autor_nombre ?? tenant.nombre
+                          }
+                          src={comunidad.ultimoPost.autor_avatar_url}
+                          size={32}
+                        />
+                      )}
                       <p className="text-sm text-muted truncate min-w-0">
                         <span className="text-graphite font-medium">
                           {comunidad.ultimoPost.autor_nombre ?? tenant.nombre}

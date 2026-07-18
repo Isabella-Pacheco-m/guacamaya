@@ -63,6 +63,13 @@ const FEATURES: FeatureMeta[] = [
     status: 'available',
   },
   {
+    key: 'ranking_enabled',
+    label: 'Tabla de posiciones',
+    description:
+      'Muestra en la comunidad quiénes son los clientes con más puntos acumulados. Cada miembro ve también su propio puesto. Ojo: expone el nombre y la foto de tus miembros al resto del club.',
+    status: 'available',
+  },
+  {
     key: 'retos_enabled',
     label: 'Retos',
     description:
