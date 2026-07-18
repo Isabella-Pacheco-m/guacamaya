@@ -97,11 +97,13 @@ body {
   100% { opacity: 0; transform: translateY(-12px); }
 }
 
-/* Marquesina infinita: el track lleva el contenido DUPLICADO y se desplaza
-   exactamente la mitad, así el salto al reiniciar es invisible. */
+/* Marquesina infinita. El track lleva el contenido repetido CUATRO veces y se
+   desplaza exactamente un cuarto (= una copia), así el reinicio es invisible.
+   Con solo dos copias, en pantallas anchas una copia podía ser más angosta que
+   el viewport y aparecía un hueco al reiniciar. */
 @keyframes marquee {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(-25%); }
 }
 
 .animate-marquee {

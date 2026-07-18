@@ -33,19 +33,26 @@ const RECOMPENSAS = [
   { nombre: 'Combo VIP', costo: 2000 },
 ]
 
-// Cada funcionalidad lleva su punto de color: la marquesina deja de ser una
-// tira gris y se vuelve parte de la paleta.
-const FEATURES: { label: string; color: string }[] = [
-  { label: 'Puntos', color: '#EBBA4F' },
-  { label: 'Niveles', color: '#C2603C' },
-  { label: 'Recompensas', color: '#D89B7A' },
-  { label: 'Tarjeta de sellos', color: '#7E8C5A' },
-  { label: 'Sorteos', color: '#EBBA4F' },
-  { label: 'Retos', color: '#C2603C' },
-  { label: 'Galería', color: '#D89B7A' },
-  { label: 'Lanzamientos', color: '#7E8C5A' },
-  { label: 'Notas', color: '#EBBA4F' },
-  { label: 'Cumpleaños', color: '#C2603C' },
+// Tintes suaves de la paleta: el chip entero se colorea (fondo, borde y texto)
+// en vez de llevar un punto suelto. Los tonos son lavados a propósito para que
+// la tira sume color sin gritar.
+type Tinte = { bg: string; border: string; text: string }
+const SOL: Tinte = { bg: '#FBEFD2', border: '#F2DFAC', text: '#7A5B12' }
+const TERRACOTA: Tinte = { bg: '#F8E3DA', border: '#EFCBBB', text: '#8E3F20' }
+const ARCILLA: Tinte = { bg: '#F7E6DC', border: '#EDD0C0', text: '#8A503A' }
+const OLIVA: Tinte = { bg: '#EDEFDF', border: '#DCE0C4', text: '#55603A' }
+
+const FEATURES: { label: string; color: Tinte }[] = [
+  { label: 'Puntos', color: SOL },
+  { label: 'Niveles', color: TERRACOTA },
+  { label: 'Recompensas', color: ARCILLA },
+  { label: 'Tarjeta de sellos', color: OLIVA },
+  { label: 'Sorteos', color: SOL },
+  { label: 'Retos', color: TERRACOTA },
+  { label: 'Galería', color: ARCILLA },
+  { label: 'Lanzamientos', color: OLIVA },
+  { label: 'Notas', color: SOL },
+  { label: 'Cumpleaños', color: TERRACOTA },
 ]
 
 // Cada foto ilustra una capacidad concreta — no son decoración.
@@ -335,35 +342,38 @@ export function RootLanding({
                     Su comunidad
                   </span>
 
-                  {/* Nota post-it de la marca */}
-                  <div
-                    className="mt-4 rounded-xl p-3.5 -rotate-1 shadow-lg"
-                    style={{
-                      background: '#FEF3C7',
-                      border: '1px solid #FDE68A',
-                      color: '#7C5E10',
-                    }}
-                  >
-                    <p className="text-[13px] leading-snug">
-                      Hoy horneamos pan de masa madre. Sale a las 4 🥖
-                    </p>
-                    <p className="text-[10px] mt-2 opacity-70">hoy</p>
+                  {/* Nota post-it: CUADRADA, igual que las reales de la app */}
+                  <div className="mt-4 flex items-start gap-3">
+                    <div
+                      className="w-[124px] shrink-0 aspect-square flex flex-col rounded-xl p-3 -rotate-2 shadow-lg"
+                      style={{
+                        background: '#FEF3C7',
+                        border: '1px solid #FDE68A',
+                        color: '#7C5E10',
+                      }}
+                    >
+                      <p className="text-[12px] leading-snug flex-1 line-clamp-4">
+                        Hoy horneamos pan de masa madre. Sale a las 4 🥖
+                      </p>
+                      <p className="text-[10px] opacity-70 shrink-0">hoy</p>
+                    </div>
+
+                    {/* Polaroid de un cliente, al lado */}
+                    <div className="bg-white p-1.5 pb-5 rounded-[3px] rotate-2 shadow-lg shrink-0">
+                      <div
+                        className="h-[92px] w-[92px] rounded-[2px]"
+                        style={{ background: '#C2603C' }}
+                      />
+                    </div>
                   </div>
 
-                  {/* Polaroid de un cliente */}
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="bg-white p-1.5 pb-4 rounded-[3px] rotate-2 shadow-lg shrink-0">
-                      <div className="h-16 w-16 rounded-[2px] bg-gradient-to-br from-[#C2603C] to-[#EBBA4F]" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-white/90 leading-snug">
-                        Tus clientes suben fotos
-                      </p>
-                      <p className="text-[11px] text-white/45 mt-0.5">
-                        y ganan puntos por hacerlo
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-white/90 leading-snug mt-4">
+                    Notas del día y fotos de tus clientes
+                    <span className="text-white/45">
+                      {' '}
+                      — que ganan puntos por subirlas
+                    </span>
+                  </p>
 
                   {/* Reto activo */}
                   <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/[0.07] px-3 py-2.5">
@@ -393,19 +403,22 @@ export function RootLanding({
       {/* ══════════ Marquesina de funcionalidades ══════════ */}
       <section className="py-7 border-y border-border/70 bg-white/40 overflow-hidden marquee-fade">
         <div className="flex w-max animate-marquee">
-          {/* Duplicado: permite el bucle sin costura (ver @keyframes marquee) */}
-          {[0, 1].map((copy) => (
-            <div key={copy} className="flex shrink-0" aria-hidden={copy === 1}>
+          {/* Cuatro copias: garantizan que el track siempre exceda el ancho de
+              pantalla, incluso en monitores anchos (ver @keyframes marquee). */}
+          {[0, 1, 2, 3].map((copy) => (
+            <div key={copy} className="flex shrink-0" aria-hidden={copy > 0}>
               {FEATURES.map((f) => (
+                // El color va en el propio chip —fondo y borde teñidos— en vez
+                // de un punto suelto: se lee como paleta, no como viñeta.
                 <span
                   key={`${copy}-${f.label}`}
-                  className="mx-2 inline-flex items-center gap-2.5 whitespace-nowrap text-sm font-medium text-graphite/80 bg-white border border-border rounded-full pl-3.5 pr-5 py-2"
+                  className="mx-1.5 inline-flex items-center whitespace-nowrap text-sm font-medium rounded-full px-5 py-2 border"
+                  style={{
+                    color: f.color.text,
+                    background: f.color.bg,
+                    borderColor: f.color.border,
+                  }}
                 >
-                  <span
-                    aria-hidden
-                    className="h-2 w-2 rounded-full shrink-0"
-                    style={{ background: f.color }}
-                  />
                   {f.label}
                 </span>
               ))}
@@ -462,116 +475,44 @@ export function RootLanding({
       </section>
 
       {/* ══════════ Cierre ══════════ */}
-      <section className="px-6 pb-24">
-        {/* Es una postal de papel, no un banner: fondo crema plano (sin
-            degradados), borde visible, sello de correo y la guacamaya de la
-            casa. El tono habla de tú a tú con quien atiende el negocio. */}
-        <div className="max-w-3xl mx-auto relative">
-          <div className="relative rounded-lg bg-white border border-border shadow-[0_18px_50px_-24px_rgba(42,35,32,0.35)] overflow-hidden">
-            {/* Franja superior tipo postal */}
-            <div className="flex">
-              {['#EBBA4F', '#C2603C', '#D89B7A', '#2A2320'].map((c) => (
-                <span key={c} className="h-1.5 flex-1" style={{ background: c }} />
-              ))}
-            </div>
+      {/* Deliberadamente desnudo: sin tarjeta, sin marco, sin sello ni cintas.
+          Solo aire, una frase, el botón y la guacamaya. El cierre anterior
+          acumulaba adornos y se comía el mensaje. */}
+      <section className="px-6 pb-28 pt-4">
+        <div className="max-w-2xl mx-auto text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/img/guacamaya-volando.png"
+            alt=""
+            aria-hidden
+            className="w-[104px] h-auto mx-auto mb-10 opacity-90"
+          />
 
-            <div className="relative px-7 sm:px-12 py-12 sm:py-14">
-              {/* Sello de correo, arriba a la derecha */}
-              <div className="absolute top-8 right-7 sm:right-12 hidden sm:block">
-                <div className="w-[86px] rotate-6 bg-surface border-2 border-dashed border-border rounded-[4px] p-1.5 text-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/img/guacamaya-trazo.png"
-                    alt=""
-                    className="h-12 w-auto mx-auto opacity-80"
-                  />
-                  <p className="text-[7px] uppercase tracking-[0.14em] text-muted mt-1 leading-tight">
-                    Guacamaya
-                    <br />
-                    Colombia
-                  </p>
-                </div>
-              </div>
-
-              {/* Guacamaya en vuelo con su estela: el guiño de correo aéreo que
-                  ata la postal con la marca. Decorativa, se oculta en móvil. */}
-              <div
+          <h2 className="text-[32px] sm:text-[42px] font-light leading-[1.12] tracking-tight mb-6">
+            Tú ya sabes quién es cliente de la casa.
+            <br className="hidden sm:block" />{' '}
+            <span className="relative inline-block">
+              <span className="relative z-10">Ahora tu negocio también.</span>
+              <span
                 aria-hidden
-                className="pointer-events-none absolute right-6 bottom-4 hidden lg:block w-[230px]"
-              >
-                <svg
-                  viewBox="0 0 220 90"
-                  fill="none"
-                  className="absolute -left-24 top-8 w-[190px] text-electric/50"
-                >
-                  <path
-                    d="M2 76C40 76 52 14 96 14c30 0 40 40 74 40"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeDasharray="1 9"
-                  />
-                </svg>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/img/guacamaya-volando.png"
-                  alt=""
-                  className="relative w-[130px] h-auto opacity-90 -rotate-6"
-                />
-              </div>
+                className="absolute inset-x-0 bottom-1 h-3 -z-0 rounded-full bg-lime/50"
+              />
+            </span>
+          </h2>
 
-              <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-5">
-                Para quien abre cada mañana
-              </p>
+          <p className="text-muted text-[15px] leading-relaxed max-w-md mx-auto mb-10">
+            Tu club vive en{' '}
+            <span className="text-graphite">tunegocio.guacamaya.net</span>, con
+            tu logo arriba y tu gente adentro.
+          </p>
 
-              <h2 className="text-[30px] sm:text-[40px] font-light leading-[1.08] tracking-tight mb-5 max-w-xl">
-                Tú ya sabes quién es
-                <br />
-                cliente de la casa.
-                <br />
-                <span className="relative inline-block mt-1">
-                  <span className="relative z-10">Ahora tu negocio también.</span>
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 bottom-1 h-3 -z-0 rounded-full bg-lime/60"
-                  />
-                </span>
-              </h2>
+          <a href="/api/auth/login" className="inline-block">
+            <Button className="px-12">Ingresar</Button>
+          </a>
 
-              <p className="text-muted text-[15px] leading-relaxed max-w-lg mb-8">
-                No es una app más: es tu club, en{' '}
-                <span className="font-mono text-graphite">
-                  tunegocio.guacamaya.net
-                </span>
-                , con tu logo arriba y tu gente adentro. El nuestro no aparece
-                por ningún lado.
-              </p>
-
-              {/* lg:pr-64 reserva el carril de la guacamaya en vuelo */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:pr-64">
-                <a href="/api/auth/login">
-                  <Button className="px-10">Ingresar</Button>
-                </a>
-                <p className="text-[13px] text-muted">
-                  ¿Ya tienes club? Entra con el correo de tu negocio.
-                </p>
-              </div>
-            </div>
-
-            {/* Pie perforado, como el borde de un tiquete */}
-            <div className="border-t border-dashed border-border px-7 sm:px-12 py-4 flex flex-wrap items-center gap-x-5 gap-y-1">
-              {['Puntos', 'Sellos', 'Comunidad', 'Retos', 'Galería', 'Sorteos'].map(
-                (w) => (
-                  <span
-                    key={w}
-                    className="text-[11px] uppercase tracking-[0.16em] text-muted"
-                  >
-                    {w}
-                  </span>
-                )
-              )}
-            </div>
-          </div>
+          <p className="text-[13px] text-muted mt-5">
+            ¿Ya tienes club? Entra con el correo de tu negocio.
+          </p>
         </div>
       </section>
     </main>
