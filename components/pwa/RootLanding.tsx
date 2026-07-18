@@ -461,74 +461,85 @@ export function RootLanding({
 
       {/* ══════════ Cierre ══════════ */}
       <section className="px-6 pb-24">
-        <div className="max-w-4xl mx-auto">
-          {/* La pieza es el propio subdominio: en vez de un banner con botón,
-              se muestra la URL del club como si ya existiera. */}
-          <div className="relative rounded-lg bg-graphite text-white overflow-hidden">
-            <div
-              aria-hidden
-              className="absolute -top-20 -right-10 h-72 w-72 rounded-full opacity-[0.18] blur-3xl"
-              style={{ background: 'var(--color-lime, #EBBA4F)' }}
-            />
+        {/* Es una postal de papel, no un banner: fondo crema plano (sin
+            degradados), borde visible, sello de correo y la guacamaya de la
+            casa. El tono habla de tú a tú con quien atiende el negocio. */}
+        <div className="max-w-3xl mx-auto relative">
+          <div className="relative rounded-lg bg-white border border-border shadow-[0_18px_50px_-24px_rgba(42,35,32,0.35)] overflow-hidden">
+            {/* Franja superior tipo postal */}
+            <div className="flex">
+              {['#EBBA4F', '#C2603C', '#D89B7A', '#2A2320'].map((c) => (
+                <span key={c} className="h-1.5 flex-1" style={{ background: c }} />
+              ))}
+            </div>
 
-            <div className="relative px-7 sm:px-12 py-12 sm:py-16">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-lime/80 mb-5">
-                Y así se ve el tuyo
-              </p>
-
-              {/* Barra de navegador con el subdominio del club */}
-              <div className="inline-flex items-center gap-2.5 rounded-full bg-white/[0.07] ring-1 ring-white/10 pl-3 pr-4 py-2 mb-7 max-w-full">
-                <span className="flex gap-1.5 shrink-0" aria-hidden>
-                  <span className="h-2 w-2 rounded-full bg-white/20" />
-                  <span className="h-2 w-2 rounded-full bg-white/20" />
-                  <span className="h-2 w-2 rounded-full bg-white/20" />
-                </span>
-                <span className="text-sm font-mono truncate">
-                  <span className="text-lime">tunegocio</span>
-                  <span className="text-white/45">.guacamaya.net</span>
-                </span>
+            <div className="relative px-7 sm:px-12 py-12 sm:py-14">
+              {/* Sello de correo, arriba a la derecha */}
+              <div className="absolute top-8 right-7 sm:right-12 hidden sm:block">
+                <div className="w-[86px] rotate-6 bg-surface border-2 border-dashed border-border rounded-[4px] p-1.5 text-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/img/guacamaya-trazo.png"
+                    alt=""
+                    className="h-12 w-auto mx-auto opacity-80"
+                  />
+                  <p className="text-[7px] uppercase tracking-[0.14em] text-muted mt-1 leading-tight">
+                    Guacamaya
+                    <br />
+                    Colombia
+                  </p>
+                </div>
               </div>
 
-              <h2 className="text-[30px] sm:text-[40px] font-light leading-[1.08] tracking-tight mb-4 max-w-2xl">
-                Tu nombre arriba.
+              <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-5">
+                Para quien abre cada mañana
+              </p>
+
+              <h2 className="text-[30px] sm:text-[40px] font-light leading-[1.08] tracking-tight mb-5 max-w-xl">
+                Tú ya sabes quién es
                 <br />
-                El nuestro, en ninguna parte.
+                cliente de la casa.
+                <br />
+                <span className="relative inline-block mt-1">
+                  <span className="relative z-10">Ahora tu negocio también.</span>
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-1 h-3 -z-0 rounded-full bg-lime/60"
+                  />
+                </span>
               </h2>
 
-              <p className="text-white/60 text-[15px] leading-relaxed max-w-lg mb-9">
-                Tus clientes lo instalan en el celular como cualquier app y
-                entran a <span className="text-white/90">tu</span> club — con tu
-                logo, tus colores y tu comunidad adentro.
+              <p className="text-muted text-[15px] leading-relaxed max-w-lg mb-8">
+                No es una app más: es tu club, en{' '}
+                <span className="font-mono text-graphite">
+                  tunegocio.guacamaya.net
+                </span>
+                , con tu logo arriba y tu gente adentro. El nuestro no aparece
+                por ningún lado.
               </p>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <a href="/api/auth/login">
                   <Button className="px-10">Ingresar</Button>
                 </a>
-                <p className="text-[13px] text-white/45">
+                <p className="text-[13px] text-muted">
                   ¿Ya tienes club? Entra con el correo de tu negocio.
                 </p>
               </div>
             </div>
 
-            {/* Cinta inferior: el guiño artesanal de la marca */}
-            <div className="relative border-t border-white/10 py-4 overflow-hidden">
-              <div className="flex w-max animate-marquee">
-                {[0, 1].map((copy) => (
-                  <div key={copy} className="flex shrink-0" aria-hidden={copy === 1}>
-                    {['Puntos', 'Sellos', 'Comunidad', 'Retos', 'Galería', 'Sorteos'].map(
-                      (w) => (
-                        <span
-                          key={`${copy}-${w}`}
-                          className="mx-5 text-[13px] uppercase tracking-[0.18em] text-white/35 whitespace-nowrap"
-                        >
-                          {w} <span className="text-lime/50">✦</span>
-                        </span>
-                      )
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Pie perforado, como el borde de un tiquete */}
+            <div className="border-t border-dashed border-border px-7 sm:px-12 py-4 flex flex-wrap items-center gap-x-5 gap-y-1">
+              {['Puntos', 'Sellos', 'Comunidad', 'Retos', 'Galería', 'Sorteos'].map(
+                (w) => (
+                  <span
+                    key={w}
+                    className="text-[11px] uppercase tracking-[0.16em] text-muted"
+                  >
+                    {w}
+                  </span>
+                )
+              )}
             </div>
           </div>
         </div>

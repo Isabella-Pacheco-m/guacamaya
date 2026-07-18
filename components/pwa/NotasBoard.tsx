@@ -34,7 +34,9 @@ export function NotasBoard({
           {titulo}
         </p>
       )}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Tres columnas en pantallas anchas: con dos, cada post-it cuadrado
+          crecía demasiado. El max-w del ítem pone el techo definitivo. */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 justify-items-center sm:justify-items-start">
         {notas.map((n, i) => {
           const s = notaColorStyle(n.color)
           const rot = i % 2 === 0 ? '-rotate-1' : 'rotate-1'
@@ -43,7 +45,7 @@ export function NotasBoard({
               key={n.id}
               // aspect-square: un post-it real es cuadrado. El texto se recorta
               // si no cabe, en vez de estirar la nota.
-              className={`aspect-square flex flex-col overflow-hidden rounded-xl p-4 shadow-[0_6px_16px_-8px_rgba(42,35,32,0.3)] transition-transform hover:rotate-0 ${rot}`}
+              className={`w-full max-w-[240px] aspect-square flex flex-col overflow-hidden rounded-xl p-4 shadow-[0_6px_16px_-8px_rgba(42,35,32,0.3)] transition-transform hover:rotate-0 ${rot}`}
               style={{ background: s.bg, border: `1px solid ${s.border}` }}
             >
               {n.pinned && (
