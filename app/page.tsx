@@ -8,6 +8,8 @@ import { getTenantBySlug, findTenantByAdminEmail } from '@/lib/tenant'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { listTarjetaPremiosForMiembro, listNotas } from '@/lib/tenantQueries'
 import { listFeedPosts } from '@/lib/feed'
+import { listGaleriaAprobadas } from '@/lib/galeria'
+import { listRetosPwa } from '@/lib/retos'
 import { tenantBaseUrl } from '@/lib/config'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -114,25 +116,42 @@ async function renderTenantHome(slug: string) {
   }
 
   const features = await getTenantFeatures(tenant.id)
-  const [tarjetaPremios, ultimoPost, notas] = await Promise.all([
+  const [tarjetaPremios, ultimoPost, notas, fotos, retos] = await Promise.all([
     features.tarjeta_enabled
       ? listTarjetaPremiosForMiembro(tenant.id, miembro.id)
       : Promise.resolve([]),
     features.feed_enabled
       ? listFeedPosts(tenant.id, 1).then((posts) => posts[0] ?? null)
       : Promise.resolve(null),
-    features.notas_enabled
-      ? listNotas(tenant.id, 6)
+    features.notas_enabled ? listNotas(tenant.id, 2) : Promise.resolve([]),
+    features.galeria_enabled
+      ? listGaleriaAprobadas(tenant.id, 4)
       : Promise.resolve([]),
+    features.retos_enabled ? listRetosPwa(tenant.id) : Promise.resolve([]),
   ])
+
+  const retoActivo = retos.find((r) => r.estado === 'ABIERTO') ?? null
+  const comunidad = {
+    notas,
+    fotos,
+    ultimoPost,
+    retoActivo,
+    hayAlgo:
+      notas.length > 0 ||
+      fotos.length > 0 ||
+      ultimoPost !== null ||
+      retoActivo !== null ||
+      features.sorteos_enabled ||
+      features.lanzamientos_enabled,
+  }
+
   return (
     <TenantPwaHome
       tenant={tenant}
       miembro={miembro}
       features={features}
       tarjetaPremios={tarjetaPremios}
-      ultimoPost={ultimoPost}
-      notas={notas}
+      comunidad={comunidad}
     />
   )
 }

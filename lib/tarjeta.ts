@@ -66,6 +66,57 @@ export interface TenantFeatures {
   tarjeta_sello_url: string | null
 }
 
+// Valores por defecto de cada flag. Viven aquí (módulo puro) junto al tipo para
+// que la capa de datos y el merge defensivo compartan una sola fuente.
+export const DEFAULT_TENANT_FEATURES: Omit<TenantFeatures, 'tenant_id'> = {
+  feed_enabled: false,
+  sorteos_enabled: false,
+  tarjeta_enabled: false,
+  cumpleanos_enabled: false,
+  notas_enabled: false,
+  galeria_enabled: false,
+  galeria_puntos: 0,
+  lanzamientos_enabled: false,
+  retos_enabled: false,
+  feed_miembros_pueden_publicar: false,
+  registro_abierto: true,
+  tarjeta_size: 10,
+  sello_valor_cop: null,
+  tarjeta_color_fondo: '#2A2320',
+  tarjeta_color_sello: '#EBBA4F',
+  tarjeta_estilo_sello: 'circulo',
+  tarjeta_fondo_tipo: 'solid',
+  tarjeta_color_fondo2: null,
+  tarjeta_sello_url: null,
+}
+
+/**
+ * Completa una fila parcial de `tenant_features` con los defaults.
+ *
+ * Existe para tolerar *schema drift*: si el código se despliega antes de que
+ * corran sus migraciones, la fila de la DB no traerá las columnas nuevas. En
+ * vez de romper, la feature nueva queda apagada (su default) hasta que se
+ * migre. Solo copia claves conocidas — ignora columnas extra (updated_at, …).
+ */
+export function mergeTenantFeatures(
+  tenantId: string,
+  row: Record<string, unknown> | null | undefined
+): TenantFeatures {
+  const out = { tenant_id: tenantId, ...DEFAULT_TENANT_FEATURES } as TenantFeatures
+  if (!row) return out
+  for (const key of Object.keys(DEFAULT_TENANT_FEATURES) as Array<
+    keyof Omit<TenantFeatures, 'tenant_id'>
+  >) {
+    const v = row[key]
+    // `undefined` = la columna no existe en la DB todavía → conservar default.
+    // `null` sí es un valor legítimo para las columnas nullable.
+    if (v !== undefined) {
+      ;(out as unknown as Record<string, unknown>)[key] = v
+    }
+  }
+  return out
+}
+
 export const ESTILO_LABEL: Record<TarjetaEstilo, string> = {
   circulo: 'Círculo',
   estrella: 'Estrella',

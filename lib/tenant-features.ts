@@ -1,40 +1,24 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import {
+  DEFAULT_TENANT_FEATURES,
   FEATURE_KEYS,
   TARJETA_ESTILOS,
   TARJETA_FONDO_TIPOS,
+  mergeTenantFeatures,
   type FeatureKey,
   type TarjetaEstilo,
   type TarjetaFondoTipo,
   type TenantFeatures,
 } from '@/lib/tarjeta'
+import { isUndefinedColumn, warnSchemaDrift } from '@/lib/schema-drift'
 
 // Re-export para no romper imports existentes (`from '@/lib/tenant-features'`).
 // Las constantes/tipos puros viven en lib/tarjeta.ts; aquí solo la capa de datos.
 export { FEATURE_KEYS, TARJETA_ESTILOS, TARJETA_FONDO_TIPOS }
 export type { FeatureKey, TarjetaEstilo, TarjetaFondoTipo, TenantFeatures }
 
-const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
-  feed_enabled: false,
-  sorteos_enabled: false,
-  tarjeta_enabled: false,
-  cumpleanos_enabled: false,
-  notas_enabled: false,
-  galeria_enabled: false,
-  galeria_puntos: 0,
-  lanzamientos_enabled: false,
-  retos_enabled: false,
-  feed_miembros_pueden_publicar: false,
-  registro_abierto: true,
-  tarjeta_size: 10,
-  sello_valor_cop: null,
-  tarjeta_color_fondo: '#2A2320',
-  tarjeta_color_sello: '#EBBA4F',
-  tarjeta_estilo_sello: 'circulo',
-  tarjeta_fondo_tipo: 'solid',
-  tarjeta_color_fondo2: null,
-  tarjeta_sello_url: null,
-}
+// Los defaults viven en lib/tarjeta.ts (módulo puro) junto al tipo.
+const DEFAULT_FLAGS = DEFAULT_TENANT_FEATURES
 
 const SELECT =
   'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, notas_enabled, galeria_enabled, galeria_puntos, lanzamientos_enabled, retos_enabled, feed_miembros_pueden_publicar, registro_abierto, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello, tarjeta_fondo_tipo, tarjeta_color_fondo2, tarjeta_sello_url'
@@ -45,7 +29,24 @@ export async function getTenantFeatures(tenantId: string): Promise<TenantFeature
     .select(SELECT)
     .eq('tenant_id', tenantId)
     .maybeSingle()
-  if (error) throw error
+
+  if (error) {
+    // Camino normal: cualquier otro error sí es un fallo real.
+    if (!isUndefinedColumn(error)) throw error
+
+    // Migración pendiente: en vez de tumbar la home del tenant, releemos con
+    // `*` y completamos con defaults. Las features cuya columna aún no existe
+    // quedan apagadas hasta que se apliquen las migraciones.
+    warnSchemaDrift('getTenantFeatures', error)
+    const { data: loose, error: looseErr } = await supabaseAdmin
+      .from('tenant_features')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .maybeSingle()
+    if (looseErr) throw looseErr
+    return mergeTenantFeatures(tenantId, loose as Record<string, unknown> | null)
+  }
+
   if (!data) return { tenant_id: tenantId, ...DEFAULT_FLAGS }
   return data as TenantFeatures
 }
