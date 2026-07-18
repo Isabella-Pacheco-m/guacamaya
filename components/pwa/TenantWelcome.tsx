@@ -47,10 +47,7 @@ export function TenantWelcome({
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
-              <p className="absolute left-0 right-0 bottom-4 text-[11px] uppercase tracking-[0.2em] text-white/85">
-                Club de miembros
-              </p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
             </div>
           ) : (
             <div
@@ -73,7 +70,13 @@ export function TenantWelcome({
             />
           )}
 
-          <h1 className="text-[40px] sm:text-[52px] font-light leading-[1.05] tracking-tight mt-6">
+          {/* El rótulo va aquí y no sobre la portada: el logo se monta en el
+              borde inferior del banner y le pasaba por encima, partiendo la
+              palabra. Sobre el nombre no compite con nada. */}
+          <p className="text-[11px] uppercase tracking-[0.2em] text-electric mt-6">
+            Club de miembros
+          </p>
+          <h1 className="text-[40px] sm:text-[52px] font-light leading-[1.05] tracking-tight mt-3">
             {tenant.nombre}
           </h1>
           <p className="text-muted text-sm mt-4 max-w-sm mx-auto leading-relaxed">
