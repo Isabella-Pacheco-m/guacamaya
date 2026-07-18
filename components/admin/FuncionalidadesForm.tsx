@@ -41,6 +41,34 @@ const FEATURES: FeatureMeta[] = [
       'Crea sorteos donde los clientes participan subiendo factura, follow, etc.',
     status: 'available',
   },
+  {
+    key: 'notas_enabled',
+    label: 'Notas',
+    description:
+      'Deja notas tipo post-it para tu comunidad: avisos, horarios o mensajes cortos que tus clientes ven en la PWA.',
+    status: 'available',
+  },
+  {
+    key: 'galeria_enabled',
+    label: 'Galería',
+    description:
+      'Tus clientes suben fotos del local o de tus productos. Tú apruebas cuáles se publican y les das puntos por participar.',
+    status: 'available',
+  },
+  {
+    key: 'lanzamientos_enabled',
+    label: 'Lanzamientos',
+    description:
+      'Anuncia productos nuevos con campaña de expectativa: banner, cuenta regresiva y revelado. Ideal para generar hype antes de un lanzamiento.',
+    status: 'available',
+  },
+  {
+    key: 'retos_enabled',
+    label: 'Retos',
+    description:
+      'Proponles metas a tus clientes (visita 3 veces, prueba un producto…). Suben evidencia, tú la verificas y todos los que cumplen ganan puntos.',
+    status: 'available',
+  },
 ]
 
 export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {
@@ -103,6 +131,7 @@ export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {
         const isLoading = loading === f.key
         const disabled = f.status === 'soon' || (loading !== null && !isLoading)
         const showTarjetaConfig = f.key === 'tarjeta_enabled' && checked
+        const showGaleriaConfig = f.key === 'galeria_enabled' && checked
         return (
           <div
             key={f.key}
@@ -143,6 +172,16 @@ export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {
                   className="text-electric text-sm hover:underline"
                 >
                   Configurar tarjeta (tamaño, valor, diseño y premios) →
+                </Link>
+              </div>
+            )}
+            {showGaleriaConfig && (
+              <div className="border-t border-border pt-4">
+                <Link
+                  href="/admin/galeria"
+                  className="text-electric text-sm hover:underline"
+                >
+                  Revisar fotos y configurar puntos por publicación →
                 </Link>
               </div>
             )}

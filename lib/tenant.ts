@@ -4,6 +4,11 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureTenantFeaturesRow } from '@/lib/tenant-features'
 import type { Tenant } from '@/types'
 
+// Columnas públicas del tenant que se serializan al tipo `Tenant`. Nunca
+// incluir admin_email ni join_code aquí (no deben filtrarse a la PWA).
+const TENANT_COLS =
+  'id, nombre, slug, logo_url, banner_url, color_primario, puntos_por_mil, puntos_cumpleanos'
+
 export class TenantNotFoundError extends Error {
   constructor(public readonly slug: string | null) {
     super(
@@ -18,7 +23,7 @@ export class TenantNotFoundError extends Error {
 export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
   const { data, error } = await supabaseAdmin
     .from('tenants')
-    .select('id, nombre, slug, logo_url, color_primario, puntos_por_mil, puntos_cumpleanos')
+    .select(TENANT_COLS)
     .eq('slug', slug)
     .maybeSingle()
 
@@ -29,7 +34,7 @@ export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
 export async function getTenantById(id: string): Promise<Tenant | null> {
   const { data, error } = await supabaseAdmin
     .from('tenants')
-    .select('id, nombre, slug, logo_url, color_primario, puntos_por_mil, puntos_cumpleanos')
+    .select(TENANT_COLS)
     .eq('id', id)
     .maybeSingle()
 
@@ -72,9 +77,12 @@ const RESERVED_SLUGS = new Set([
   'auth',
   'canjear',
   'feed',
+  'galeria',
   'invite',
+  'lanzamientos',
   'puntos',
   'recompensas',
+  'retos',
   'sorteos',
   'superadmin',
   'unirse',
@@ -195,7 +203,7 @@ export async function listTenants(): Promise<Tenant[]> {
   const { data, error } = await supabaseAdmin
     .from('tenants')
     .select(
-      'id, nombre, slug, logo_url, color_primario, puntos_por_mil, puntos_cumpleanos'
+      TENANT_COLS
     )
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -228,7 +236,7 @@ export async function createTenant(
     throw new TenantCreateError('admin_email requerido y debe ser válido', 400)
   }
 
-  const color = (input.color_primario ?? '#305CFF').trim()
+  const color = (input.color_primario ?? '#C2603C').trim()
   if (!HEX_RE.test(color)) {
     throw new TenantCreateError('color_primario debe ser hex #RRGGBB', 400)
   }
@@ -265,7 +273,7 @@ export async function createTenant(
       puntos_cumpleanos: puntosCumple,
     })
     .select(
-      'id, nombre, slug, logo_url, color_primario, puntos_por_mil, puntos_cumpleanos'
+      TENANT_COLS
     )
     .single()
 
@@ -327,7 +335,7 @@ export async function updateTenant(
     .from('tenants')
     .update(patch)
     .eq('id', tenantId)
-    .select('id, nombre, slug, logo_url, color_primario, puntos_por_mil, puntos_cumpleanos')
+    .select(TENANT_COLS)
     .single()
 
   if (error) throw error

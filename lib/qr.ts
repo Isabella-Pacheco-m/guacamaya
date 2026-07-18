@@ -7,7 +7,7 @@ export async function qrSvg(text: string): Promise<string> {
     type: 'svg',
     margin: 0,
     color: {
-      dark: '#1A1A1E',
+      dark: '#2A2320',
       light: '#FFFFFF',
     },
     errorCorrectionLevel: 'M',

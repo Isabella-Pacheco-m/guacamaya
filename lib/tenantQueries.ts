@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Miembro, Recompensa, Transaccion } from '@/types'
+import type { Nota } from '@/lib/notas'
 
 export interface CreateMiembroInput {
   nombre: string
@@ -24,6 +25,21 @@ export async function createMiembro(
     p_nombre: input.nombre,
     p_telefono: input.telefono ?? null,
     p_email: input.email ?? null,
+  })
+  if (error) throw error
+  return data as Miembro
+}
+
+// Setea (o limpia con url=null) la foto de perfil del miembro. Tenant-scoped.
+export async function setMiembroAvatar(
+  tenantId: string,
+  miembroId: string,
+  url: string | null
+): Promise<Miembro> {
+  const { data, error } = await supabaseAdmin.rpc('set_miembro_avatar', {
+    p_tenant_id: tenantId,
+    p_miembro_id: miembroId,
+    p_url: url,
   })
   if (error) throw error
   return data as Miembro
@@ -464,6 +480,60 @@ export async function deleteTarjetaPremio(
     p_threshold: threshold,
   })
   if (error) throw error
+}
+
+// =====================================================================
+// Notas (post-it de la marca)
+// =====================================================================
+
+export class NotaError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message)
+    this.name = 'NotaError'
+  }
+}
+
+export async function listNotas(tenantId: string, limit = 50): Promise<Nota[]> {
+  const { data, error } = await supabaseAdmin.rpc('list_notas', {
+    p_tenant_id: tenantId,
+    p_limit: limit,
+  })
+  if (error) throw error
+  return (data ?? []) as Nota[]
+}
+
+export async function createNota(
+  tenantId: string,
+  cuerpo: string,
+  color: string,
+  pinned: boolean
+): Promise<Nota> {
+  const { data, error } = await supabaseAdmin.rpc('create_nota', {
+    p_tenant_id: tenantId,
+    p_cuerpo: cuerpo,
+    p_color: color,
+    p_pinned: pinned,
+  })
+  if (error) {
+    if ((error.message || '').includes('cuerpo no puede estar vacio')) {
+      throw new NotaError('El mensaje no puede estar vacío', 400)
+    }
+    throw error
+  }
+  return data as Nota
+}
+
+export async function deleteNota(tenantId: string, id: string): Promise<void> {
+  const { error } = await supabaseAdmin.rpc('delete_nota', {
+    p_tenant_id: tenantId,
+    p_id: id,
+  })
+  if (error) {
+    if ((error.message || '').includes('nota no encontrada')) {
+      throw new NotaError('Nota no encontrada', 404)
+    }
+    throw error
+  }
 }
 
 export async function registerCanje(

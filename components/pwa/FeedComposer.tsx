@@ -3,11 +3,18 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
+import { Avatar } from '@/components/ui/Avatar'
 
 // Caja de publicación para el miembro en el feed de la PWA. Colapsada muestra
 // un "Comparte algo…"; al abrir, textarea + imagen opcional. POST a
 // /api/me/feed (gated por el permiso que activa el admin).
-export function FeedComposer({ miembroNombre }: { miembroNombre: string }) {
+export function FeedComposer({
+  miembroNombre,
+  miembroAvatarUrl,
+}: {
+  miembroNombre: string
+  miembroAvatarUrl?: string | null
+}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [cuerpo, setCuerpo] = useState('')
@@ -15,8 +22,6 @@ export function FeedComposer({ miembroNombre }: { miembroNombre: string }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-
-  const inicial = (miembroNombre.trim()[0] ?? '?').toUpperCase()
 
   async function publish() {
     const text = cuerpo.trim()
@@ -55,9 +60,7 @@ export function FeedComposer({ miembroNombre }: { miembroNombre: string }) {
         onClick={() => setOpen(true)}
         className="w-full bg-white rounded-lg shadow-card px-4 py-3.5 flex items-center gap-3 text-left text-sm text-muted hover:bg-surface/40 transition-colors"
       >
-        <span className="h-8 w-8 rounded-full bg-surface text-graphite flex items-center justify-center text-sm font-medium shrink-0">
-          {inicial}
-        </span>
+        <Avatar name={miembroNombre} src={miembroAvatarUrl} size={32} />
         Comparte algo con la comunidad…
       </button>
     )

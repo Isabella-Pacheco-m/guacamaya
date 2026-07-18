@@ -2,32 +2,42 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import {
   FEATURE_KEYS,
   TARJETA_ESTILOS,
+  TARJETA_FONDO_TIPOS,
   type FeatureKey,
   type TarjetaEstilo,
+  type TarjetaFondoTipo,
   type TenantFeatures,
 } from '@/lib/tarjeta'
 
 // Re-export para no romper imports existentes (`from '@/lib/tenant-features'`).
 // Las constantes/tipos puros viven en lib/tarjeta.ts; aquí solo la capa de datos.
-export { FEATURE_KEYS, TARJETA_ESTILOS }
-export type { FeatureKey, TarjetaEstilo, TenantFeatures }
+export { FEATURE_KEYS, TARJETA_ESTILOS, TARJETA_FONDO_TIPOS }
+export type { FeatureKey, TarjetaEstilo, TarjetaFondoTipo, TenantFeatures }
 
 const DEFAULT_FLAGS: Omit<TenantFeatures, 'tenant_id'> = {
   feed_enabled: false,
   sorteos_enabled: false,
   tarjeta_enabled: false,
   cumpleanos_enabled: false,
+  notas_enabled: false,
+  galeria_enabled: false,
+  galeria_puntos: 0,
+  lanzamientos_enabled: false,
+  retos_enabled: false,
   feed_miembros_pueden_publicar: false,
   registro_abierto: true,
   tarjeta_size: 10,
   sello_valor_cop: null,
-  tarjeta_color_fondo: '#1A1A1E',
-  tarjeta_color_sello: '#B8FA4E',
+  tarjeta_color_fondo: '#2A2320',
+  tarjeta_color_sello: '#EBBA4F',
   tarjeta_estilo_sello: 'circulo',
+  tarjeta_fondo_tipo: 'solid',
+  tarjeta_color_fondo2: null,
+  tarjeta_sello_url: null,
 }
 
 const SELECT =
-  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, feed_miembros_pueden_publicar, registro_abierto, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello'
+  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, notas_enabled, galeria_enabled, galeria_puntos, lanzamientos_enabled, retos_enabled, feed_miembros_pueden_publicar, registro_abierto, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello, tarjeta_fondo_tipo, tarjeta_color_fondo2, tarjeta_sello_url'
 
 export async function getTenantFeatures(tenantId: string): Promise<TenantFeatures> {
   const { data, error } = await supabaseAdmin
@@ -52,6 +62,11 @@ export interface TenantFeaturesPatch {
   sorteos_enabled?: boolean
   tarjeta_enabled?: boolean
   cumpleanos_enabled?: boolean
+  notas_enabled?: boolean
+  galeria_enabled?: boolean
+  galeria_puntos?: number
+  lanzamientos_enabled?: boolean
+  retos_enabled?: boolean
   feed_miembros_pueden_publicar?: boolean
   registro_abierto?: boolean
   tarjeta_size?: number
@@ -59,6 +74,9 @@ export interface TenantFeaturesPatch {
   tarjeta_color_fondo?: string
   tarjeta_color_sello?: string
   tarjeta_estilo_sello?: TarjetaEstilo
+  tarjeta_fondo_tipo?: TarjetaFondoTipo
+  tarjeta_color_fondo2?: string | null
+  tarjeta_sello_url?: string | null
 }
 
 const HEX_RE = /^#[0-9a-f]{6}$/i
@@ -95,6 +113,16 @@ export async function updateTenantFeatures(
       )
     }
     sanitized.tarjeta_size = v
+  }
+  if (patch.galeria_puntos !== undefined) {
+    const v = patch.galeria_puntos
+    if (!Number.isInteger(v) || v < 0 || v > 100000) {
+      throw new TenantFeaturesError(
+        'galeria_puntos debe ser entero entre 0 y 100000',
+        400
+      )
+    }
+    sanitized.galeria_puntos = v
   }
   if (patch.sello_valor_cop !== undefined) {
     const v = patch.sello_valor_cop
@@ -135,6 +163,36 @@ export async function updateTenantFeatures(
       )
     }
     sanitized.tarjeta_estilo_sello = patch.tarjeta_estilo_sello
+  }
+  if (patch.tarjeta_fondo_tipo !== undefined) {
+    if (!TARJETA_FONDO_TIPOS.includes(patch.tarjeta_fondo_tipo)) {
+      throw new TenantFeaturesError(
+        `tarjeta_fondo_tipo debe ser uno de: ${TARJETA_FONDO_TIPOS.join(', ')}`,
+        400
+      )
+    }
+    sanitized.tarjeta_fondo_tipo = patch.tarjeta_fondo_tipo
+  }
+  if (patch.tarjeta_color_fondo2 !== undefined) {
+    if (patch.tarjeta_color_fondo2 === null) {
+      sanitized.tarjeta_color_fondo2 = null
+    } else if (!HEX_RE.test(patch.tarjeta_color_fondo2)) {
+      throw new TenantFeaturesError(
+        'tarjeta_color_fondo2 debe ser hex #RRGGBB o null',
+        400
+      )
+    } else {
+      sanitized.tarjeta_color_fondo2 = patch.tarjeta_color_fondo2.toUpperCase()
+    }
+  }
+  // tarjeta_sello_url se setea desde la ruta de subida /api/tenant/tarjeta-sello,
+  // no por este PATCH — pero se permite null aquí para poder limpiarla.
+  if (patch.tarjeta_sello_url !== undefined) {
+    if (patch.tarjeta_sello_url === null) {
+      sanitized.tarjeta_sello_url = null
+    } else if (typeof patch.tarjeta_sello_url === 'string') {
+      sanitized.tarjeta_sello_url = patch.tarjeta_sello_url
+    }
   }
   if (Object.keys(sanitized).length === 0) {
     throw new TenantFeaturesError('Sin cambios', 400)

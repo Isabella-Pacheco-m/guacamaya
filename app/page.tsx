@@ -6,7 +6,7 @@ import { isSuperadmin } from '@/lib/superadmin-auth'
 import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
 import { getTenantBySlug, findTenantByAdminEmail } from '@/lib/tenant'
 import { getTenantFeatures } from '@/lib/tenant-features'
-import { listTarjetaPremiosForMiembro } from '@/lib/tenantQueries'
+import { listTarjetaPremiosForMiembro, listNotas } from '@/lib/tenantQueries'
 import { listFeedPosts } from '@/lib/feed'
 import { tenantBaseUrl } from '@/lib/config'
 import { Button } from '@/components/ui/Button'
@@ -45,6 +45,14 @@ async function renderTenantHome(slug: string) {
       <main className="min-h-screen bg-tenant-halo flex items-center justify-center px-6">
         <TenantTheme color={tenant.color_primario} />
         <div className="max-w-md w-full text-center">
+          {tenant.banner_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={tenant.banner_url}
+              alt=""
+              className="w-full aspect-[16/6] object-cover rounded-lg shadow-card mb-8"
+            />
+          )}
           {tenant.logo_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -106,13 +114,16 @@ async function renderTenantHome(slug: string) {
   }
 
   const features = await getTenantFeatures(tenant.id)
-  const [tarjetaPremios, ultimoPost] = await Promise.all([
+  const [tarjetaPremios, ultimoPost, notas] = await Promise.all([
     features.tarjeta_enabled
       ? listTarjetaPremiosForMiembro(tenant.id, miembro.id)
       : Promise.resolve([]),
     features.feed_enabled
       ? listFeedPosts(tenant.id, 1).then((posts) => posts[0] ?? null)
       : Promise.resolve(null),
+    features.notas_enabled
+      ? listNotas(tenant.id, 6)
+      : Promise.resolve([]),
   ])
   return (
     <TenantPwaHome
@@ -121,6 +132,7 @@ async function renderTenantHome(slug: string) {
       features={features}
       tarjetaPremios={tarjetaPremios}
       ultimoPost={ultimoPost}
+      notas={notas}
     />
   )
 }

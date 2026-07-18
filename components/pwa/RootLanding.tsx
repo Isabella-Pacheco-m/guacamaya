@@ -33,7 +33,23 @@ const RECOMPENSAS = [
   { nombre: 'Combo VIP', costo: 2000 },
 ]
 
-const FEATURES = ['Puntos', 'Niveles', 'Recompensas', 'Tarjeta de sellos', 'Sorteos']
+const FEATURES = [
+  'Puntos',
+  'Niveles',
+  'Recompensas',
+  'Tarjeta de sellos',
+  'Sorteos',
+  'Retos',
+  'Galería',
+  'Lanzamientos',
+]
+
+// Fotos de negocios reales — el alma del pitch: gente atendiendo su local.
+const FOTOS = [
+  { src: '/img/barista.jpg', alt: 'Barista entregando un pedido en su café' },
+  { src: '/img/tendera.jpg', alt: 'Dueñas de una tienda revisando su comunidad' },
+  { src: '/img/mercado.jpg', alt: 'Dueña de un mercado local en su tienda' },
+]
 
 // Cuenta-regresiva animada del número de puntos (ease-out cúbico).
 function useCountUp(target: number): number {
@@ -94,28 +110,36 @@ export function RootLanding({
   }, [])
 
   return (
-    <main className="min-h-screen bg-tenant-halo flex items-center px-6 py-16">
+    <main className="relative min-h-screen bg-tenant-halo bg-paper px-6 py-14 sm:py-16">
       <section className="max-w-6xl w-full mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         {/* ── Pitch ── */}
         <div className="text-center lg:text-left">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-6">
-            Club de miembros · marca propia
-          </p>
-
           <Image
             src="/logo-light.png"
             alt="Guacamaya"
             width={280}
             height={120}
             priority
-            className="h-auto w-[200px] mx-auto lg:mx-0 mb-6"
+            className="h-auto w-[210px] mx-auto lg:mx-0 mb-7"
           />
 
-          <h1 className="text-[40px] sm:text-[48px] font-light leading-[1.02] tracking-tight mb-5">
+          <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-graphite/70 bg-lime/35 border border-lime/50 rounded-full px-3.5 py-1.5 mb-6">
+            Club de miembros · marca propia
+          </p>
+
+          <h1 className="text-[40px] sm:text-[52px] font-light leading-[1.02] tracking-tight mb-5">
             Convierte cada compra
             <br />
             en una razón para{' '}
-            <span className="text-electric">volver</span>.
+            <span className="relative inline-block">
+              <span className="relative z-10">volver</span>
+              {/* Subrayado pintado a mano — el toque artesanal de la marca. */}
+              <span
+                aria-hidden
+                className="absolute inset-x-0 bottom-1 h-3 -z-0 rounded-full bg-lime/60"
+              />
+            </span>
+            .
           </h1>
 
           <p className="text-muted text-[15px] leading-relaxed mb-7 max-w-md mx-auto lg:mx-0">
@@ -171,7 +195,7 @@ export function RootLanding({
             <div
               aria-hidden
               className="absolute -top-16 -right-16 h-44 w-44 rounded-full opacity-20 blur-2xl"
-              style={{ background: 'var(--color-lime, #B8FA4E)' }}
+              style={{ background: 'var(--color-lime, #EBBA4F)' }}
             />
 
             <div className="relative">
@@ -276,6 +300,52 @@ export function RootLanding({
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Negocios de verdad ── */}
+      <section className="max-w-6xl w-full mx-auto mt-20 sm:mt-24">
+        <div className="text-center max-w-xl mx-auto mb-9">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-electric mb-3">
+            Hecho para negocios de barrio
+          </p>
+          <h2 className="text-[28px] sm:text-[34px] font-light leading-tight tracking-tight">
+            La gente vuelve por quien está detrás del mostrador.
+          </h2>
+          <p className="text-muted text-[15px] leading-relaxed mt-3">
+            Guacamaya le pone nombre, cara y memoria a esa relación: quién viene,
+            cada cuánto y qué se lleva.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          {FOTOS.map((f, i) => (
+            <figure
+              key={f.src}
+              className={
+                'relative overflow-hidden rounded-lg ring-1 ring-graphite/[0.06] shadow-card ' +
+                // La primera ocupa dos columnas en móvil: da ritmo editorial.
+                (i === 0 ? 'col-span-2 sm:col-span-1' : '')
+              }
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={f.src}
+                alt={f.alt}
+                loading="lazy"
+                className="h-full w-full object-cover aspect-[4/3] transition-transform duration-700 hover:scale-[1.04]"
+              />
+            </figure>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/api/auth/login" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto px-8">Ingresar</Button>
+          </a>
+          <span className="text-xs text-muted">
+            Tu club, tu marca, tu subdominio.
+          </span>
         </div>
       </section>
     </main>

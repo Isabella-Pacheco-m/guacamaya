@@ -13,6 +13,10 @@ export const FEATURE_KEYS = [
   'sorteos_enabled',
   'tarjeta_enabled',
   'cumpleanos_enabled',
+  'notas_enabled',
+  'galeria_enabled',
+  'lanzamientos_enabled',
+  'retos_enabled',
 ] as const
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
@@ -30,12 +34,20 @@ export const TARJETA_ESTILOS = [
 ] as const
 export type TarjetaEstilo = (typeof TARJETA_ESTILOS)[number]
 
+export const TARJETA_FONDO_TIPOS = ['solid', 'gradient'] as const
+export type TarjetaFondoTipo = (typeof TARJETA_FONDO_TIPOS)[number]
+
 export interface TenantFeatures {
   tenant_id: string
   feed_enabled: boolean
   sorteos_enabled: boolean
   tarjeta_enabled: boolean
   cumpleanos_enabled: boolean
+  notas_enabled: boolean
+  galeria_enabled: boolean
+  galeria_puntos: number
+  lanzamientos_enabled: boolean
+  retos_enabled: boolean
   feed_miembros_pueden_publicar: boolean
   // Registro abierto: cualquier usuario logueado puede unirse a la comunidad
   // sin enlace de invitación. Default true.
@@ -45,6 +57,13 @@ export interface TenantFeatures {
   tarjeta_color_fondo: string
   tarjeta_color_sello: string
   tarjeta_estilo_sello: TarjetaEstilo
+  // Fondo de la tarjeta: 'solid' usa solo tarjeta_color_fondo; 'gradient'
+  // hace un degradado hacia tarjeta_color_fondo2.
+  tarjeta_fondo_tipo: TarjetaFondoTipo
+  tarjeta_color_fondo2: string | null
+  // PNG subido por la marca para usar como estampilla del sello. Si es null se
+  // usa el emblema SVG según tarjeta_estilo_sello.
+  tarjeta_sello_url: string | null
 }
 
 export const ESTILO_LABEL: Record<TarjetaEstilo, string> = {
@@ -92,10 +111,10 @@ export interface TarjetaPreset {
 }
 
 export const TARJETA_PRESETS: TarjetaPreset[] = [
-  { id: 'grafito', nombre: 'Grafito', colorFondo: '#1A1A1E', colorSello: '#B8FA4E', estilo: 'circulo' },
+  { id: 'espresso', nombre: 'Espresso', colorFondo: '#2A2320', colorSello: '#EBBA4F', estilo: 'circulo' },
   { id: 'cafe', nombre: 'Café', colorFondo: '#3B2A20', colorSello: '#E8C18A', estilo: 'circulo' },
-  { id: 'elegante', nombre: 'Elegante', colorFondo: '#0F1B2D', colorSello: '#D4AF37', estilo: 'estrella' },
-  { id: 'vibrante', nombre: 'Vibrante', colorFondo: '#6D28D9', colorSello: '#FDE047', estilo: 'diamante' },
-  { id: 'menta', nombre: 'Menta', colorFondo: '#0F3D3E', colorSello: '#7FE7C4', estilo: 'hexagono' },
-  { id: 'coral', nombre: 'Coral', colorFondo: '#7A1F3D', colorSello: '#FF8FA3', estilo: 'corazon' },
+  { id: 'terracota', nombre: 'Terracota', colorFondo: '#8C3F24', colorSello: '#F2D0A4', estilo: 'estrella' },
+  { id: 'oliva', nombre: 'Oliva', colorFondo: '#4A4A22', colorSello: '#DCCB6A', estilo: 'hexagono' },
+  { id: 'arcilla', nombre: 'Arcilla', colorFondo: '#7A4436', colorSello: '#E9B7A0', estilo: 'corazon' },
+  { id: 'trigo', nombre: 'Trigo', colorFondo: '#5C4B2E', colorSello: '#F0D79B', estilo: 'diamante' },
 ]
