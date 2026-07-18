@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminTenantId } from '@/lib/api-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { esImagenValida } from '@/lib/imagen'
 import { getTenantById } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
@@ -77,6 +78,12 @@ export async function POST(req: NextRequest) {
 
   const path = `${logoPrefix(auth.tenantId)}logo-${Date.now()}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
+  if (!esImagenValida(buffer, file.type)) {
+    return NextResponse.json(
+      { error: 'El archivo no es una imagen válida' },
+      { status: 400 }
+    )
+  }
 
   const { error: upErr } = await supabaseAdmin.storage
     .from(BUCKET)

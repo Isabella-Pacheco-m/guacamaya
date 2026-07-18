@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { requireAdminTenantId } from '@/lib/api-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { esImagenValida } from '@/lib/imagen'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
   listRetosAdmin,
@@ -87,6 +88,12 @@ export async function POST(req: NextRequest) {
     }
     const path = `${retoCoverPrefix(auth.tenantId)}cover-${Date.now()}.${ext}`
     const buf = Buffer.from(await file.arrayBuffer())
+    if (!esImagenValida(buf, file.type)) {
+      return NextResponse.json(
+        { error: 'El archivo no es una imagen válida' },
+        { status: 400 }
+      )
+    }
     const { error: upErr } = await supabaseAdmin.storage
       .from(RETOS_BUCKET)
       .upload(path, buf, { contentType: file.type, upsert: false, cacheControl: '3600' })
