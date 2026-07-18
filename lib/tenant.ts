@@ -102,6 +102,7 @@ const RESERVED_SLUGS = new Set([
   'api',
   'auth',
   'canjear',
+  'comunidad',
   'feed',
   'galeria',
   'invite',

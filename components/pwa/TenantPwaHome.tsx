@@ -3,16 +3,18 @@ import type { ReactNode } from 'react'
 import type { FeedPost, Miembro, Tenant } from '@/types'
 import type { TenantFeatures } from '@/lib/tenant-features'
 import type { TarjetaPremioEstado } from '@/lib/tenantQueries'
+import type { Nota } from '@/lib/notas'
+import type { GaleriaPostPublic } from '@/lib/galeria'
+import type { Reto } from '@/lib/retos'
 import { Card } from '@/components/ui/Card'
 import { NivelBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Avatar } from '@/components/ui/Avatar'
 import { TenantTheme } from '@/components/pwa/TenantTheme'
 import { CumpleanosPrompt } from '@/components/pwa/CumpleanosPrompt'
 import { TarjetaCliente } from '@/components/pwa/TarjetaCliente'
-import { FeedPostCard } from '@/components/pwa/FeedPostCard'
 import { AvatarUploader } from '@/components/pwa/AvatarUploader'
-import { NotasBoard } from '@/components/pwa/NotasBoard'
-import type { Nota } from '@/lib/notas'
+import { notaColorStyle } from '@/lib/notas'
 
 const COP = new Intl.NumberFormat('es-CO')
 
@@ -22,20 +24,27 @@ const NIVEL_PROGRESO: Record<Miembro['nivel'], { siguiente: string | null; meta:
   ORO: { siguiente: null, meta: null },
 }
 
+/** Anticipo de la comunidad que se muestra en la home. */
+export interface ComunidadPreview {
+  notas: Nota[]
+  fotos: GaleriaPostPublic[]
+  ultimoPost: FeedPost | null
+  retoActivo: Reto | null
+  hayAlgo: boolean
+}
+
 export function TenantPwaHome({
   tenant,
   miembro,
   features,
   tarjetaPremios,
-  ultimoPost,
-  notas,
+  comunidad,
 }: {
   tenant: Tenant
   miembro: Miembro
   features: TenantFeatures
   tarjetaPremios: TarjetaPremioEstado[]
-  ultimoPost: FeedPost | null
-  notas: Nota[]
+  comunidad: ComunidadPreview
 }) {
   const progreso = NIVEL_PROGRESO[miembro.nivel]
   const haciaSiguiente =
@@ -49,7 +58,7 @@ export function TenantPwaHome({
     <main className="min-h-screen bg-tenant-halo">
       <TenantTheme color={tenant.color_primario} />
 
-      {/* ── Portada: banner + logo + avatar del miembro ── */}
+      {/* ── Portada: banner + logo + identidad del miembro ── */}
       <header className="relative">
         <div className="relative h-40 sm:h-52 lg:h-60 w-full overflow-hidden bg-graphite">
           {tenant.banner_url ? (
@@ -72,7 +81,6 @@ export function TenantPwaHome({
             />
           )}
 
-          {/* Logo + nombre sobre la portada */}
           <div className="absolute left-0 right-0 bottom-0 px-6 pb-4 flex items-center gap-3">
             {tenant.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -93,7 +101,6 @@ export function TenantPwaHome({
           </div>
         </div>
 
-        {/* Barra de identidad del miembro, montada sobre el borde de la portada */}
         <div className="px-6 max-w-md lg:max-w-5xl mx-auto">
           <div className="-mt-8 flex items-end justify-between gap-4">
             <div className="flex items-end gap-3 min-w-0">
@@ -118,22 +125,30 @@ export function TenantPwaHome({
         </div>
       </header>
 
-      <div className="px-6 pt-6 pb-12 sm:px-8 lg:pb-16 max-w-md lg:max-w-5xl mx-auto">
-        <div className="lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:items-start">
-          <div className="lg:min-w-0">
-            <Card padding="lg" className="mb-6">
+      <div className="px-6 pt-8 pb-14 sm:px-8 max-w-md lg:max-w-5xl mx-auto flex flex-col gap-10">
+        {/* ══════════ TU CUENTA ══════════ */}
+        <section>
+          <SectionTitle
+            titulo="Tu cuenta"
+            hint="Tus puntos, tu tarjeta y tus canjes"
+          />
+
+          {/* En desktop: puntos y tarjeta lado a lado — el desbalance venía de
+              dejar la columna izquierda corta mientras la derecha se alargaba. */}
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <Card padding="lg" className="flex flex-col justify-between min-h-[220px]">
               <p className="text-[11px] uppercase tracking-wider text-muted">
                 Tus puntos
               </p>
               <div className="flex items-baseline gap-2 mt-2 mb-6">
-                <span className="text-[64px] lg:text-[80px] font-light leading-none tracking-tight tabular-nums">
+                <span className="text-[56px] lg:text-[68px] font-light leading-none tracking-tight tabular-nums">
                   {COP.format(miembro.puntos_actuales)}
                 </span>
                 <span className="text-sm text-muted">disponibles</span>
               </div>
 
               {progreso.siguiente && progreso.meta != null ? (
-                <>
+                <div>
                   <div className="flex items-center justify-between text-xs text-muted mb-2">
                     <span className="tracking-wide">
                       Hacia{' '}
@@ -157,129 +172,195 @@ export function TenantPwaHome({
                     </span>{' '}
                     puntos para subir.
                   </p>
-                </>
+                </div>
               ) : (
                 <p className="text-xs text-muted">Estás en el nivel máximo. ✨</p>
               )}
             </Card>
 
-            {features.tarjeta_enabled && (
-              <TarjetaCliente
-                tenantNombre={tenant.nombre}
-                miembroNombre={miembro.nombre}
-                sellos={miembro.sellos_actuales}
-                tarjetaSize={features.tarjeta_size}
-                premios={tarjetaPremios}
-                colorFondo={features.tarjeta_color_fondo}
-                colorSello={features.tarjeta_color_sello}
-                estiloSello={features.tarjeta_estilo_sello}
-                fondoTipo={features.tarjeta_fondo_tipo}
-                colorFondo2={features.tarjeta_color_fondo2}
-                selloUrl={features.tarjeta_sello_url}
-              />
-            )}
-          </div>
-
-          <div className="lg:min-w-0">
-            {features.cumpleanos_enabled && (
-              <CumpleanosPrompt initialMes={miembro.mes_cumpleanos} />
-            )}
-
-            {features.notas_enabled && notas.length > 0 && (
-              <NotasBoard notas={notas} />
-            )}
-
-            {features.feed_enabled && ultimoPost && (
-              <div className="mb-6 flex flex-col gap-2">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-[11px] uppercase tracking-wider text-muted">
-                    Última publicación
-                  </p>
-                  <Link
-                    href="/feed"
-                    className="text-xs text-electric hover:underline"
-                  >
-                    Ver todas →
-                  </Link>
-                </div>
-                <FeedPostCard post={ultimoPost} tenant={tenant} />
+            {features.tarjeta_enabled ? (
+              <div className="[&>div]:mb-0">
+                <TarjetaCliente
+                  tenantNombre={tenant.nombre}
+                  miembroNombre={miembro.nombre}
+                  sellos={miembro.sellos_actuales}
+                  tarjetaSize={features.tarjeta_size}
+                  premios={tarjetaPremios}
+                  colorFondo={features.tarjeta_color_fondo}
+                  colorSello={features.tarjeta_color_sello}
+                  estiloSello={features.tarjeta_estilo_sello}
+                  fondoTipo={features.tarjeta_fondo_tipo}
+                  colorFondo2={features.tarjeta_color_fondo2}
+                  selloUrl={features.tarjeta_sello_url}
+                />
+              </div>
+            ) : (
+              // Sin tarjeta, los accesos ocupan la segunda columna y no queda
+              // un hueco en desktop.
+              <div className="grid grid-cols-2 gap-3">
+                <AccountTile href="/recompensas" label="Recompensas" hint="Canjea tus puntos" icon={<GiftIcon />} />
+                <AccountTile href="/puntos" label="Historial" hint="Tus movimientos" icon={<ClockIcon />} />
               </div>
             )}
-
-            <p className="text-[11px] uppercase tracking-wider text-muted mb-3">
-              Explora
-            </p>
-            <nav className="grid grid-cols-2 gap-3 mb-8">
-              <HomeTile
-                href="/recompensas"
-                label="Recompensas"
-                hint="Canjea tus puntos"
-                icon={<GiftIcon />}
-              />
-              <HomeTile
-                href="/puntos"
-                label="Historial"
-                hint="Tus movimientos"
-                icon={<ClockIcon />}
-              />
-              {features.feed_enabled && (
-                <HomeTile
-                  href="/feed"
-                  label="Novedades"
-                  hint={`Lo último de ${tenant.nombre}`}
-                  icon={<SparkIcon />}
-                />
-              )}
-              {features.galeria_enabled && (
-                <HomeTile
-                  href="/galeria"
-                  label="Galería"
-                  hint="Sube fotos y gana puntos"
-                  icon={<ImageIcon />}
-                />
-              )}
-              {features.lanzamientos_enabled && (
-                <HomeTile
-                  href="/lanzamientos"
-                  label="Lanzamientos"
-                  hint="Lo nuevo que se viene"
-                  icon={<RocketIcon />}
-                />
-              )}
-              {features.sorteos_enabled && (
-                <HomeTile
-                  href="/sorteos"
-                  label="Sorteos"
-                  hint="Participa y gana"
-                  icon={<TicketIcon />}
-                />
-              )}
-              {features.retos_enabled && (
-                <HomeTile
-                  href="/retos"
-                  label="Retos"
-                  hint="Cumple metas y gana"
-                  icon={<TrophyIcon />}
-                />
-              )}
-            </nav>
-
-            <a href="/api/auth/logout" className="block">
-              <Button
-                variant="ghost"
-                className="w-full text-muted hover:text-graphite"
-              >
-                Cerrar sesión
-              </Button>
-            </a>
           </div>
-        </div>
+
+          {features.tarjeta_enabled && (
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <AccountTile href="/recompensas" label="Recompensas" hint="Canjea tus puntos" icon={<GiftIcon />} />
+              <AccountTile href="/puntos" label="Historial" hint="Tus movimientos" icon={<ClockIcon />} />
+            </div>
+          )}
+
+          {features.cumpleanos_enabled && (
+            <div className="mt-4">
+              <CumpleanosPrompt initialMes={miembro.mes_cumpleanos} />
+            </div>
+          )}
+        </section>
+
+        {/* ══════════ COMUNIDAD ══════════ */}
+        {comunidad.hayAlgo && (
+          <section>
+            <SectionTitle
+              titulo="Comunidad"
+              hint={`Lo que pasa en ${tenant.nombre}`}
+              accion={{ href: '/comunidad', label: 'Ver todo' }}
+            />
+
+            <Link href="/comunidad" className="block group">
+              <Card
+                padding="md"
+                className="overflow-hidden transition-shadow group-hover:shadow-[0_2px_4px_rgba(42,35,32,0.06),0_10px_28px_rgba(42,35,32,0.08)]"
+              >
+                <div className="flex flex-col gap-4">
+                  {/* Notas recientes */}
+                  {comunidad.notas.length > 0 && (
+                    <div className="flex gap-3 overflow-hidden">
+                      {comunidad.notas.slice(0, 2).map((n, i) => {
+                        const s = notaColorStyle(n.color)
+                        return (
+                          <div
+                            key={n.id}
+                            className={
+                              'flex-1 min-w-0 rounded-xl p-3 text-[13px] leading-snug line-clamp-3 ' +
+                              (i % 2 === 0 ? '-rotate-1' : 'rotate-1')
+                            }
+                            style={{
+                              background: s.bg,
+                              border: `1px solid ${s.border}`,
+                              color: s.text,
+                            }}
+                          >
+                            {n.cuerpo}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Tira de fotos de la galería */}
+                  {comunidad.fotos.length > 0 && (
+                    <div className="flex gap-2">
+                      {comunidad.fotos.slice(0, 4).map((f) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={f.id}
+                          src={f.imagen_url}
+                          alt=""
+                          className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg object-cover bg-surface ring-1 ring-graphite/[0.06]"
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reto activo */}
+                  {comunidad.retoActivo && (
+                    <div className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5">
+                      <span className="grid place-items-center h-8 w-8 rounded-full bg-lime/40 text-graphite shrink-0">
+                        <TrophyIcon />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">
+                          {comunidad.retoActivo.titulo}
+                        </p>
+                        <p className="text-[11px] text-muted">
+                          Reto activo
+                          {comunidad.retoActivo.puntos > 0 &&
+                            ` · +${comunidad.retoActivo.puntos} pts`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Última publicación */}
+                  {comunidad.ultimoPost && (
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar
+                        name={
+                          comunidad.ultimoPost.autor_nombre ?? tenant.nombre
+                        }
+                        src={comunidad.ultimoPost.autor_avatar_url}
+                        size={32}
+                      />
+                      <p className="text-sm text-muted truncate min-w-0">
+                        <span className="text-graphite font-medium">
+                          {comunidad.ultimoPost.autor_nombre ?? tenant.nombre}
+                        </span>{' '}
+                        · {comunidad.ultimoPost.cuerpo}
+                      </p>
+                    </div>
+                  )}
+
+                  <span className="text-sm text-electric font-medium inline-flex items-center gap-1">
+                    Entrar a la comunidad
+                    <span className="transition-transform group-hover:translate-x-0.5">
+                      →
+                    </span>
+                  </span>
+                </div>
+              </Card>
+            </Link>
+          </section>
+        )}
+
+        <a href="/api/auth/logout" className="block">
+          <Button variant="ghost" className="w-full text-muted hover:text-graphite">
+            Cerrar sesión
+          </Button>
+        </a>
       </div>
     </main>
   )
 }
 
-function HomeTile({
+function SectionTitle({
+  titulo,
+  hint,
+  accion,
+}: {
+  titulo: string
+  hint?: string
+  accion?: { href: string; label: string }
+}) {
+  return (
+    <div className="flex items-end justify-between gap-4 mb-4">
+      <div>
+        <h2 className="text-lg font-medium tracking-tight">{titulo}</h2>
+        {hint && <p className="text-xs text-muted mt-0.5">{hint}</p>}
+      </div>
+      {accion && (
+        <Link
+          href={accion.href}
+          className="text-xs text-electric hover:underline shrink-0"
+        >
+          {accion.label} →
+        </Link>
+      )}
+    </div>
+  )
+}
+
+function AccountTile({
   href,
   label,
   hint,
@@ -295,13 +376,13 @@ function HomeTile({
       <Card
         interactive
         padding="md"
-        className="h-full flex flex-col justify-between min-h-[128px]"
+        className="h-full flex flex-col justify-between min-h-[112px]"
       >
-        <span className="grid place-items-center h-10 w-10 rounded-full bg-surface text-electric">
+        <span className="grid place-items-center h-9 w-9 rounded-full bg-surface text-electric">
           {icon}
         </span>
-        <div>
-          <p className="text-base font-medium text-graphite">{label}</p>
+        <div className="mt-3">
+          <p className="text-[15px] font-medium text-graphite">{label}</p>
           <div className="flex items-end justify-between gap-2">
             <p className="text-xs text-muted leading-snug">{hint}</p>
             <span className="text-electric text-sm transition-transform group-hover:translate-x-0.5">
@@ -333,46 +414,9 @@ function ClockIcon() {
   )
 }
 
-function SparkIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-5 w-5">
-      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
-    </svg>
-  )
-}
-
-function TicketIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-5 w-5">
-      <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z" />
-      <path d="M13 7v10" strokeDasharray="1.5 2.5" />
-    </svg>
-  )
-}
-
-function ImageIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-5 w-5">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <circle cx="8.5" cy="9.5" r="1.5" />
-      <path d="m4 17 4.5-4.5 3 3 3.5-3.5L20 16" />
-    </svg>
-  )
-}
-
-function RocketIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-5 w-5">
-      <path d="M12 3c3 1.6 5 4.6 5 8 0 2-.7 3.7-1.8 5H8.8C7.7 14.7 7 13 7 11c0-3.4 2-6.4 5-8Z" />
-      <circle cx="12" cy="10" r="1.6" />
-      <path d="M8.8 16c-1.2.9-2 2.3-2 4M15.2 16c1.2.9 2 2.3 2 4" />
-    </svg>
-  )
-}
-
 function TrophyIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-5 w-5">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-4 w-4">
       <path d="M7 4h10v4a5 5 0 0 1-10 0Z" />
       <path d="M7 6H4.5a2.5 2.5 0 0 0 3 4M17 6h2.5a2.5 2.5 0 0 1-3 4" />
       <path d="M12 13v3M9 20h6M10 16h4l.5 4h-5Z" />

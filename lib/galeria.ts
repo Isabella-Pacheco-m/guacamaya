@@ -122,13 +122,20 @@ export async function createGaleriaPost(
   return data as GaleriaPost
 }
 
+// Tamaño de página del scroll infinito de la galería.
+export const GALERIA_PAGE_SIZE = 24
+
+// Paginación por keyset: `before` es el created_at del último elemento ya
+// mostrado. Estable aunque entren fotos nuevas durante el scroll.
 export async function listGaleriaAprobadas(
   tenantId: string,
-  limit = 60
+  limit = GALERIA_PAGE_SIZE,
+  before?: string | null
 ): Promise<GaleriaPostPublic[]> {
   const { data, error } = await supabaseAdmin.rpc('list_galeria_aprobadas', {
     p_tenant_id: tenantId,
     p_limit: limit,
+    p_before: before ?? null,
   })
   if (error) throw error
   return (data ?? []) as GaleriaPostPublic[]
