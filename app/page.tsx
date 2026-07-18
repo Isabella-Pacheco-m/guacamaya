@@ -16,7 +16,7 @@ import {
   getProximaCaducidad,
   listRecompensasActivas,
 } from '@/lib/tenantQueries'
-import { listFeedPosts } from '@/lib/feed'
+import { listFeedPostsPublic } from '@/lib/feed'
 import { listGaleriaAprobadas } from '@/lib/galeria'
 import { listRetosPwa } from '@/lib/retos'
 import { tenantBaseUrl } from '@/lib/config'
@@ -113,7 +113,7 @@ async function renderTenantHome(slug: string) {
       ? listTarjetaPremiosForMiembro(tenant.id, miembro.id)
       : Promise.resolve([]),
     features.feed_enabled
-      ? listFeedPosts(tenant.id, 1).then((posts) => posts[0] ?? null)
+      ? listFeedPostsPublic(tenant.id, 1).then((posts) => posts[0] ?? null)
       : Promise.resolve(null),
     features.notas_enabled ? listNotas(tenant.id, 2) : Promise.resolve([]),
     features.galeria_enabled

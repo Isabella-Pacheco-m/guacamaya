@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { requireCliente } from '@/lib/page-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { listNotas } from '@/lib/tenantQueries'
-import { listFeedPosts } from '@/lib/feed'
+import { listFeedPostsPublic } from '@/lib/feed'
 import { listGaleriaAprobadas, GALERIA_PAGE_SIZE } from '@/lib/galeria'
 import { listRetosPwa } from '@/lib/retos'
 import { listSorteosActivos } from '@/lib/sorteos'
@@ -49,7 +49,9 @@ export default async function ComunidadPage({
   const [notas, posts, galeria, retos, sorteos, lanzamientos, rankingFilas, rankingYo] =
     await Promise.all([
       features.notas_enabled ? listNotas(tenant.id, 6) : Promise.resolve([]),
-      features.feed_enabled ? listFeedPosts(tenant.id, 30) : Promise.resolve([]),
+      features.feed_enabled
+        ? listFeedPostsPublic(tenant.id, 30)
+        : Promise.resolve([]),
       features.galeria_enabled
         ? listGaleriaAprobadas(tenant.id, GALERIA_PAGE_SIZE)
         : Promise.resolve([]),

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest} from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { requireClienteContext } from '@/lib/api-auth'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getTenantFeatures } from '@/lib/tenant-features'
@@ -65,7 +66,9 @@ export async function POST(
         { status: 413 }
       )
     }
-    const path = `${sorteoEvidenciaPrefix(auth.tenant.id, params.id)}${auth.miembro.id}-${Date.now()}.${ext}`
+    // Nombre con UUID aleatorio: la evidencia (facturas) vive en un bucket
+    // público y con miembroId+timestamp la URL era semi-adivinable.
+    const path = `${sorteoEvidenciaPrefix(auth.tenant.id, params.id)}${auth.miembro.id}-${randomUUID()}.${ext}`
     const buf = Buffer.from(await file.arrayBuffer())
     const { error: upErr } = await supabaseAdmin.storage
       .from(SORTEOS_BUCKET)

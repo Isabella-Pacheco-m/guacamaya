@@ -4,7 +4,7 @@
 import 'server-only'
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import type { FeedPost } from '@/types'
+import type { FeedPost, FeedPostPublic } from '@/types'
 
 export const FEED_BUCKET = 'business_media'
 export const FEED_MIME_TO_EXT: Record<string, string> = {
@@ -35,6 +35,20 @@ export async function listFeedPosts(
   })
   if (error) throw error
   return (data ?? []) as FeedPost[]
+}
+
+/**
+ * Posts para la PWA del cliente: igual que listFeedPosts pero SIN
+ * `autor_email`. El correo del admin solo debe llegar al panel admin; todo
+ * lo que se pase a un componente cliente termina serializado en el payload
+ * de la página, se pinte o no.
+ */
+export async function listFeedPostsPublic(
+  tenantId: string,
+  limit = 50
+): Promise<FeedPostPublic[]> {
+  const posts = await listFeedPosts(tenantId, limit)
+  return posts.map(({ autor_email: _omit, ...pub }) => pub)
 }
 
 export class FeedPostError extends Error {

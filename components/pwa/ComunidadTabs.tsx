@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import type { FeedPost, Miembro, Sorteo, Tenant } from '@/types'
+import type { FeedPostPublic, Miembro, Sorteo, Tenant } from '@/types'
 import type { Nota } from '@/lib/notas'
 import type { GaleriaPostPublic } from '@/lib/galeria'
 import type { Reto } from '@/lib/retos'
@@ -28,7 +28,7 @@ export type TabId =
 
 export interface ComunidadData {
   notas: Nota[]
-  posts: FeedPost[]
+  posts: FeedPostPublic[]
   galeria: { initial: GaleriaPostPublic[]; hasMore: boolean }
   retos: Reto[]
   sorteos: Sorteo[]
