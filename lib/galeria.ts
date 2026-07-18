@@ -4,6 +4,7 @@
 import 'server-only'
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { esImagenValida } from '@/lib/imagen'
 import type { Miembro } from '@/types'
 
 // NOTA: los tipos de este módulo se pueden importar con `import type` desde
@@ -87,6 +88,9 @@ export async function uploadGaleriaImage(
     throw new GaleriaError('Imagen demasiado grande (máximo 5 MB)', 413)
   const path = `${galeriaPrefix(tenantId, miembroId)}${Date.now()}.${ext}`
   const buf = Buffer.from(await file.arrayBuffer())
+  if (!esImagenValida(buf, file.type)) {
+    throw new GaleriaError('El archivo no es una imagen válida', 400)
+  }
   const { error } = await supabaseAdmin.storage
     .from(GALERIA_BUCKET)
     .upload(path, buf, {

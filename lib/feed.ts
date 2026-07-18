@@ -4,6 +4,7 @@
 import 'server-only'
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { esImagenValida } from '@/lib/imagen'
 import type { FeedPost, FeedPostPublic } from '@/types'
 
 export const FEED_BUCKET = 'business_media'
@@ -83,6 +84,9 @@ export async function uploadFeedImage(
   }
   const path = `${feedPrefix(tenantId)}post-${Date.now()}.${ext}`
   const buf = Buffer.from(await file.arrayBuffer())
+  if (!esImagenValida(buf, file.type)) {
+    throw new FeedPostError('El archivo no es una imagen válida', 400)
+  }
   const { error } = await supabaseAdmin.storage
     .from(FEED_BUCKET)
     .upload(path, buf, {

@@ -4,6 +4,7 @@
 import 'server-only'
 
 import crypto from 'node:crypto'
+import { cache } from 'react'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import type { Miembro, Tenant } from '@/types'
 
@@ -136,18 +137,21 @@ export async function selfRegisterMiembro(
   return data as Miembro
 }
 
-export async function getMiembroByAuth0(
-  tenantId: string,
-  auth0UserId: string
-): Promise<Miembro | null> {
-  const { data, error } = await supabaseAdmin.rpc('get_miembro_by_auth0', {
-    p_tenant_id: tenantId,
-    p_auth0_user_id: auth0UserId,
-  })
-  if (error) throw error
-  if (!data || (data as Miembro).id == null) return null
-  return data as Miembro
-}
+// Memoizada por request (React cache): el guard de página y el propio render
+// la piden con los mismos argumentos. Las escrituras que vinculan miembros
+// (redeem, self-register) corren en requests separados — no hay lectura
+// stale posible dentro del mismo render.
+export const getMiembroByAuth0 = cache(
+  async (tenantId: string, auth0UserId: string): Promise<Miembro | null> => {
+    const { data, error } = await supabaseAdmin.rpc('get_miembro_by_auth0', {
+      p_tenant_id: tenantId,
+      p_auth0_user_id: auth0UserId,
+    })
+    if (error) throw error
+    if (!data || (data as Miembro).id == null) return null
+    return data as Miembro
+  }
+)
 
 // Lookup global por auth0_user_id (sin saber tenant). Lo usa el landing root
 // cuando el cliente acaba de canjear: el JWT del cliente NO lleva tenantId

@@ -171,7 +171,8 @@ Input:            border border-border rounded-md px-4 py-3 focus:ring-electric
 │   ├── admin/
 │   └── pwa/
 ├── lib/
-│   ├── supabase.ts
+│   ├── supabase-admin.ts # único cliente Supabase (server-only)
+│   ├── queries/          # capa de datos por dominio (fachada: tenantQueries.ts)
 │   ├── auth0.ts
 │   └── business.ts
 ├── types/index.ts
@@ -236,20 +237,26 @@ y no aplica para Guacamaya.
 
 Proyecto y buckets existentes. Variables de entorno ya en `.env` — no modificar.
 
+**Un solo cliente, solo servidor.** El browser NUNCA habla con Supabase: todo
+pasa por las API routes con el service role. No existe cliente anon (la anon
+key ni siquiera se inyecta al bundle) y la migración 0020 revocó todos los
+permisos de `anon`/`authenticated` en Postgres.
+
 ```typescript
-// lib/supabase.ts
+// lib/supabase-admin.ts — importa 'server-only': usarlo desde un componente
+// cliente falla en BUILD, no en runtime.
+import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 
 export const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!   // solo server, nunca al browser
-)
-
-export const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE!,      // solo server, nunca al browser
+  { auth: { persistSession: false, autoRefreshToken: false } }
 )
 ```
+
+La capa de datos vive en `lib/queries/*` (miembros, recompensas, tarjeta,
+notas, metricas) con `lib/tenantQueries.ts` como fachada de re-export.
 
 Pasar `tenant_id` antes de cada query con RLS:
 
@@ -488,9 +495,10 @@ GET  /api/metricas/resumen         → (admin)
 
 ## Prohibido
 
-- Exponer `SUPABASE_SERVICE_ROLE_KEY` al browser
+- Exponer `SUPABASE_SERVICE_ROLE` (o la anon key) al browser — Supabase se
+  toca solo desde el servidor vía `lib/supabase-admin.ts`
 - Leer `tenantId` del body en rutas protegidas
-- Usar `supabaseAdmin` donde debería usarse `supabaseClient`
+- Subir archivos sin validar magic bytes (`esImagenValida` de `lib/imagen.ts`)
 - Crear tablas o buckets sin una migración SQL en `supabase/migrations/`
 - Usar fuentes distintas a Manrope
 - Usar blanco puro (`#FFFFFF`) como fondo de página — siempre `--color-surface`
