@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { headers } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureTenantFeaturesRow } from '@/lib/tenant-features'
+import { isUndefinedColumn, warnSchemaDrift } from '@/lib/schema-drift'
 import type { Tenant } from '@/types'
 
 // Columnas públicas del tenant que se serializan al tipo `Tenant`. Nunca
@@ -20,26 +21,51 @@ export class TenantNotFoundError extends Error {
   }
 }
 
-export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
+// Lectura del tenant tolerante a migraciones pendientes. Estas dos funciones
+// corren en CADA página de tenant, así que una columna faltante tumbaría todos
+// los subdominios; ante 42703 releemos con `*` y normalizamos con defaults.
+async function selectTenant(
+  column: 'slug' | 'id',
+  value: string
+): Promise<Tenant | null> {
   const { data, error } = await supabaseAdmin
     .from('tenants')
     .select(TENANT_COLS)
-    .eq('slug', slug)
+    .eq(column, value)
     .maybeSingle()
 
-  if (error) throw error
-  return (data as Tenant | null) ?? null
+  if (!error) return (data as Tenant | null) ?? null
+  if (!isUndefinedColumn(error)) throw error
+
+  warnSchemaDrift(`getTenantBy${column === 'slug' ? 'Slug' : 'Id'}`, error)
+  const { data: loose, error: looseErr } = await supabaseAdmin
+    .from('tenants')
+    .select('*')
+    .eq(column, value)
+    .maybeSingle()
+  if (looseErr) throw looseErr
+  if (!loose) return null
+
+  const row = loose as Record<string, unknown>
+  // Solo columnas públicas — nunca admin_email ni join_code (ver TENANT_COLS).
+  return {
+    id: row.id as string,
+    nombre: row.nombre as string,
+    slug: row.slug as string,
+    logo_url: (row.logo_url as string | null) ?? null,
+    banner_url: (row.banner_url as string | null) ?? null,
+    color_primario: (row.color_primario as string | null) ?? '#C2603C',
+    puntos_por_mil: (row.puntos_por_mil as number | null) ?? 1,
+    puntos_cumpleanos: (row.puntos_cumpleanos as number | null) ?? null,
+  }
+}
+
+export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
+  return selectTenant('slug', slug)
 }
 
 export async function getTenantById(id: string): Promise<Tenant | null> {
-  const { data, error } = await supabaseAdmin
-    .from('tenants')
-    .select(TENANT_COLS)
-    .eq('id', id)
-    .maybeSingle()
-
-  if (error) throw error
-  return (data as Tenant | null) ?? null
+  return selectTenant('id', id)
 }
 
 export async function getTenantFromRequest(): Promise<Tenant> {
