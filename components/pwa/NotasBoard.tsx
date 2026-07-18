@@ -56,15 +56,17 @@ export function NotasBoard({
                   Fijada
                 </span>
               )}
+              {/* line-clamp corta por línea y añade elipsis; con overflow a
+                  secas el texto quedaba partido a media línea en móvil. */}
               <p
-                className="text-[13px] leading-relaxed whitespace-pre-wrap flex-1 min-h-0 overflow-hidden"
+                className="text-[12.5px] sm:text-[13px] leading-snug whitespace-pre-wrap flex-1 min-h-0 line-clamp-5"
                 style={{ color: s.text }}
               >
                 {n.cuerpo}
               </p>
               {/* Fecha de posteo — separada por una línea del color de la nota */}
               <p
-                className="mt-3 pt-2 text-[10px] tracking-wide border-t"
+                className="mt-2 pt-1.5 text-[10px] tracking-wide border-t shrink-0"
                 style={{ color: s.text, opacity: 0.65, borderColor: s.border }}
               >
                 {fechaCorta(n.created_at)}

@@ -249,7 +249,7 @@ export function TenantPwaHome({
                             // Cuadradas como un post-it real, pero con tope: sin
                             // el max-w crecen demasiado en pantallas anchas.
                             className={
-                              'min-w-0 w-full max-w-[220px] aspect-square overflow-hidden rounded-xl p-3 text-[13px] leading-snug ' +
+                              'min-w-0 w-full max-w-[220px] aspect-square rounded-xl p-3 text-[12.5px] leading-snug line-clamp-6 ' +
                               (i % 2 === 0 ? '-rotate-1' : 'rotate-1')
                             }
                             style={{
