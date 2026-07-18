@@ -1,4 +1,4 @@
-import type { FeedPost, Tenant } from '@/types'
+import type { FeedPostPublic, Tenant } from '@/types'
 import { Avatar } from '@/components/ui/Avatar'
 
 const dateFmt = new Intl.DateTimeFormat('es-CO', {
@@ -31,7 +31,7 @@ export function FeedPostCard({
   post,
   tenant,
 }: {
-  post: FeedPost
+  post: FeedPostPublic
   tenant: Pick<Tenant, 'nombre' | 'logo_url'>
 }) {
   const esMiembro = post.autor_miembro_id != null

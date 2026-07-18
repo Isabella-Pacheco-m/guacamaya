@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import type { FeedPost, Miembro, Tenant } from '@/types'
+import type { FeedPostPublic, Miembro, Tenant } from '@/types'
 import type { TenantFeatures } from '@/lib/tenant-features'
 import type { TarjetaPremioEstado } from '@/lib/tenantQueries'
 import type { Nota } from '@/lib/notas'
@@ -33,7 +33,7 @@ const NIVEL_PROGRESO: Record<Miembro['nivel'], { siguiente: string | null; meta:
 export interface ComunidadPreview {
   notas: Nota[]
   fotos: GaleriaPostPublic[]
-  ultimoPost: FeedPost | null
+  ultimoPost: FeedPostPublic | null
   retoActivo: Reto | null
   hayAlgo: boolean
 }

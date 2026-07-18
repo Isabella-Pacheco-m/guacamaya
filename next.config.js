@@ -50,7 +50,9 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.SUPABASE_PROJECTID
       ? `https://${process.env.SUPABASE_PROJECTID}.supabase.co`
       : '',
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_PUBLIC,
+    // La anon key NO se expone: el browser nunca habla con Supabase directo
+    // (todo pasa por las API routes con service role) y 0020 le revocó los
+    // permisos a anon. Inyectarla al bundle era superficie gratuita.
     AUTH0_ISSUER_BASE_URL: process.env.AUTH0_DOMAIN
       ? `https://${process.env.AUTH0_DOMAIN}`
       : '',

@@ -80,6 +80,12 @@ export interface FeedPost {
   created_at: string
 }
 
+// Post tal como viaja a la PWA del cliente. `autor_email` (el correo del
+// admin) se queda fuera: aunque la UI no lo pinte, pasar el objeto entero a
+// un componente cliente lo serializa al payload de la página y cualquier
+// miembro lo puede leer. Usar listFeedPostsPublic() para obtenerlos.
+export type FeedPostPublic = Omit<FeedPost, 'autor_email'>
+
 export type SorteoEstado = 'ABIERTO' | 'CERRADO' | 'SORTEADO'
 
 export interface Sorteo {
