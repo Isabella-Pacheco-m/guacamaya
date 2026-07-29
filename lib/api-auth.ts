@@ -7,6 +7,7 @@ import {
   TenantNotFoundError,
 } from '@/lib/tenant'
 import { getMiembroByAuth0 } from '@/lib/invitaciones'
+import { esAccesoCancelado } from '@/lib/suscripciones'
 import type { Miembro, Tenant } from '@/types'
 
 // Lectura de sesión robusta en App Router. Con @auth0/nextjs-auth0 v3.8,
@@ -74,6 +75,18 @@ export async function requireAdminTenantId(req?: NextRequest): Promise<AdminAuth
       ok: false,
       res: NextResponse.json(
         { error: 'Operación reservada al admin del tenant' },
+        { status: 403 }
+      ),
+    }
+  }
+
+  // Desuscripción: cuenta cancelada pierde el acceso también por API (mismo
+  // criterio que requireAdmin en lib/page-auth.ts).
+  if (await esAccesoCancelado(email)) {
+    return {
+      ok: false,
+      res: NextResponse.json(
+        { error: 'Suscripción cancelada — la cuenta no tiene acceso' },
         { status: 403 }
       ),
     }

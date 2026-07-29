@@ -16,6 +16,7 @@ export type AdminIconName =
   | 'retos'
   | 'funcionalidades'
   | 'marca'
+  | 'suscripcion'
 
 const PATHS: Record<AdminIconName, React.ReactNode> = {
   dashboard: (
@@ -136,6 +137,13 @@ const PATHS: Record<AdminIconName, React.ReactNode> = {
       <circle cx="7.5" cy="11" r="1" />
       <circle cx="10.5" cy="7.5" r="1" />
       <circle cx="14.5" cy="7.5" r="1" />
+    </>
+  ),
+  suscripcion: (
+    <>
+      <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+      <path d="M2.5 10h19" />
+      <path d="M6.5 15h4" />
     </>
   ),
 }

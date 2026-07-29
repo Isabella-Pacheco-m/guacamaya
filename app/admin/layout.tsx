@@ -107,6 +107,11 @@ const GROUPS: NavGroup[] = [
         icon: 'funcionalidades',
       },
       { href: '/admin/marca', label: 'Marca', icon: 'marca' },
+      {
+        href: '/admin/suscripcion',
+        label: 'Suscripción',
+        icon: 'suscripcion',
+      },
     ],
   },
 ]

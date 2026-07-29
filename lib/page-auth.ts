@@ -8,6 +8,7 @@ import {
   isAdminOfTenant,
 } from '@/lib/tenant'
 import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
+import { esAccesoCancelado } from '@/lib/suscripciones'
 import { tenantBaseUrl } from '@/lib/config'
 import type { Miembro, Tenant } from '@/types'
 
@@ -75,6 +76,13 @@ export async function requireAdmin(): Promise<AdminContext> {
 
   if (!email || !verified || !(await isAdminOfTenant(tenant.id, email))) {
     redirect('/?error=not-admin')
+  }
+
+  // Desuscripción: si la última suscripción del email quedó CANCELADA, la
+  // cuenta pierde el acceso al panel. Tenants sin suscripción registrada
+  // (anteriores al cobro) no se bloquean.
+  if (await esAccesoCancelado(email)) {
+    redirect('/?error=suscripcion-cancelada')
   }
 
   return {

@@ -143,6 +143,7 @@ const RESERVED_SLUGS = new Set([
   'retos',
   'sorteos',
   'superadmin',
+  'suscribirse',
   'unirse',
   'www',
 ])

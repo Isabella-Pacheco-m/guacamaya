@@ -243,6 +243,8 @@ function mapError(code: string | undefined): string | null {
       return 'Esta sección es solo para administradores del tenant.'
     case 'not-superadmin':
       return 'Esta sección es solo para superadmins de la plataforma.'
+    case 'suscripcion-cancelada':
+      return 'Tu suscripción fue cancelada y tu cuenta ya no tiene acceso. Para volver, suscríbete de nuevo en /suscribirse.'
     default:
       return null
   }

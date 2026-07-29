@@ -116,6 +116,29 @@ export interface SorteoParticipacion {
   created_at: string
 }
 
+// Suscripción mensual a la plataforma (pago vía Wompi). Una fila por intento
+// de pago; el vínculo con el tenant es por email == tenants.admin_email.
+export type SuscripcionEstado =
+  | 'PENDIENTE'
+  | 'ACTIVA'
+  | 'RECHAZADA'
+  | 'CANCELADA'
+
+export interface Suscripcion {
+  id: string
+  nombre: string
+  negocio: string
+  email: string
+  telefono: string | null
+  referencia: string
+  estado: SuscripcionEstado
+  monto_cop: number
+  wompi_transaction_id: string | null
+  pagada_hasta: string | null
+  cancelada_at: string | null
+  created_at: string
+}
+
 export interface SorteoParticipacionAdmin {
   id: string
   miembro_id: string
