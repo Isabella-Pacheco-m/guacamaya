@@ -266,7 +266,7 @@ export function RootLanding({
         />
 
         {/* ══════════ Hero ══════════ */}
-        <section className="relative overflow-hidden px-6 pt-32 sm:pt-36 pb-24 sm:pb-28 text-center">
+        <section className="relative overflow-hidden px-6 pt-44 sm:pt-52 pb-28 sm:pb-36 text-center">
           {/* Manchas de color difuminadas: aire y profundidad sin ensuciar */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -top-24 -left-24 h-[380px] w-[380px] rounded-full bg-lime/25 blur-3xl" />
@@ -320,7 +320,7 @@ export function RootLanding({
             +1 sello
           </HeroSticker>
           <HeroSticker
-            pos="hidden xl:block left-[24%] top-28"
+            pos="hidden xl:block left-[16%] top-24"
             look="rotate-2 border border-border bg-white text-graphite"
             emoji="🎂"
             delay="0.85s"
@@ -525,25 +525,16 @@ export function RootLanding({
                     borderColor: r.tinte.border,
                   }}
                 >
-                  {/* Numeral editorial: contorno fantasma + numeral sólido
-                      encima, desfasados. Al hover el sólido se separa más. */}
-                  <span aria-hidden className="relative block h-[72px] mb-4">
-                    <span
-                      className="absolute -top-3 left-0 text-[76px] font-extrabold leading-none tracking-[-0.05em] select-none"
-                      style={{
-                        WebkitTextStroke: `2px ${r.tinte.text}`,
-                        color: 'transparent',
-                        opacity: 0.4,
-                      }}
-                    >
-                      0{i + 1}
-                    </span>
-                    <span
-                      className="absolute top-1.5 left-4 text-[52px] font-extrabold leading-none tracking-[-0.05em] select-none transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:translate-x-1 group-hover:-rotate-3"
-                      style={{ color: r.tinte.text }}
-                    >
-                      0{i + 1}
-                    </span>
+                  {/* Numeral editorial: solo contorno, sin relleno. */}
+                  <span
+                    aria-hidden
+                    className="block text-[76px] font-extrabold leading-none tracking-[-0.05em] select-none mb-4 origin-left transition-transform duration-300 group-hover:-translate-y-1 group-hover:-rotate-2"
+                    style={{
+                      WebkitTextStroke: `2px ${r.tinte.text}`,
+                      color: 'transparent',
+                    }}
+                  >
+                    0{i + 1}
                   </span>
                   <h3
                     className="text-xl font-extrabold leading-snug tracking-tight mb-3"
