@@ -259,9 +259,12 @@ export function RootLanding({
               priority
               className="h-10 md:h-12 w-auto"
               // El PNG trae márgenes vacíos asimétricos (≈14% a la izquierda
-              // y 22% arriba): se compensan en % para centrar el trazo real
-              // a cualquier tamaño.
-              style={{ transform: 'translate(-6.8%, -10.7%)' }}
+              // y 22% arriba): se compensan en % para que el trazo quede
+              // centrado a cualquier tamaño. En vertical se corrige de menos
+              // (−6.5% en vez de −10.7%) porque la cola del ave baja mucho
+              // más que la palabra: centrar la caja completa deja el
+              // "Guacamaya" ópticamente subido.
+              style={{ transform: 'translate(-6.8%, -6.5%)' }}
             />
           }
           useFixedPosition
