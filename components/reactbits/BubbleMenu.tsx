@@ -213,10 +213,11 @@ export default function BubbleMenu({
             'bubble logo-bubble',
             'inline-flex items-center justify-center',
             'rounded-full',
-            'shadow-[0_4px_16px_rgba(42,35,32,0.14)]',
+            'border border-[#E3DACB]',
+            'shadow-[0_6px_22px_rgba(42,35,32,0.22)]',
             'pointer-events-auto',
-            'h-12 md:h-14',
-            'px-4 md:px-6',
+            'h-14 md:h-16',
+            'px-5 md:px-7',
             'gap-2',
             'will-change-transform'
           ].join(' ')}
@@ -244,10 +245,11 @@ export default function BubbleMenu({
             isMenuOpen ? 'open' : '',
             'inline-flex flex-col items-center justify-center',
             'rounded-full',
-            'shadow-[0_4px_16px_rgba(42,35,32,0.14)]',
+            'border border-[#E3DACB]',
+            'shadow-[0_6px_22px_rgba(42,35,32,0.22)]',
             'pointer-events-auto',
-            'w-12 h-12 md:w-14 md:h-14',
-            'border-0 cursor-pointer p-0',
+            'w-14 h-14 md:w-16 md:h-16',
+            'cursor-pointer p-0',
             'will-change-transform'
           ].join(' ')}
           onClick={handleToggle}
@@ -289,6 +291,11 @@ export default function BubbleMenu({
             'z-[1000]'
           ].join(' ')}
           aria-hidden={!isMenuOpen}
+          style={{
+            background: 'rgba(243, 238, 229, 0.92)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          }}
         >
           <ul
             className={[
@@ -323,7 +330,8 @@ export default function BubbleMenu({
                     'w-full',
                     'rounded-[999px]',
                     'no-underline',
-                    'shadow-[0_4px_14px_rgba(42,35,32,0.10)]',
+                    'border border-[#E3DACB]',
+                    'shadow-[0_10px_30px_rgba(42,35,32,0.16)]',
                     'flex items-center justify-center',
                     'relative',
                     'transition-[background,color] duration-300 ease-in-out',

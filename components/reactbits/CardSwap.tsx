@@ -115,6 +115,15 @@ const CardSwap: React.FC<CardSwapProps> = ({
   const tlRef = useRef<gsap.core.Timeline | null>(null)
   const intervalRef = useRef<number>(0)
   const container = useRef<HTMLDivElement>(null)
+  const swapRef = useRef<() => void>(() => {})
+
+  // Click en una tarjeta: intercambia ya y reinicia el ciclo automático.
+  const triggerSwap = () => {
+    if (tlRef.current?.isActive()) return
+    clearInterval(intervalRef.current)
+    swapRef.current()
+    intervalRef.current = window.setInterval(() => swapRef.current(), delay)
+  }
 
   useEffect(() => {
     const total = refs.length
@@ -178,6 +187,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
       })
     }
 
+    swapRef.current = swap
     swap()
     intervalRef.current = window.setInterval(swap, delay)
 
@@ -212,6 +222,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
           onClick: e => {
             child.props.onClick?.(e as React.MouseEvent<HTMLDivElement>)
             onCardClick?.(i)
+            triggerSwap()
           }
         } as CardProps & React.RefAttributes<HTMLDivElement>)
       : child
@@ -220,7 +231,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
   return (
     <div
       ref={container}
-      className="absolute bottom-0 right-0 transform translate-x-[5%] translate-y-[20%] origin-bottom-right overflow-visible max-[768px]:translate-x-[25%] max-[768px]:translate-y-[25%] max-[768px]:scale-[0.75] max-[480px]:translate-x-[25%] max-[480px]:translate-y-[25%] max-[480px]:scale-[0.55]"
+      className="absolute bottom-0 right-0 transform translate-x-[5%] translate-y-[20%] origin-bottom-right overflow-visible cursor-pointer max-[768px]:translate-x-[12%] max-[768px]:translate-y-[16%] max-[768px]:scale-[0.9] max-[480px]:translate-x-[14%] max-[480px]:translate-y-[18%] max-[480px]:scale-[0.78]"
       style={{ width, height, perspective: 900 }}
     >
       {rendered}

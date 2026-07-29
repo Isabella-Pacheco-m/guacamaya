@@ -34,6 +34,41 @@ const WHATSAPP_URL =
     'Hola 👋 Quiero crear el club de miembros de mi negocio con Guacamaya.'
   )
 
+// Sticker flotante del hero: el wrapper posiciona y entra con fadeup; el
+// inner flota en bucle. El emoji va sobre una moneda blanca para que
+// contraste con cualquier fondo.
+function HeroSticker({
+  pos,
+  look,
+  emoji,
+  delay,
+  float,
+  bg,
+  children,
+}: {
+  pos: string
+  look: string
+  emoji: string
+  delay: string
+  float: string
+  bg?: string
+  children: React.ReactNode
+}) {
+  return (
+    <span aria-hidden className={`hero-in absolute ${pos}`} style={{ animationDelay: delay }}>
+      <span
+        className={`inline-flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 text-sm font-bold shadow-card ${float} ${look}`}
+        style={bg ? { background: bg } : undefined}
+      >
+        <span className="grid place-items-center h-6 w-6 rounded-full bg-white shadow-sm text-[13px]">
+          {emoji}
+        </span>
+        {children}
+      </span>
+    </span>
+  )
+}
+
 // ── Header (BubbleMenu) ──
 const MENU_ITEMS: BubbleMenuItem[] = [
   {
@@ -218,10 +253,10 @@ export function RootLanding({
             <Image
               src="/logo-light.png"
               alt="Guacamaya"
-              width={140}
-              height={60}
+              width={180}
+              height={77}
               priority
-              className="h-7 w-auto"
+              className="h-9 md:h-10 w-auto"
             />
           }
           useFixedPosition
@@ -231,34 +266,83 @@ export function RootLanding({
         />
 
         {/* ══════════ Hero ══════════ */}
-        <section className="relative px-6 pt-32 sm:pt-36 pb-16 text-center">
-          {/* Stickers flotantes — solo desktop, puro sabor */}
-          <span
-            aria-hidden
-            className="hidden lg:inline-flex absolute left-[12%] top-44 -rotate-6 rounded-full bg-lime px-4 py-2 text-sm font-bold text-graphite shadow-card animate-[floaty_5s_ease-in-out_infinite]"
+        <section className="relative overflow-hidden px-6 pt-32 sm:pt-36 pb-24 sm:pb-28 text-center">
+          {/* Manchas de color difuminadas: aire y profundidad sin ensuciar */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute -top-24 -left-24 h-[380px] w-[380px] rounded-full bg-lime/25 blur-3xl" />
+            <div
+              className="absolute top-10 -right-28 h-[340px] w-[340px] rounded-full blur-3xl"
+              style={{ background: 'rgba(194,96,60,0.16)' }}
+            />
+            <div
+              className="absolute -bottom-36 left-1/3 h-[360px] w-[360px] rounded-full blur-3xl"
+              style={{ background: 'rgba(216,155,122,0.22)' }}
+            />
+          </div>
+
+          {/* Stickers flotantes — emoji en moneda blanca para que contraste */}
+          <HeroSticker
+            pos="hidden lg:block left-[9%] top-44"
+            look="-rotate-6 bg-lime text-graphite"
+            emoji="✨"
+            delay="0.45s"
+            float="animate-[floaty_5s_ease-in-out_infinite]"
           >
-            +120 pts ✨
-          </span>
-          <span
-            aria-hidden
-            className="hidden lg:inline-flex absolute right-[11%] top-40 rotate-6 rounded-full px-4 py-2 text-sm font-bold text-white shadow-card animate-[floaty_6s_ease-in-out_infinite_reverse]"
-            style={{ background: TERRACOTA }}
+            +120 pts
+          </HeroSticker>
+          <HeroSticker
+            pos="hidden lg:block right-[9%] top-40"
+            look="rotate-6 text-white"
+            emoji="🎁"
+            delay="0.55s"
+            float="animate-[floaty_6s_ease-in-out_infinite_reverse]"
+            bg={TERRACOTA}
           >
-            🎁 Canje listo
-          </span>
-          <span
-            aria-hidden
-            className="hidden lg:inline-flex absolute left-[18%] bottom-10 rotate-3 rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-graphite shadow-card animate-[floaty_7s_ease-in-out_infinite]"
+            Canje listo
+          </HeroSticker>
+          <HeroSticker
+            pos="hidden lg:block left-[15%] bottom-14"
+            look="rotate-3 border border-border bg-white text-graphite"
+            emoji="🏆"
+            delay="0.65s"
+            float="animate-[floaty_7s_ease-in-out_infinite]"
           >
-            🏆 Nivel ORO
-          </span>
+            Nivel ORO
+          </HeroSticker>
+          <HeroSticker
+            pos="hidden lg:block right-[14%] bottom-20"
+            look="-rotate-3 text-graphite"
+            emoji="🎟️"
+            delay="0.75s"
+            float="animate-[floaty_5.5s_ease-in-out_infinite_reverse]"
+            bg={ARCILLA}
+          >
+            +1 sello
+          </HeroSticker>
+          <HeroSticker
+            pos="hidden xl:block left-[24%] top-28"
+            look="rotate-2 border border-border bg-white text-graphite"
+            emoji="🎂"
+            delay="0.85s"
+            float="animate-[floaty_6.5s_ease-in-out_infinite]"
+          >
+            Regalo de cumple
+          </HeroSticker>
 
           <div className="max-w-3xl mx-auto">
-            <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] font-bold text-graphite bg-lime/40 border border-lime rounded-full px-4 py-2 mb-7">
-              🦜 Club de miembros · con tu marca
+            <p
+              className="hero-in inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] font-bold text-graphite bg-lime/40 border border-lime rounded-full pl-1.5 pr-4 py-1.5 mb-7"
+            >
+              <span className="grid place-items-center h-6 w-6 rounded-full bg-white text-[13px] tracking-normal">
+                🦜
+              </span>
+              Club de miembros · con tu marca
             </p>
 
-            <h1 className="text-[44px] sm:text-[64px] font-extrabold leading-[1.0] tracking-tight mb-6">
+            <h1
+              className="hero-in text-[44px] sm:text-[64px] font-extrabold leading-[1.0] tracking-tight mb-6"
+              style={{ animationDelay: '0.08s' }}
+            >
               Convierte compras en{' '}
               <span className="relative inline-block whitespace-nowrap">
                 <span className="relative z-10">clientes que vuelven</span>
@@ -270,7 +354,10 @@ export function RootLanding({
               .
             </h1>
 
-            <p className="text-muted text-[17px] leading-relaxed max-w-xl mx-auto mb-9">
+            <p
+              className="hero-in text-muted text-[17px] leading-relaxed max-w-xl mx-auto mb-9"
+              style={{ animationDelay: '0.16s' }}
+            >
               Puntos, niveles, recompensas y una comunidad que se siente
               genuina — en una app con tu logo que tus clientes instalan en su
               celular. Vender más no es descontar más: es dar motivos para
@@ -295,7 +382,10 @@ export function RootLanding({
                 </a>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+              <div
+                className="hero-in flex flex-col sm:flex-row gap-3 items-center justify-center"
+                style={{ animationDelay: '0.24s' }}
+              >
                 <a href="/suscribirse" className="w-full sm:w-auto">
                   <Button className="w-full sm:w-auto px-9 py-4 text-base font-bold">
                     Crea tu club · $35.000/mes
@@ -312,7 +402,10 @@ export function RootLanding({
               </div>
             )}
 
-            <p className="text-xs text-muted mt-5">
+            <p
+              className="hero-in text-xs text-muted mt-5"
+              style={{ animationDelay: '0.32s' }}
+            >
               Sin permanencia · montaje asistido por un equipo real
             </p>
           </div>
@@ -372,8 +465,8 @@ export function RootLanding({
                 </ul>
               </div>
 
-              {/* Pila de tarjetas que rota sola (pausa al hacer hover) */}
-              <div className="relative h-[300px] mt-6 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 lg:h-auto">
+              {/* Pila de tarjetas: rota sola, con click también intercambia */}
+              <div className="relative h-[380px] sm:h-[420px] mt-8 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 lg:h-auto">
                 <CardSwap
                   width={400}
                   height={310}
@@ -433,10 +526,10 @@ export function RootLanding({
                   }}
                 >
                   <span
-                    className="inline-grid place-items-center h-9 w-9 rounded-full text-sm font-extrabold mb-5 bg-white/70"
-                    style={{ color: r.tinte.text }}
+                    className="inline-grid place-items-center h-14 w-14 -rotate-6 rounded-2xl bg-white border-2 shadow-card text-[26px] font-extrabold mb-5 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
+                    style={{ color: r.tinte.text, borderColor: r.tinte.border }}
                   >
-                    0{i + 1}
+                    {i + 1}
                   </span>
                   <h3
                     className="text-xl font-extrabold leading-snug tracking-tight mb-3"
@@ -522,7 +615,7 @@ export function RootLanding({
                 />
               </div>
               <p className="text-center text-xs text-muted mt-5">
-                Arrástralas 👆 — así de fácil es engancharse a un club.
+                Arrástralas 👆 — así lucirán tus clientes cuando tengas tu club
               </p>
             </div>
           </div>
@@ -543,8 +636,11 @@ export function RootLanding({
             </p>
 
             <div className="relative max-w-lg mx-auto rounded-[32px] bg-graphite text-white p-8 sm:p-10 text-left shadow-[0_28px_70px_-30px_rgba(42,35,32,0.6)]">
-              <span className="absolute -top-4 right-8 rotate-3 rounded-full bg-lime px-4 py-1.5 text-xs font-extrabold text-graphite shadow-card">
-                Sin permanencia ✌️
+              <span className="absolute -top-4 right-8 rotate-3 inline-flex items-center gap-1.5 rounded-full bg-lime pl-1.5 pr-4 py-1.5 text-xs font-extrabold text-graphite shadow-card">
+                <span className="grid place-items-center h-5 w-5 rounded-full bg-white text-[11px]">
+                  ✌️
+                </span>
+                Sin permanencia
               </span>
 
               <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mb-3">
@@ -588,13 +684,16 @@ export function RootLanding({
           style={{ background: ESPRESSO }}
         >
           <div className="max-w-3xl mx-auto text-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/img/guacamaya-volando.png"
-              alt=""
-              aria-hidden
-              className="w-[96px] h-auto mx-auto mb-8 opacity-95"
-            />
+            {/* El trazo del ave es negro: va sobre un sello claro para verse */}
+            <span className="mx-auto mb-8 grid place-items-center h-24 w-24 -rotate-3 rounded-full bg-lime shadow-[0_16px_40px_-16px_rgba(235,186,79,0.55)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/img/guacamaya-volando.png"
+                alt=""
+                aria-hidden
+                className="w-16 h-auto"
+              />
+            </span>
 
             <h2 className="text-[32px] sm:text-[44px] font-extrabold leading-[1.05] tracking-tight mb-5">
               ¿Listo para darle a tu negocio su propio club?
@@ -610,7 +709,7 @@ export function RootLanding({
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 rounded-full px-9 py-4 text-base font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2.5 rounded-full px-9 py-4 text-base font-extrabold text-[#0B3D22] ring-2 ring-white/25 shadow-[0_16px_40px_-14px_rgba(37,211,102,0.7)] transition-all hover:brightness-110 active:scale-[0.98] w-full sm:w-auto"
                 style={{ background: '#25D366' }}
               >
                 {/* Ícono WhatsApp */}

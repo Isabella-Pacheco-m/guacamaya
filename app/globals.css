@@ -90,6 +90,16 @@ body {
   }
 }
 
+/* Entrada del hero: aparece desde abajo con leve escala. */
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hero-in { animation: fadeup 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-in { animation: none; }
+}
+
 /* Stickers del hero de la landing: flotan suavemente en bucle. */
 @keyframes floaty {
   0%, 100% { transform: translateY(0) rotate(var(--tw-rotate, 0)); }
