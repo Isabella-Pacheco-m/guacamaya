@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { requireAdmin } from '@/lib/page-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { AdminNav } from '@/components/admin/AdminNav'
-import type { AdminIconName } from '@/components/admin/AdminNavIcon'
+import type { IconName } from '@/components/ui/Icon'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +20,7 @@ type FeatureFlag =
 interface NavItem {
   href: string
   label: string
-  icon: AdminIconName
+  icon: IconName
   requires?: FeatureFlag
 }
 

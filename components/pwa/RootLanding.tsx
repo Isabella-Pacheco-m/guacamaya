@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
+import { Icon, type IconName } from '@/components/ui/Icon'
 import ClickSpark from '@/components/reactbits/ClickSpark'
 import BubbleMenu, { type BubbleMenuItem } from '@/components/reactbits/BubbleMenu'
 import CardSwap, { Card } from '@/components/reactbits/CardSwap'
@@ -104,19 +105,19 @@ const MENU_ITEMS: BubbleMenuItem[] = [
 ]
 
 // ── Marquesina de funcionalidades ──
-const FEATURES: { label: string; color: Tinte }[] = [
-  { label: '📱 PWA instalable', color: T_SOL },
-  { label: '⭐ Puntos y niveles', color: T_TERRA },
-  { label: '🎁 Recompensas', color: T_ARCILLA },
-  { label: '🎟️ Tarjeta de sellos', color: T_OLIVA },
-  { label: '💬 Comunidad', color: T_SOL },
-  { label: '🎉 Sorteos', color: T_TERRA },
-  { label: '🏆 Retos', color: T_ARCILLA },
-  { label: '📸 Galería', color: T_OLIVA },
-  { label: '🚀 Lanzamientos', color: T_SOL },
-  { label: '📝 Notas', color: T_TERRA },
-  { label: '🎂 Cumpleaños', color: T_ARCILLA },
-  { label: '🥇 Ranking', color: T_OLIVA },
+const FEATURES: { label: string; icon: IconName; color: Tinte }[] = [
+  { label: 'PWA instalable', icon: 'app', color: T_SOL },
+  { label: 'Puntos y niveles', icon: 'puntos', color: T_TERRA },
+  { label: 'Recompensas', icon: 'recompensas', color: T_ARCILLA },
+  { label: 'Tarjeta de sellos', icon: 'tarjeta', color: T_OLIVA },
+  { label: 'Comunidad', icon: 'comunidad', color: T_SOL },
+  { label: 'Sorteos', icon: 'sorteos', color: T_TERRA },
+  { label: 'Retos', icon: 'retos', color: T_ARCILLA },
+  { label: 'Galería', icon: 'galeria', color: T_OLIVA },
+  { label: 'Lanzamientos', icon: 'lanzamientos', color: T_SOL },
+  { label: 'Notas', icon: 'notas', color: T_TERRA },
+  { label: 'Cumpleaños', icon: 'cumpleanos', color: T_ARCILLA },
+  { label: 'Ranking', icon: 'ranking', color: T_OLIVA },
 ]
 
 // ── Sección soluciones (CardSwap) ──
@@ -257,6 +258,10 @@ export function RootLanding({
               height={77}
               priority
               className="h-10 md:h-12 w-auto"
+              // El PNG trae márgenes vacíos asimétricos (≈14% a la izquierda
+              // y 22% arriba): se compensan en % para centrar el trazo real
+              // a cualquier tamaño.
+              style={{ transform: 'translate(-6.8%, -10.7%)' }}
             />
           }
           useFixedPosition
@@ -266,7 +271,7 @@ export function RootLanding({
         />
 
         {/* ══════════ Hero ══════════ */}
-        <section className="relative overflow-hidden px-6 pt-44 sm:pt-52 pb-28 sm:pb-36 text-center">
+        <section className="relative overflow-hidden px-6 pt-44 sm:pt-52 pb-36 sm:pb-48 text-center">
           {/* Manchas de color difuminadas: aire y profundidad sin ensuciar */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -top-24 -left-24 h-[380px] w-[380px] rounded-full bg-lime/25 blur-3xl" />
@@ -419,13 +424,14 @@ export function RootLanding({
                 {FEATURES.map((f) => (
                   <span
                     key={`${copy}-${f.label}`}
-                    className="mx-1.5 inline-flex items-center whitespace-nowrap text-sm font-bold rounded-full px-5 py-2 border"
+                    className="mx-1.5 inline-flex items-center gap-2 whitespace-nowrap text-sm font-bold rounded-full px-5 py-2 border"
                     style={{
                       color: f.color.text,
                       background: f.color.bg,
                       borderColor: f.color.border,
                     }}
                   >
+                    <Icon name={f.icon} className="h-[17px] w-[17px] shrink-0" />
                     {f.label}
                   </span>
                 ))}

@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { AdminNavIcon, type AdminIconName } from '@/components/admin/AdminNavIcon'
+import { Icon, type IconName } from '@/components/ui/Icon'
 
 export interface NavItem {
   href: string
   label: string
-  icon: AdminIconName
+  icon: IconName
 }
 
 export interface NavGroup {
@@ -49,7 +49,7 @@ export function AdminNav({
                   : 'text-white/65 hover:bg-white/10')
               }
             >
-              <AdminNavIcon name={item.icon} className="h-4 w-4 shrink-0" />
+              <Icon name={item.icon} className="h-4 w-4 shrink-0" />
               {item.label}
             </Link>
           )
@@ -82,7 +82,7 @@ export function AdminNav({
                 {active && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-lime" />
                 )}
-                <AdminNavIcon
+                <Icon
                   name={item.icon}
                   className={
                     'h-[18px] w-[18px] shrink-0 ' +

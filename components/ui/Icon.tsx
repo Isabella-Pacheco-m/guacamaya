@@ -1,6 +1,7 @@
-// Íconos del nav admin. Componente puro (sin estado) — set mínimo de líneas
-// SVG con stroke currentColor para heredar el color del enlace.
-export type AdminIconName =
+// Set de íconos de la app. Componente puro (sin estado) — líneas SVG con
+// stroke currentColor para heredar el color del contenedor. Lo usan el nav
+// del admin y la marquesina de la landing.
+export type IconName =
   | 'dashboard'
   | 'miembros'
   | 'inactivos'
@@ -17,8 +18,12 @@ export type AdminIconName =
   | 'funcionalidades'
   | 'marca'
   | 'suscripcion'
+  | 'app'
+  | 'puntos'
+  | 'comunidad'
+  | 'ranking'
 
-const PATHS: Record<AdminIconName, React.ReactNode> = {
+const PATHS: Record<IconName, React.ReactNode> = {
   dashboard: (
     <>
       <rect x="3" y="3" width="7" height="9" rx="1.5" />
@@ -146,13 +151,38 @@ const PATHS: Record<AdminIconName, React.ReactNode> = {
       <path d="M6.5 15h4" />
     </>
   ),
+  app: (
+    <>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+      <path d="M10.5 5.5h3" />
+      <circle cx="12" cy="18" r="0.7" />
+    </>
+  ),
+  puntos: (
+    <path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9Z" />
+  ),
+  comunidad: (
+    <>
+      <path d="M20.5 12.2c0 3.4-3.8 6.2-8.5 6.2-.9 0-1.8-.1-2.7-.3L4 20.5l1.5-3.3c-1.3-1.2-2-2.7-2-4.4 0-3.4 3.8-6.3 8.5-6.3s8.5 2.8 8.5 6.3Z" />
+      <path d="M8.5 12h.01M12 12h.01M15.5 12h.01" />
+    </>
+  ),
+  ranking: (
+    <>
+      <path d="M9.5 21V9.5h5V21" />
+      <path d="M3.5 21v-7h6" />
+      <path d="M14.5 12.5h6v8.5" />
+      <path d="M3.5 21h17" />
+      <path d="m12 3 .9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2L9 5.2l2-.3Z" />
+    </>
+  ),
 }
 
-export function AdminNavIcon({
+export function Icon({
   name,
   className = 'h-[18px] w-[18px]',
 }: {
-  name: AdminIconName
+  name: IconName
   className?: string
 }) {
   return (
