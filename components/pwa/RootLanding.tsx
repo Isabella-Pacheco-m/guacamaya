@@ -57,10 +57,10 @@ function HeroSticker({
   return (
     <span aria-hidden className={`hero-in absolute ${pos}`} style={{ animationDelay: delay }}>
       <span
-        className={`inline-flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 text-sm font-bold shadow-card ${float} ${look}`}
+        className={`inline-flex items-center gap-2.5 rounded-full pl-2 pr-6 py-2 text-base font-bold shadow-card ${float} ${look}`}
         style={bg ? { background: bg } : undefined}
       >
-        <span className="grid place-items-center h-6 w-6 rounded-full bg-white shadow-sm text-[13px]">
+        <span className="grid place-items-center h-10 w-10 rounded-full bg-white shadow-sm text-[22px] leading-none">
           {emoji}
         </span>
         {children}
@@ -331,9 +331,9 @@ export function RootLanding({
 
           <div className="max-w-3xl mx-auto">
             <p
-              className="hero-in inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] font-bold text-graphite bg-lime/40 border border-lime rounded-full pl-1.5 pr-4 py-1.5 mb-7"
+              className="hero-in inline-flex items-center gap-2.5 text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold text-graphite bg-lime/40 border border-lime rounded-full pl-1.5 pr-5 py-1.5 mb-7"
             >
-              <span className="grid place-items-center h-6 w-6 rounded-full bg-white text-[13px] tracking-normal">
+              <span className="grid place-items-center h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-white text-[18px] sm:text-[20px] leading-none tracking-normal">
                 🦜
               </span>
               Club de miembros · con tu marca
@@ -387,14 +387,14 @@ export function RootLanding({
                 style={{ animationDelay: '0.24s' }}
               >
                 <a href="/suscribirse" className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto px-9 py-4 text-base font-bold">
+                  <Button className="w-full sm:w-auto px-9 py-4 text-base font-extrabold">
                     Crea tu club · $35.000/mes
                   </Button>
                 </a>
                 <a href="#soluciones" className="w-full sm:w-auto">
                   <Button
                     variant="secondary"
-                    className="w-full sm:w-auto px-9 py-4 text-base"
+                    className="w-full sm:w-auto px-9 py-4 text-base font-bold"
                   >
                     Ver cómo funciona ↓
                   </Button>
@@ -465,7 +465,7 @@ export function RootLanding({
                 </ul>
               </div>
 
-              {/* Pila de tarjetas: rota sola, con click también intercambia */}
+              {/* Pila de tarjetas: rota sola y se pausa al pasar el mouse */}
               <div className="relative h-[380px] sm:h-[420px] mt-8 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 lg:h-auto">
                 <CardSwap
                   width={400}
@@ -525,11 +525,25 @@ export function RootLanding({
                     borderColor: r.tinte.border,
                   }}
                 >
-                  <span
-                    className="inline-grid place-items-center h-14 w-14 -rotate-6 rounded-2xl bg-white border-2 shadow-card text-[26px] font-extrabold mb-5 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
-                    style={{ color: r.tinte.text, borderColor: r.tinte.border }}
-                  >
-                    {i + 1}
+                  {/* Numeral editorial: contorno fantasma + numeral sólido
+                      encima, desfasados. Al hover el sólido se separa más. */}
+                  <span aria-hidden className="relative block h-[72px] mb-4">
+                    <span
+                      className="absolute -top-3 left-0 text-[76px] font-extrabold leading-none tracking-[-0.05em] select-none"
+                      style={{
+                        WebkitTextStroke: `2px ${r.tinte.text}`,
+                        color: 'transparent',
+                        opacity: 0.4,
+                      }}
+                    >
+                      0{i + 1}
+                    </span>
+                    <span
+                      className="absolute top-1.5 left-4 text-[52px] font-extrabold leading-none tracking-[-0.05em] select-none transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:translate-x-1 group-hover:-rotate-3"
+                      style={{ color: r.tinte.text }}
+                    >
+                      0{i + 1}
+                    </span>
                   </span>
                   <h3
                     className="text-xl font-extrabold leading-snug tracking-tight mb-3"
@@ -636,8 +650,8 @@ export function RootLanding({
             </p>
 
             <div className="relative max-w-lg mx-auto rounded-[32px] bg-graphite text-white p-8 sm:p-10 text-left shadow-[0_28px_70px_-30px_rgba(42,35,32,0.6)]">
-              <span className="absolute -top-4 right-8 rotate-3 inline-flex items-center gap-1.5 rounded-full bg-lime pl-1.5 pr-4 py-1.5 text-xs font-extrabold text-graphite shadow-card">
-                <span className="grid place-items-center h-5 w-5 rounded-full bg-white text-[11px]">
+              <span className="absolute -top-5 right-6 sm:right-8 rotate-3 inline-flex items-center gap-2.5 rounded-full bg-lime pl-2 pr-6 py-2 text-base font-extrabold text-graphite shadow-card">
+                <span className="grid place-items-center h-10 w-10 rounded-full bg-white text-[22px] leading-none">
                   ✌️
                 </span>
                 Sin permanencia
@@ -665,7 +679,7 @@ export function RootLanding({
               </ul>
 
               <a href="/suscribirse" className="block">
-                <Button className="w-full py-4 text-base font-bold">
+                <Button className="w-full py-4 text-base font-extrabold">
                   Crear mi club ahora
                 </Button>
               </a>
@@ -684,16 +698,19 @@ export function RootLanding({
           style={{ background: ESPRESSO }}
         >
           <div className="max-w-3xl mx-auto text-center">
-            {/* El trazo del ave es negro: va sobre un sello claro para verse */}
-            <span className="mx-auto mb-8 grid place-items-center h-24 w-24 -rotate-3 rounded-full bg-lime shadow-[0_16px_40px_-16px_rgba(235,186,79,0.55)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/img/guacamaya-volando.png"
-                alt=""
-                aria-hidden
-                className="w-16 h-auto"
-              />
-            </span>
+            {/* El trazo del ave es negro: lo quemamos a blanco con el filtro
+                (brightness(0) lo vuelve sólido, invert(1) lo pasa a blanco). */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/img/guacamaya-volando.png"
+              alt=""
+              aria-hidden
+              className="mx-auto mb-8 w-28 sm:w-32 h-auto -rotate-3"
+              style={{
+                filter:
+                  'brightness(0) invert(1) drop-shadow(0 14px 34px rgba(252,250,246,0.28))',
+              }}
+            />
 
             <h2 className="text-[32px] sm:text-[44px] font-extrabold leading-[1.05] tracking-tight mb-5">
               ¿Listo para darle a tu negocio su propio club?
@@ -719,7 +736,7 @@ export function RootLanding({
                 Hablar por WhatsApp
               </a>
               <a href="/suscribirse" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto px-9 py-4 text-base font-bold">
+                <Button className="w-full sm:w-auto px-9 py-4 text-base font-extrabold">
                   Crear mi club ya
                 </Button>
               </a>
