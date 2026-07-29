@@ -256,7 +256,7 @@ export function RootLanding({
               width={180}
               height={77}
               priority
-              className="h-9 md:h-10 w-auto"
+              className="h-10 md:h-12 w-auto"
             />
           }
           useFixedPosition
