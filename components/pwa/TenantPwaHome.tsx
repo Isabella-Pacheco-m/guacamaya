@@ -124,7 +124,10 @@ export function TenantPwaHome({
               />
               <div className="min-w-0 pb-1">
                 <h1 className="text-xl lg:text-2xl font-light leading-tight truncate">
-                  Hola, {miembro.nombre.split(' ')[0]}
+                  Hola,{' '}
+                  <span className="subrayado-tenant">
+                    {miembro.nombre.split(' ')[0]}
+                  </span>
                 </h1>
                 <p className="text-xs text-muted truncate">
                   {miembro.email ?? 'Miembro de la comunidad'}
@@ -156,7 +159,7 @@ export function TenantPwaHome({
               padding="lg"
               className="flex flex-col justify-between min-h-[220px] lg:col-start-1 lg:row-start-1"
             >
-              <p className="text-[11px] uppercase tracking-wider text-muted">
+              <p className="eyebrow text-muted">
                 Tus puntos
               </p>
               <div className="flex items-baseline gap-2 mt-2 mb-6">
@@ -391,6 +394,8 @@ export function TenantPwaHome({
   )
 }
 
+// Mismo ritmo editorial de la landing: eyebrow corto en versalitas (con el
+// color del tenant) y debajo el titular ligero que explica la sección.
 function SectionTitle({
   titulo,
   hint,
@@ -402,9 +407,13 @@ function SectionTitle({
 }) {
   return (
     <div className="flex items-end justify-between gap-4 mb-4">
-      <div>
-        <h2 className="text-lg font-medium tracking-tight">{titulo}</h2>
-        {hint && <p className="text-xs text-muted mt-0.5">{hint}</p>}
+      <div className="min-w-0">
+        <p className="eyebrow text-electric mb-1.5">{titulo}</p>
+        {hint && (
+          <h2 className="text-lg font-light tracking-[-0.01em] leading-snug">
+            {hint}
+          </h2>
+        )}
       </div>
       {accion && (
         <Link
@@ -436,7 +445,7 @@ function AccountTile({
         padding="md"
         className="h-full flex flex-col justify-between min-h-[112px]"
       >
-        <span className="grid place-items-center h-9 w-9 rounded-full bg-surface text-electric">
+        <span className="grid place-items-center h-9 w-9 rounded-full bg-electric/10 text-electric">
           {icon}
         </span>
         <div className="mt-3">

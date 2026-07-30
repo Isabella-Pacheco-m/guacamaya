@@ -26,6 +26,24 @@
   --color-border: #E3DACB;
   --color-text-muted: #736658;
 
+  --color-oliva: #55603A;
+
+  /* Tintes lavados de la landing (chips, tarjetas de sección, eyebrows).
+     Cada tinte = fondo + borde + tinta legible sobre ese fondo. Se comparten
+     con el panel y la PWA para que todo el producto suene igual. */
+  --tint-sol-bg: #FBEFD2;
+  --tint-sol-border: #F2DFAC;
+  --tint-sol-ink: #7A5B12;
+  --tint-terra-bg: #F8E3DA;
+  --tint-terra-border: #EFCBBB;
+  --tint-terra-ink: #8E3F20;
+  --tint-arcilla-bg: #F7E6DC;
+  --tint-arcilla-border: #EDD0C0;
+  --tint-arcilla-ink: #8A503A;
+  --tint-oliva-bg: #EDEFDF;
+  --tint-oliva-border: #DCE0C4;
+  --tint-oliva-ink: #55603A;
+
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -33,6 +51,7 @@
 
   /* Sombras cálidas (tinte espresso) en vez de negro puro. */
   --shadow-card: 0 1px 3px rgba(42, 35, 32, 0.05), 0 4px 16px rgba(42, 35, 32, 0.05);
+  --shadow-card-hover: 0 2px 6px rgba(42, 35, 32, 0.06), 0 12px 30px rgba(42, 35, 32, 0.08);
 }
 
 body {
@@ -74,6 +93,51 @@ body {
       radial-gradient(120% 80% at 80% 0%, rgb(var(--color-electric) / 0.10), transparent 60%),
       radial-gradient(90% 70% at 0% 100%, rgba(235, 186, 79, 0.14), transparent 60%),
       var(--color-surface);
+  }
+
+  /* ── Tintes de sección (mismos de la landing) ──
+     `.tint-*` pinta fondo + borde; `.ink-*` da la tinta del titular sobre ese
+     fondo. Pensados para combinarse con `border`: <div class="border tint-sol">. */
+  .tint-sol { background-color: var(--tint-sol-bg); border-color: var(--tint-sol-border); }
+  .tint-terra { background-color: var(--tint-terra-bg); border-color: var(--tint-terra-border); }
+  .tint-arcilla { background-color: var(--tint-arcilla-bg); border-color: var(--tint-arcilla-border); }
+  .tint-oliva { background-color: var(--tint-oliva-bg); border-color: var(--tint-oliva-border); }
+
+  .ink-sol { color: var(--tint-sol-ink); }
+  .ink-terra { color: var(--tint-terra-ink); }
+  .ink-arcilla { color: var(--tint-arcilla-ink); }
+  .ink-oliva { color: var(--tint-oliva-ink); }
+
+  /* Eyebrow: la etiqueta corta en versalitas que abre cada sección de la
+     landing. Es la firma tipográfica de la marca — se reusa en panel y PWA. */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+
+  /* Subrayado de sol detrás de una palabra (como en los titulares del hero).
+     Va como fondo del inline, así respeta saltos de línea. */
+  .subrayado-sol {
+    background-image: linear-gradient(
+      to top,
+      rgba(235, 186, 79, 0.6) 0 0.34em,
+      transparent 0.34em
+    );
+    background-repeat: no-repeat;
+  }
+
+  /* Misma idea que `.subrayado-sol`, pero con el color del tenant: en la PWA
+     el acento debe ser la marca del negocio, no el sol de Guacamaya. */
+  .subrayado-tenant {
+    background-image: linear-gradient(
+      to top,
+      rgb(var(--color-electric) / 0.28) 0 0.3em,
+      transparent 0.3em
+    );
+    background-repeat: no-repeat;
   }
 
   /* Grano de papel — textura muy sutil que da el acabado "impreso"/artesanal

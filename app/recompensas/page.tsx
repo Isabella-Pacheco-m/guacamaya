@@ -25,7 +25,7 @@ export default async function RecompensasPwaPage() {
           <h1 className="text-2xl font-light mt-1 leading-tight">Recompensas</h1>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-[11px] uppercase tracking-wider text-muted">Tienes</p>
+          <p className="eyebrow text-muted">Tienes</p>
           <p className="text-xl font-light tabular-nums">
             {fmt.format(miembro.puntos_actuales)} <span className="text-sm text-muted">pts</span>
           </p>
@@ -55,7 +55,7 @@ export default async function RecompensasPwaPage() {
                     <p className="text-2xl font-light tabular-nums leading-none">
                       {fmt.format(r.costo_puntos)}
                     </p>
-                    <p className="text-[11px] uppercase tracking-wider text-muted mt-1">
+                    <p className="eyebrow text-muted mt-1">
                       puntos
                     </p>
                   </div>

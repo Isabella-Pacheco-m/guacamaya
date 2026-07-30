@@ -48,7 +48,7 @@ export default async function PuntosPwaPage() {
 
         <div className="lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 lg:items-start">
           <Card className="mb-6 lg:mb-0 lg:sticky lg:top-10" padding="lg">
-            <p className="text-[11px] uppercase tracking-wider text-muted">
+            <p className="eyebrow text-muted">
               Saldo actual
             </p>
             <p className="text-[56px] font-light tabular-nums leading-none mt-2">

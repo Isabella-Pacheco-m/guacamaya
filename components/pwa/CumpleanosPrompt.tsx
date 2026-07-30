@@ -67,7 +67,7 @@ export function CumpleanosPrompt({
       <Card className="mb-6">
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
-            <p className="text-xs uppercase tracking-wider text-muted mb-1">
+            <p className="eyebrow text-muted mb-1">
               Mes de cumpleaños
             </p>
             <p className="text-graphite">
@@ -89,7 +89,7 @@ export function CumpleanosPrompt({
 
   return (
     <Card className="mb-6">
-      <p className="text-xs uppercase tracking-wider text-electric mb-2">
+      <p className="eyebrow text-electric mb-2">
         Cuéntanos cuándo cumples
       </p>
       <p className="text-sm text-graphite mb-1">

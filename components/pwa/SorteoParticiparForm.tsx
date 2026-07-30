@@ -39,7 +39,7 @@ export function SorteoParticiparForm({ sorteoId }: { sorteoId: string }) {
   return (
     <div className="bg-white rounded-lg shadow-card p-6 flex flex-col gap-4">
       <div>
-        <p className="text-[11px] uppercase tracking-wider text-electric font-medium">
+        <p className="eyebrow text-electric">
           Participar
         </p>
         <h3 className="text-lg font-light leading-tight mt-1">

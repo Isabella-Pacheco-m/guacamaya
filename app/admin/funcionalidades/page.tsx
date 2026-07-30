@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/page-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { FuncionalidadesForm } from '@/components/admin/FuncionalidadesForm'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,13 +11,17 @@ export default async function FuncionalidadesPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">Funcionalidades</h1>
-        <p className="text-muted text-sm mt-2">
-          Activa solo lo que tu negocio necesita. Tus clientes verán cada
-          sección en la PWA según lo que dejes prendido aquí.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Configuración"
+        tone="arcilla"
+        titulo="Funcionalidades"
+        descripcion={
+          <>
+            Activa solo lo que tu negocio necesita. Tus clientes verán cada
+            sección en la PWA según lo que dejes prendido aquí.
+          </>
+        }
+      />
       <FuncionalidadesForm initial={features} />
     </div>
   )

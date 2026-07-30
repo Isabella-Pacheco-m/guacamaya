@@ -15,6 +15,7 @@ import { RegistrarCompraForm } from '@/components/admin/RegistrarCompraForm'
 import { InvitacionesPanel } from '@/components/admin/InvitacionesPanel'
 import { TarjetaMiembroPanel } from '@/components/admin/TarjetaMiembroPanel'
 import { HistorialList } from '@/components/HistorialList'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,29 +59,35 @@ export default async function MiembroDetailPage({
         ← Volver a miembros
       </Link>
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[44px] font-light tracking-tight leading-tight">{miembro.nombre}</h1>
-          <p className="text-muted text-sm mt-2">
+      <PageHeader
+        eyebrow="Miembro"
+        tone="terra"
+        titulo={miembro.nombre}
+        descripcion={
+          <>
             {formatTelefono(miembro.telefono)}
             {miembro.email && ` · ${miembro.email}`}
-          </p>
-        </div>
-        <NivelBadge nivel={miembro.nivel} className="text-sm px-4 py-1.5" />
-      </div>
+          </>
+        }
+        accion={<NivelBadge nivel={miembro.nivel} className="text-sm px-4 py-1.5" />}
+      />
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <div className="text-xs text-muted uppercase tracking-wide">Puntos disponibles</div>
-          <div className="mt-2 text-[32px] font-light">{COP.format(miembro.puntos_actuales)}</div>
+        <Card tone="sol">
+          <div className="eyebrow ink-sol">Puntos disponibles</div>
+          <div className="mt-2 text-[32px] font-light tracking-[-0.02em] tabular-nums">
+            {COP.format(miembro.puntos_actuales)}
+          </div>
         </Card>
-        <Card>
-          <div className="text-xs text-muted uppercase tracking-wide">Puntos histórico</div>
-          <div className="mt-2 text-[32px] font-light">{COP.format(miembro.puntos_historicos)}</div>
+        <Card tone="arcilla">
+          <div className="eyebrow ink-arcilla">Puntos histórico</div>
+          <div className="mt-2 text-[32px] font-light tracking-[-0.02em] tabular-nums">
+            {COP.format(miembro.puntos_historicos)}
+          </div>
         </Card>
-        <Card>
-          <div className="text-xs text-muted uppercase tracking-wide">Próximo nivel</div>
-          <div className="mt-2 text-sm">
+        <Card tone="oliva">
+          <div className="eyebrow ink-oliva">Próximo nivel</div>
+          <div className="mt-2 text-sm leading-snug">
             {nextLevelHint(miembro.puntos_historicos)}
           </div>
         </Card>

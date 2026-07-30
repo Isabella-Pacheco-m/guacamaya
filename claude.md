@@ -131,6 +131,28 @@ Badge nivel:      bg-graphite text-lime rounded-full px-3 py-1 text-sm font-medi
 Input:            border border-border rounded-md px-4 py-3 focus:ring-electric
 ```
 
+### Tintes de sección y eyebrow (lenguaje común landing ↔ panel ↔ PWA)
+
+La landing definió el ritmo visual de la marca y el panel lo hereda. Los
+tokens viven en `globals.css` y no deben duplicarse como hex sueltos:
+
+| Utilidad | Qué hace |
+|---|---|
+| `.tint-sol` `.tint-terra` `.tint-arcilla` `.tint-oliva` | fondo + borde lavado (combinar con `border`) |
+| `.ink-sol` `.ink-terra` `.ink-arcilla` `.ink-oliva` | tinta del titular sobre ese tinte |
+| `.eyebrow` | etiqueta corta en versalitas (11px / 700 / `0.2em`) que abre cada sección |
+| `.subrayado-sol` | franja de sol detrás de una palabra (solo Guacamaya) |
+| `.subrayado-tenant` | igual pero con el color del tenant (PWA) |
+
+- `<Card tone="sol|terra|arcilla|oliva">` aplica el tinte; `paper` (default) es
+  la tarjeta neutra de siempre.
+- Cada área del panel tiene su tinte, tomado de su grupo en la nav:
+  Clientes → terra, Fidelización → sol, Contenido → oliva, Configuración →
+  arcilla. `components/admin/PageHeader.tsx` es el encabezado de toda página
+  del panel (eyebrow + titular + descripción + acción opcional).
+- En la **PWA del cliente** el acento es el color del tenant (`electric`), no
+  el sol: los tintes de Guacamaya se quedan en el panel y la landing.
+
 ### Principios de UI
 
 - Fondo general siempre `--color-surface` (#F3EEE5, crema), nunca blanco puro

@@ -135,7 +135,7 @@ export function SorteoDetailPanel({
           )}
           {sorteo.requisitos && (
             <div className="bg-surface rounded-md p-3 text-sm">
-              <p className="text-xs uppercase tracking-wider text-muted mb-1">
+              <p className="eyebrow text-muted mb-1">
                 Requisitos
               </p>
               <p className="whitespace-pre-wrap">{sorteo.requisitos}</p>
@@ -143,7 +143,7 @@ export function SorteoDetailPanel({
           )}
           {sorteo.ganador_nombre && (
             <div className="bg-lime/30 rounded-md p-3 text-sm">
-              <p className="text-xs uppercase tracking-wider text-graphite/70 mb-1">
+              <p className="eyebrow text-graphite/70 mb-1">
                 Ganador
               </p>
               <p className="font-medium">{sorteo.ganador_nombre}</p>

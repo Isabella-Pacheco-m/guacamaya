@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/page-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import { listSorteosAdmin } from '@/lib/sorteos'
 import { SorteosAdminList } from '@/components/admin/SorteosAdminList'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,12 +16,12 @@ export default async function SorteosAdminPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">Sorteos</h1>
-        <p className="text-muted text-sm mt-2">
-          Crea sorteos y elige al ganador entre los participantes.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Contenido"
+        tone="oliva"
+        titulo="Sorteos"
+        descripcion="Crea sorteos y elige al ganador entre los participantes."
+      />
       <SorteosAdminList initial={sorteos} />
     </div>
   )

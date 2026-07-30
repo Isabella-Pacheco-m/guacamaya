@@ -218,7 +218,7 @@ export function TenantWelcome({
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-[11px] uppercase tracking-wider text-muted">
+    <h2 className="eyebrow text-muted">
       {children}
     </h2>
   )

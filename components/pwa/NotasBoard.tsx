@@ -30,7 +30,7 @@ export function NotasBoard({
   return (
     <section className="mb-6">
       {titulo && (
-        <p className="text-[11px] uppercase tracking-wider text-muted mb-3">
+        <p className="eyebrow text-muted mb-3">
           {titulo}
         </p>
       )}

@@ -62,7 +62,7 @@ export default async function CanjearPwaPage({
       <div className="px-6 py-10 max-w-md mx-auto">
         <TenantTheme color={tenant.color_primario} />
         <header className="mb-6 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted">
+          <p className="eyebrow text-muted">
             {tenant.nombre}
           </p>
           <h1 className="text-2xl font-light mt-1 leading-tight">
@@ -75,7 +75,7 @@ export default async function CanjearPwaPage({
 
         <Card className="mb-4" padding="lg">
           <div className="text-center">
-            <p className="text-[11px] uppercase tracking-wider text-muted">
+            <p className="eyebrow text-muted">
               Canjeas
             </p>
             <p className="text-lg font-medium mt-1">{recompensa.nombre}</p>

@@ -4,6 +4,7 @@ import { getTenantById } from '@/lib/tenant'
 import { listMiembrosInactivos } from '@/lib/tenantQueries'
 import { Card } from '@/components/ui/Card'
 import { NivelBadge } from '@/components/ui/Badge'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,34 +60,32 @@ export default async function InactivosPage({
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="flex items-end justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-[44px] font-light tracking-tight leading-tight">
-            Inactivos
-          </h1>
-          <p className="text-muted text-sm mt-2">
-            Miembros sin compras en los últimos {dias} días.
-          </p>
-        </div>
-        <div className="flex gap-1.5 text-xs bg-white border border-border rounded-full p-1">
-          {PERIODOS.map((p) => {
-            const isActive = p.dias === dias
-            return (
-              <Link
-                key={p.dias}
-                href={`/admin/inactivos?dias=${p.dias}`}
-                className={
-                  isActive
-                    ? 'rounded-full px-4 py-1.5 bg-graphite text-white transition-colors'
-                    : 'rounded-full px-4 py-1.5 text-muted hover:text-graphite transition-colors'
-                }
-              >
-                {p.label}
-              </Link>
-            )
-          })}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Clientes"
+        tone="terra"
+        titulo="Inactivos"
+        descripcion={<>Miembros sin compras en los últimos {dias} días.</>}
+        accion={
+          <div className="flex gap-1 text-xs font-medium bg-white border border-border/70 rounded-full p-1 shadow-card">
+            {PERIODOS.map((p) => {
+              const isActive = p.dias === dias
+              return (
+                <Link
+                  key={p.dias}
+                  href={`/admin/inactivos?dias=${p.dias}`}
+                  className={
+                    isActive
+                      ? 'rounded-full px-4 py-1.5 bg-graphite text-white transition-colors'
+                      : 'rounded-full px-4 py-1.5 text-muted hover:text-graphite hover:bg-surface transition-colors'
+                  }
+                >
+                  {p.label}
+                </Link>
+              )
+            })}
+          </div>
+        }
+      />
 
       <Card padding="none" className="overflow-hidden">
         {inactivos.length === 0 ? (
@@ -112,7 +111,7 @@ export default async function InactivosPage({
                   return (
                     <tr
                       key={m.id}
-                      className="border-b border-border last:border-0 hover:bg-surface/50"
+                      className="border-b border-border last:border-0 hover:bg-lime/[0.06]"
                     >
                       <td className="px-6 py-4">{m.nombre}</td>
                       <td className="px-6 py-4 text-muted">

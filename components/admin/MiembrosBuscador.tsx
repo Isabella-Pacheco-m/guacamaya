@@ -74,7 +74,7 @@ export function MiembrosBuscador({
           onChange={(e) => setQ(e.target.value)}
           placeholder="Buscar por nombre, correo o teléfono"
           aria-label="Buscar miembro"
-          className="w-full rounded-full border border-border bg-white pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric"
+          className="w-full rounded-full border border-border/70 bg-white shadow-card pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric"
         />
       </div>
 
@@ -108,7 +108,7 @@ export function MiembrosBuscador({
                 <li key={m.id}>
                   <Link
                     href={`/admin/miembros/${m.id}`}
-                    className="flex items-center gap-4 px-5 py-4 hover:bg-surface/60 transition-colors"
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-lime/[0.08] transition-colors"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-graphite truncate">

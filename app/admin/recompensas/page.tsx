@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/ui/Badge'
 import { CreateRecompensaForm } from '@/components/admin/CreateRecompensaForm'
 import { ToggleRecompensaActiva } from '@/components/admin/ToggleRecompensaActiva'
 import { DeleteRecompensa } from '@/components/admin/DeleteRecompensa'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,14 +18,16 @@ export default async function RecompensasPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">
-          Recompensas
-        </h1>
-        <p className="text-muted text-sm mt-2">
-          {activas} activas · {recompensas.length} en total.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Fidelización"
+        tone="sol"
+        titulo="Recompensas"
+        descripcion={
+          <>
+            {activas} activas · {recompensas.length} en total.
+          </>
+        }
+      />
 
       <Card>
         <h2 className="text-sm font-medium mb-4">Nueva recompensa</h2>

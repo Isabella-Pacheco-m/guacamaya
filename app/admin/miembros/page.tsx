@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { CreateMiembroForm } from '@/components/admin/CreateMiembroForm'
 import { MiembrosBuscador } from '@/components/admin/MiembrosBuscador'
 import { ComunidadAccesoPanel } from '@/components/admin/ComunidadAccesoPanel'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,15 +21,17 @@ export default async function MiembrosPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">
-          Miembros
-        </h1>
-        <p className="text-muted text-sm mt-2">
-          Busca un miembro por nombre, correo o teléfono para registrar su
-          compra o sumar sellos.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Clientes"
+        tone="terra"
+        titulo="Miembros"
+        descripcion={
+          <>
+            Busca un miembro por nombre, correo o teléfono para registrar su
+            compra o sumar sellos.
+          </>
+        }
+      />
 
       <Card>
         <h2 className="text-sm font-medium mb-4">Cómo se une la gente</h2>

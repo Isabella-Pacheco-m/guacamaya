@@ -5,6 +5,7 @@ import {
 } from '@/lib/suscripciones'
 import { SUSCRIPCION_PRECIO_COP } from '@/lib/wompi'
 import { SuscripcionPanel } from '@/components/admin/SuscripcionPanel'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,14 +22,19 @@ export default async function SuscripcionPage() {
   ])
 
   return (
-    <div>
-      <h1 className="text-[32px] font-light tracking-tight mb-2">
-        Suscripción
-      </h1>
-      <p className="text-sm text-muted mb-8">
-        Tu acceso a Guacamaya — ${new Intl.NumberFormat('es-CO').format(SUSCRIPCION_PRECIO_COP)}{' '}
-        COP al mes.
-      </p>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        eyebrow="Configuración"
+        tone="arcilla"
+        titulo="Suscripción"
+        descripcion={
+          <>
+            Tu acceso a Guacamaya — $
+            {new Intl.NumberFormat('es-CO').format(SUSCRIPCION_PRECIO_COP)} COP
+            al mes.
+          </>
+        }
+      />
 
       <SuscripcionPanel
         ultima={ultima}

@@ -6,6 +6,7 @@ import { getTenantFeatures } from '@/lib/tenant-features'
 import { listCumpleanerosDelMes } from '@/lib/tenantQueries'
 import { Card } from '@/components/ui/Card'
 import { NivelBadge } from '@/components/ui/Badge'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,16 +73,16 @@ export default async function CumpleanerosPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">
-          Cumpleañeros
-        </h1>
-        <p className="text-muted text-sm mt-2">
-          Miembros que cumplen años en {MESES[mes - 1].toLowerCase()}.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Clientes"
+        tone="terra"
+        titulo="Cumpleañeros"
+        descripcion={
+          <>Miembros que cumplen años en {MESES[mes - 1].toLowerCase()}.</>
+        }
+      />
 
-      <div className="inline-flex gap-1 text-xs bg-white border border-border rounded-full p-1 self-start flex-wrap">
+      <div className="inline-flex gap-1 text-xs font-medium bg-white border border-border/70 rounded-full p-1 self-start flex-wrap shadow-card">
         {MESES.map((label, idx) => {
           const valor = idx + 1
           const isActive = valor === mes
@@ -92,7 +93,7 @@ export default async function CumpleanerosPage({
               className={
                 isActive
                   ? 'rounded-full px-3 py-1.5 bg-graphite text-white transition-colors'
-                  : 'rounded-full px-3 py-1.5 text-muted hover:text-graphite transition-colors'
+                  : 'rounded-full px-3 py-1.5 text-muted hover:text-graphite hover:bg-surface transition-colors'
               }
             >
               {label.slice(0, 3)}
@@ -124,7 +125,7 @@ export default async function CumpleanerosPage({
                   return (
                     <tr
                       key={m.id}
-                      className="border-b border-border last:border-0 hover:bg-surface/50"
+                      className="border-b border-border last:border-0 hover:bg-lime/[0.06]"
                     >
                       <td className="px-6 py-4">{m.nombre}</td>
                       <td className="px-6 py-4 text-muted">

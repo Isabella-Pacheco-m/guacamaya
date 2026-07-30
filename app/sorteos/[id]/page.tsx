@@ -86,7 +86,7 @@ export default async function SorteoDetailPwaPage({
             )}
             {sorteo.requisitos && (
               <div className="bg-surface rounded-md p-4 text-sm mt-2">
-                <p className="text-[11px] uppercase tracking-wider text-muted mb-1.5">
+                <p className="eyebrow text-muted mb-1.5">
                   Para participar
                 </p>
                 <p className="whitespace-pre-wrap leading-relaxed">
@@ -101,7 +101,7 @@ export default async function SorteoDetailPwaPage({
           <Card className="text-center" padding="lg">
             {esGanador ? (
               <>
-                <p className="text-[11px] uppercase tracking-wider text-electric font-medium">
+                <p className="eyebrow text-electric">
                   ¡Felicidades!
                 </p>
                 <p className="text-xl font-light mt-3 leading-tight">
@@ -133,7 +133,7 @@ export default async function SorteoDetailPwaPage({
           </Card>
         ) : yaParticipo ? (
           <Card className="text-center" padding="lg">
-            <p className="text-[11px] uppercase tracking-wider text-electric font-medium">
+            <p className="eyebrow text-electric">
               Ya estás dentro
             </p>
             <p className="text-sm text-graphite mt-2">

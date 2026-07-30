@@ -76,11 +76,11 @@ export function ConfirmarCanjeForm({
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="bg-surface rounded-md p-3">
-          <p className="text-xs uppercase tracking-wider text-muted">Saldo actual</p>
+          <p className="eyebrow text-muted">Saldo actual</p>
           <p className="text-lg font-light mt-1">{numFmt.format(saldoActual)}</p>
         </div>
         <div className="bg-surface rounded-md p-3">
-          <p className="text-xs uppercase tracking-wider text-muted">Tras canje</p>
+          <p className="eyebrow text-muted">Tras canje</p>
           <p className="text-lg font-light mt-1">{numFmt.format(saldoTras)}</p>
         </div>
       </div>

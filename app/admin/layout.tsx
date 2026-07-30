@@ -131,8 +131,15 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-surface lg:flex">
-      {/* Sidebar — desktop */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-graphite text-white lg:sticky lg:top-0 lg:h-screen">
+      {/* Sidebar — desktop. Espresso con un degradado cálido apenas perceptible
+          (como los bloques oscuros de la landing) y un filo de sol al borde. */}
+      <aside
+        className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 text-white lg:sticky lg:top-0 lg:h-screen border-r border-lime/15"
+        style={{
+          background:
+            'radial-gradient(120% 60% at 0% 0%, rgba(235,186,79,0.10), transparent 60%), linear-gradient(180deg, #2A2320 0%, #332A24 100%)',
+        }}
+      >
         <div className="px-6 py-6">
           <Link href="/admin/dashboard" className="inline-flex">
             <Image
@@ -155,22 +162,22 @@ export default async function AdminLayout({
               alt=""
               width={36}
               height={36}
-              className="rounded-full shrink-0"
+              className="rounded-full shrink-0 ring-1 ring-lime/30"
               unoptimized
             />
           ) : (
-            <div className="h-9 w-9 rounded-full bg-white/10 shrink-0" />
+            <div className="h-9 w-9 rounded-full bg-lime/15 ring-1 ring-lime/25 shrink-0" />
           )}
           <div className="min-w-0 flex-1 leading-tight">
             <p className="text-sm text-white truncate">
               {user.name ?? user.email}
             </p>
-            <p className="text-[11px] text-white/45">Admin</p>
+            <p className="eyebrow text-lime/70 mt-0.5">Admin</p>
           </div>
           <a
             href="/api/auth/logout"
             title="Cerrar sesión"
-            className="text-white/55 hover:text-white p-1.5 rounded-md hover:bg-white/10 transition-colors"
+            className="text-white/55 hover:text-lime p-1.5 rounded-full hover:bg-white/10 transition-colors"
           >
             <svg
               viewBox="0 0 24 24"
@@ -191,7 +198,13 @@ export default async function AdminLayout({
       </aside>
 
       {/* Top bar — móvil */}
-      <header className="lg:hidden bg-graphite text-white sticky top-0 z-20">
+      <header
+        className="lg:hidden text-white sticky top-0 z-20 border-b border-lime/15"
+        style={{
+          background:
+            'radial-gradient(90% 120% at 0% 0%, rgba(235,186,79,0.10), transparent 60%), linear-gradient(180deg, #2A2320 0%, #332A24 100%)',
+        }}
+      >
         <div className="px-5 py-3 flex items-center justify-between">
           <Link href="/admin/dashboard" className="inline-flex">
             <Image
@@ -204,7 +217,7 @@ export default async function AdminLayout({
           </Link>
           <a
             href="/api/auth/logout"
-            className="text-xs text-white/70 hover:text-white px-3 py-1.5 rounded-full border border-white/20"
+            className="text-xs font-medium text-white/75 hover:text-graphite hover:bg-lime px-3.5 py-1.5 rounded-full border border-white/20 hover:border-lime transition-colors"
           >
             Salir
           </a>

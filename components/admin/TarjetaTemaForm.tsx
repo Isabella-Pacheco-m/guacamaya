@@ -187,7 +187,7 @@ export function TarjetaTemaForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <div>
-        <p className="text-xs uppercase tracking-wider text-muted mb-3">
+        <p className="eyebrow text-muted mb-3">
           Vista previa
         </p>
         <TarjetaCliente

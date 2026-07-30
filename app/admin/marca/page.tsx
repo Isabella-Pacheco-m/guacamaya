@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/page-auth'
 import { getTenantById } from '@/lib/tenant'
 import { Card } from '@/components/ui/Card'
 import { MarcaForm } from '@/components/admin/MarcaForm'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,13 +23,17 @@ export default async function MarcaPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">Marca</h1>
-        <p className="text-muted text-sm mt-2">
-          Personaliza el nombre y los colores que ven tus clientes en{' '}
-          <span className="font-mono text-graphite">{tenant.slug}</span>.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Configuración"
+        tone="arcilla"
+        titulo="Marca"
+        descripcion={
+          <>
+            Personaliza el nombre y los colores que ven tus clientes en{' '}
+            <span className="font-mono text-graphite">{tenant.slug}</span>.
+          </>
+        }
+      />
 
       <Card padding="lg">
         <MarcaForm

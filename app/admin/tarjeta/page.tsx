@@ -6,6 +6,7 @@ import { listTarjetaPremios } from '@/lib/tenantQueries'
 import { Card } from '@/components/ui/Card'
 import { TarjetaPremiosForm } from '@/components/admin/TarjetaPremiosForm'
 import { TarjetaTemaForm } from '@/components/admin/TarjetaTemaForm'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,16 +23,18 @@ export default async function TarjetaPage() {
 
   return (
     <div className="flex flex-col gap-10 max-w-3xl">
-      <div>
-        <h1 className="text-[44px] font-light tracking-tight leading-tight">
-          Tarjeta
-        </h1>
-        <p className="text-muted text-sm mt-2">
-          Tarjeta de {features.tarjeta_size} sellos. Personaliza cómo se ve en
-          la PWA del cliente y configura los premios que desbloquean al llegar
-          a cada umbral.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Fidelización"
+        tone="sol"
+        titulo="Tarjeta"
+        descripcion={
+          <>
+            Tarjeta de {features.tarjeta_size} sellos. Personaliza cómo se ve en
+            la PWA del cliente y configura los premios que desbloquean al llegar
+            a cada umbral.
+          </>
+        }
+      />
 
       <section className="flex flex-col gap-4">
         <div>
