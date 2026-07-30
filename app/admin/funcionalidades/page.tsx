@@ -10,7 +10,7 @@ export default async function FuncionalidadesPage() {
   const features = await getTenantFeatures(tenantId)
 
   return (
-    <div className="flex flex-col gap-8 max-w-2xl">
+    <div className="flex flex-col gap-8">
       <PageHeader
         eyebrow="Configuración"
         tone="arcilla"

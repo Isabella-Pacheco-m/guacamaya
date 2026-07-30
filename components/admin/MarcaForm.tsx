@@ -178,283 +178,295 @@ export function MarcaForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-graphite">Logo</label>
-        <div className="flex items-center gap-4">
-          <div className="h-20 w-20 rounded-md border border-border bg-surface flex items-center justify-center overflow-hidden shrink-0">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt="Logo del negocio"
-                className="h-full w-full object-contain"
+    <form
+      onSubmit={onSubmit}
+      className="grid gap-8 lg:grid-cols-2 lg:items-start"
+    >
+      {/* Identidad visual */}
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-graphite">Logo</label>
+          <div className="flex items-center gap-4">
+            <div className="h-20 w-20 rounded-md border border-border bg-surface flex items-center justify-center overflow-hidden shrink-0">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt="Logo del negocio"
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span className="text-xs text-muted">Sin logo</span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) onPickFile(f)
+                }}
               />
-            ) : (
-              <span className="text-xs text-muted">Sin logo</span>
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) onPickFile(f)
-              }}
-            />
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={logoLoading}
-              >
-                {logoLoading
-                  ? 'Procesando...'
-                  : logoUrl
-                    ? 'Cambiar logo'
-                    : 'Subir logo'}
-              </Button>
-              {logoUrl && !logoLoading && (
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={onDeleteLogo}
-                  className="text-red-600"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={logoLoading}
                 >
-                  Quitar
+                  {logoLoading
+                    ? 'Procesando...'
+                    : logoUrl
+                      ? 'Cambiar logo'
+                      : 'Subir logo'}
                 </Button>
-              )}
+                {logoUrl && !logoLoading && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={onDeleteLogo}
+                    className="text-red-600"
+                  >
+                    Quitar
+                  </Button>
+                )}
+              </div>
+              <span className="text-xs text-muted">
+                PNG, JPG o WebP. Máximo 2 MB. Idealmente cuadrado.
+              </span>
             </div>
-            <span className="text-xs text-muted">
-              PNG, JPG o WebP. Máximo 2 MB. Idealmente cuadrado.
-            </span>
           </div>
-        </div>
-        {logoError && (
-          <span className="text-xs text-red-600">{logoError}</span>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-graphite">
-          Banner de portada
-        </label>
-        <div className="rounded-md border border-border bg-surface overflow-hidden aspect-[16/6] flex items-center justify-center">
-          {bannerUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={bannerUrl}
-              alt="Banner del negocio"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="text-xs text-muted">Sin banner</span>
+          {logoError && (
+            <span className="text-xs text-red-600">{logoError}</span>
           )}
         </div>
-        <input
-          ref={bannerInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) onPickBanner(f)
-          }}
-        />
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => bannerInputRef.current?.click()}
-            disabled={bannerLoading}
-          >
-            {bannerLoading
-              ? 'Procesando...'
-              : bannerUrl
-                ? 'Cambiar banner'
-                : 'Subir banner'}
-          </Button>
-          {bannerUrl && !bannerLoading && (
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-graphite">
+            Banner de portada
+          </label>
+          <div className="rounded-md border border-border bg-surface overflow-hidden aspect-[16/6] flex items-center justify-center">
+            {bannerUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={bannerUrl}
+                alt="Banner del negocio"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-xs text-muted">Sin banner</span>
+            )}
+          </div>
+          <input
+            ref={bannerInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) onPickBanner(f)
+            }}
+          />
+          <div className="flex gap-2">
             <Button
               type="button"
               variant="secondary"
-              onClick={onDeleteBanner}
-              className="text-red-600"
+              onClick={() => bannerInputRef.current?.click()}
+              disabled={bannerLoading}
             >
-              Quitar
+              {bannerLoading
+                ? 'Procesando...'
+                : bannerUrl
+                  ? 'Cambiar banner'
+                  : 'Subir banner'}
             </Button>
-          )}
-        </div>
-        <span className="text-xs text-muted">
-          PNG, JPG o WebP. Máximo 4 MB. Horizontal (ideal 1600×600). Se muestra
-          como portada arriba de la comunidad.
-        </span>
-        {bannerError && (
-          <span className="text-xs text-red-600">{bannerError}</span>
-        )}
-      </div>
-
-      <Input
-        name="nombre"
-        label="Nombre del negocio"
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        hint="Aparece en la PWA del cliente y en facturas/recibos."
-        maxLength={80}
-        required
-      />
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-graphite">
-          Color primario
-        </label>
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            value={colorValido ? color : '#C2603C'}
-            onChange={(e) => setColor(e.target.value.toUpperCase())}
-            className="h-12 w-14 rounded-md border border-border cursor-pointer bg-white"
-            aria-label="Selector de color"
-          />
-          <input
-            type="text"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            placeholder="#C2603C"
-            maxLength={7}
-            className="flex-1 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm font-mono uppercase"
-          />
-        </div>
-        <span className="text-xs text-muted">
-          Se aplica a links, acentos y la barra de progreso en la PWA del cliente.
-        </span>
-        {!colorValido && (
-          <span className="text-xs text-red-600">
-            Formato esperado: #RRGGBB
-          </span>
-        )}
-      </div>
-
-      <div className="rounded-md border border-border p-4 bg-surface flex items-center gap-4">
-        <div
-          className="h-10 w-10 rounded-full shrink-0"
-          style={{ background: colorValido ? color : '#C2603C' }}
-        />
-        <div className="text-sm">
-          <p className="font-medium">Vista previa</p>
-          <p className="text-muted text-xs mt-0.5">
-            Así se verá el color en los acentos de la PWA.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 border-t border-border pt-6">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={cumpleActivo}
-            onChange={(e) => setCumpleActivo(e.target.checked)}
-            className="mt-1 h-4 w-4 accent-electric"
-          />
-          <span className="flex-1">
-            <span className="text-sm font-medium text-graphite block">
-              Regalar puntos por cumpleaños
-            </span>
-            <span className="text-xs text-muted block mt-0.5">
-              Cada miembro recibe puntos automáticamente el día de su cumpleaños.
-              Solo se acreditan a quienes tienen fecha de nacimiento registrada.
-            </span>
-          </span>
-        </label>
-
-        {cumpleActivo && (
-          <div className="pl-7">
-            <label className="text-sm font-medium text-graphite block mb-1.5">
-              Puntos por cumpleaños
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={100000}
-              step={1}
-              value={cumpleMonto}
-              onChange={(e) => setCumpleMonto(e.target.value)}
-              className="w-32 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm"
-            />
-            {!cumpleValido && (
-              <p className="text-xs text-red-600 mt-1">
-                Debe ser un entero positivo.
-              </p>
+            {bannerUrl && !bannerLoading && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onDeleteBanner}
+                className="text-red-600"
+              >
+                Quitar
+              </Button>
             )}
           </div>
-        )}
+          <span className="text-xs text-muted">
+            PNG, JPG o WebP. Máximo 4 MB. Horizontal (ideal 1600×600). Se muestra
+            como portada arriba de la comunidad.
+          </span>
+          {bannerError && (
+            <span className="text-xs text-red-600">{bannerError}</span>
+          )}
+        </div>
+
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-border pt-6">
-        <div>
-          <span className="text-sm font-medium text-graphite block">
-            Vencimiento de puntos
+      {/* Datos y reglas del club */}
+      <div className="flex flex-col gap-6">
+        <Input
+          name="nombre"
+          label="Nombre del negocio"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          hint="Aparece en la PWA del cliente y en facturas/recibos."
+          maxLength={80}
+          required
+        />
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-graphite">
+            Color primario
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={colorValido ? color : '#C2603C'}
+              onChange={(e) => setColor(e.target.value.toUpperCase())}
+              className="h-12 w-14 rounded-md border border-border cursor-pointer bg-white"
+              aria-label="Selector de color"
+            />
+            <input
+              type="text"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              placeholder="#C2603C"
+              maxLength={7}
+              className="flex-1 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm font-mono uppercase"
+            />
+          </div>
+          <span className="text-xs text-muted">
+            Se aplica a links, acentos y la barra de progreso en la PWA del cliente.
           </span>
-          <span className="text-xs text-muted block mt-0.5">
-            Cada punto vence pasado este tiempo desde que se ganó. Se gastan
-            primero los más antiguos, así que a un cliente que visita seguido
-            casi nunca le vence nada. El nivel (Bronce/Plata/Oro) no se pierde.
-          </span>
+          {!colorValido && (
+            <span className="text-xs text-red-600">
+              Formato esperado: #RRGGBB
+            </span>
+          )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {[null, ...CADUCIDAD_MESES].map((op) => {
-            const activo = caducidad === op
-            return (
-              <button
-                key={op ?? 'nunca'}
-                type="button"
-                onClick={() => setCaducidad(op)}
-                aria-pressed={activo}
-                className={
-                  'rounded-full px-4 py-2 text-sm font-medium transition-colors border ' +
-                  (activo
-                    ? 'bg-graphite text-white border-graphite'
-                    : 'bg-white text-graphite border-border hover:border-graphite/40')
-                }
-              >
-                {op === null ? 'Nunca vencen' : caducidadLabel(op)}
-              </button>
-            )
-          })}
+        <div className="rounded-md border border-border p-4 bg-surface flex items-center gap-4">
+          <div
+            className="h-10 w-10 rounded-full shrink-0"
+            style={{ background: colorValido ? color : '#C2603C' }}
+          />
+          <div className="text-sm">
+            <p className="font-medium">Vista previa</p>
+            <p className="text-muted text-xs mt-0.5">
+              Así se verá el color en los acentos de la PWA.
+            </p>
+          </div>
         </div>
 
-        {caducidad !== null && (
-          <p className="text-xs text-muted bg-surface border border-border rounded-md px-3 py-2">
-            Tus clientes verán en su PWA cuántos puntos les vencen y en qué
-            fecha. El barrido corre una vez al día.
-          </p>
-        )}
+        <div className="flex flex-col gap-3 border-t border-border pt-6">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={cumpleActivo}
+              onChange={(e) => setCumpleActivo(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-electric"
+            />
+            <span className="flex-1">
+              <span className="text-sm font-medium text-graphite block">
+                Regalar puntos por cumpleaños
+              </span>
+              <span className="text-xs text-muted block mt-0.5">
+                Cada miembro recibe puntos automáticamente el día de su cumpleaños.
+                Solo se acreditan a quienes tienen fecha de nacimiento registrada.
+              </span>
+            </span>
+          </label>
+
+          {cumpleActivo && (
+            <div className="pl-7">
+              <label className="text-sm font-medium text-graphite block mb-1.5">
+                Puntos por cumpleaños
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={100000}
+                step={1}
+                value={cumpleMonto}
+                onChange={(e) => setCumpleMonto(e.target.value)}
+                className="w-32 border border-border rounded-md px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-electric/30 focus:border-electric text-sm"
+              />
+              {!cumpleValido && (
+                <p className="text-xs text-red-600 mt-1">
+                  Debe ser un entero positivo.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-border pt-6">
+          <div>
+            <span className="text-sm font-medium text-graphite block">
+              Vencimiento de puntos
+            </span>
+            <span className="text-xs text-muted block mt-0.5">
+              Cada punto vence pasado este tiempo desde que se ganó. Se gastan
+              primero los más antiguos, así que a un cliente que visita seguido
+              casi nunca le vence nada. El nivel (Bronce/Plata/Oro) no se pierde.
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {[null, ...CADUCIDAD_MESES].map((op) => {
+              const activo = caducidad === op
+              return (
+                <button
+                  key={op ?? 'nunca'}
+                  type="button"
+                  onClick={() => setCaducidad(op)}
+                  aria-pressed={activo}
+                  className={
+                    'rounded-full px-4 py-2 text-sm font-medium transition-colors border ' +
+                    (activo
+                      ? 'bg-graphite text-white border-graphite'
+                      : 'bg-white text-graphite border-border hover:border-graphite/40')
+                  }
+                >
+                  {op === null ? 'Nunca vencen' : caducidadLabel(op)}
+                </button>
+              )
+            })}
+          </div>
+
+          {caducidad !== null && (
+            <p className="text-xs text-muted bg-surface border border-border rounded-md px-3 py-2">
+              Tus clientes verán en su PWA cuántos puntos les vencen y en qué
+              fecha. El barrido corre una vez al día.
+            </p>
+          )}
+        </div>
       </div>
 
-      {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-          {error}
-        </div>
-      )}
+      <div className="lg:col-span-2 flex flex-col gap-3">
+        {error && (
+          <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+            {error}
+          </div>
+        )}
 
-      {savedAt && !error && !dirty && (
-        <div className="text-sm text-graphite bg-lime/30 border border-lime/40 rounded-md px-3 py-2">
-          Cambios guardados.
-        </div>
-      )}
+        {savedAt && !error && !dirty && (
+          <div className="text-sm text-graphite bg-lime/30 border border-lime/40 rounded-md px-3 py-2">
+            Cambios guardados.
+          </div>
+        )}
 
-      <div className="flex justify-end gap-3">
-        <Button
-          type="submit"
-          disabled={loading || !dirty || !formValido}
-        >
-          {loading ? 'Guardando...' : 'Guardar'}
-        </Button>
+        <div className="flex justify-end gap-3">
+          <Button
+            type="submit"
+            disabled={loading || !dirty || !formValido}
+          >
+            {loading ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </div>
       </div>
     </form>
   )

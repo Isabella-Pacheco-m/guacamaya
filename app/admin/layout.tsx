@@ -140,15 +140,15 @@ export default async function AdminLayout({
             'radial-gradient(120% 60% at 0% 0%, rgba(235,186,79,0.10), transparent 60%), linear-gradient(180deg, #2A2320 0%, #332A24 100%)',
         }}
       >
-        <div className="px-6 py-6">
+        <div className="px-5 pt-7 pb-6">
           <Link href="/admin/dashboard" className="inline-flex">
             <Image
               src="/logo-dark.png"
               alt="Guacamaya"
-              width={140}
-              height={60}
+              width={220}
+              height={94}
               priority
-              className="h-9 w-auto"
+              className="h-14 w-auto"
             />
           </Link>
         </div>
@@ -212,7 +212,7 @@ export default async function AdminLayout({
               alt="Guacamaya"
               width={140}
               height={60}
-              className="h-6 w-auto"
+              className="h-8 w-auto"
             />
           </Link>
           <a

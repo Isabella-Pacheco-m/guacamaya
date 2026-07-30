@@ -133,68 +133,72 @@ export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {
           {error}
         </div>
       )}
-      {FEATURES.map((f) => {
-        const checked = state[f.key]
-        const isLoading = loading === f.key
-        const disabled = f.status === 'soon' || (loading !== null && !isLoading)
-        const showTarjetaConfig = f.key === 'tarjeta_enabled' && checked
-        const showGaleriaConfig = f.key === 'galeria_enabled' && checked
-        return (
-          <div
-            key={f.key}
-            className="bg-white rounded-lg shadow-card p-5 flex flex-col gap-4"
-          >
-            <div className="flex items-start gap-5">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-medium text-graphite">
-                    {f.label}
-                  </h3>
-                  {f.status === 'soon' && (
-                    <span className="text-[10px] uppercase tracking-wide bg-surface text-muted border border-border rounded-full px-2 py-0.5">
-                      pronto
-                    </span>
-                  )}
-                  {savedKey === f.key && (
-                    <span className="text-[11px] text-graphite bg-lime/40 rounded-full px-2 py-0.5">
-                      guardado
-                    </span>
-                  )}
+      {/* Rejilla: las tarjetas son cortas, en una sola columna sobraba
+          muchísimo ancho en desktop. */}
+      <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3 items-start">
+        {FEATURES.map((f) => {
+          const checked = state[f.key]
+          const isLoading = loading === f.key
+          const disabled = f.status === 'soon' || (loading !== null && !isLoading)
+          const showTarjetaConfig = f.key === 'tarjeta_enabled' && checked
+          const showGaleriaConfig = f.key === 'galeria_enabled' && checked
+          return (
+            <div
+              key={f.key}
+              className="h-full bg-white border border-border/50 rounded-lg shadow-card p-5 flex flex-col gap-4"
+            >
+              <div className="flex items-start gap-5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-medium text-graphite">
+                      {f.label}
+                    </h3>
+                    {f.status === 'soon' && (
+                      <span className="text-[10px] uppercase tracking-wide bg-surface text-muted border border-border rounded-full px-2 py-0.5">
+                        pronto
+                      </span>
+                    )}
+                    {savedKey === f.key && (
+                      <span className="text-[11px] text-graphite bg-lime/40 rounded-full px-2 py-0.5">
+                        guardado
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted mt-1 leading-relaxed">
+                    {f.description}
+                  </p>
                 </div>
-                <p className="text-sm text-muted mt-1 leading-relaxed">
-                  {f.description}
-                </p>
+                <Toggle
+                  checked={checked}
+                  onChange={(v) => toggle(f.key, v)}
+                  disabled={disabled}
+                  loading={isLoading}
+                />
               </div>
-              <Toggle
-                checked={checked}
-                onChange={(v) => toggle(f.key, v)}
-                disabled={disabled}
-                loading={isLoading}
-              />
+              {showTarjetaConfig && (
+                <div className="border-t border-border pt-4">
+                  <Link
+                    href="/admin/tarjeta"
+                    className="text-electric text-sm hover:underline"
+                  >
+                    Configurar tarjeta (tamaño, valor, diseño y premios) →
+                  </Link>
+                </div>
+              )}
+              {showGaleriaConfig && (
+                <div className="border-t border-border pt-4">
+                  <Link
+                    href="/admin/galeria"
+                    className="text-electric text-sm hover:underline"
+                  >
+                    Revisar fotos y configurar puntos por publicación →
+                  </Link>
+                </div>
+              )}
             </div>
-            {showTarjetaConfig && (
-              <div className="border-t border-border pt-4">
-                <Link
-                  href="/admin/tarjeta"
-                  className="text-electric text-sm hover:underline"
-                >
-                  Configurar tarjeta (tamaño, valor, diseño y premios) →
-                </Link>
-              </div>
-            )}
-            {showGaleriaConfig && (
-              <div className="border-t border-border pt-4">
-                <Link
-                  href="/admin/galeria"
-                  className="text-electric text-sm hover:underline"
-                >
-                  Revisar fotos y configurar puntos por publicación →
-                </Link>
-              </div>
-            )}
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
