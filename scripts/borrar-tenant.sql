@@ -2,10 +2,14 @@
 --
 -- ⚠️  IRREVERSIBLE. Elimina el tenant, sus miembros, transacciones,
 --     recompensas, tarjeta (premios y canjes), invitaciones y toda la
---     comunidad (feed, notas, galería, sorteos, retos, lanzamientos),
---     además de sus archivos en el bucket `business_media`.
+--     comunidad (feed, notas, galería, sorteos, retos, lanzamientos).
 --
 -- Los demás tenants NO se tocan.
+--
+-- ORDEN: primero los archivos, después este SQL (el script necesita que el
+-- tenant siga en la DB para resolver su id):
+--   node scripts/borrar-tenant-storage.mjs burger-house            (dry-run)
+--   node scripts/borrar-tenant-storage.mjs burger-house --confirm
 --
 -- Lo que NO borra:
 --   - Auth0: las cuentas de login siguen existiendo. El bloque PREFLIGHT
@@ -65,11 +69,10 @@ begin
   delete from tenant_features       where tenant_id = v_id;
   delete from miembros              where tenant_id = v_id;
 
-  -- Archivos del tenant (logo, banner, sello, feed, galería, sorteos,
-  -- retos, lanzamientos, avatares): todos cuelgan de tenants/<id>/.
-  delete from storage.objects
-   where bucket_id = 'business_media'
-     and name like 'tenants/' || v_id::text || '/%';
+  -- OJO: los archivos del bucket NO se borran acá. Supabase protege
+  -- storage.objects con un trigger (storage.protect_delete) y un delete
+  -- directo falla. Van por la Storage API, ANTES de este bloque:
+  --   node scripts/borrar-tenant-storage.mjs burger-house --confirm
 
   -- Suscripción a la plataforma: se vincula por email, no por FK.
   if v_email is not null then
