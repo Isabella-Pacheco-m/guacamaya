@@ -6,10 +6,12 @@
 --
 -- Los demás tenants NO se tocan.
 --
--- ORDEN: primero los archivos, después este SQL (el script necesita que el
--- tenant siga en la DB para resolver su id):
---   node scripts/borrar-tenant-storage.mjs burger-house            (dry-run)
---   node scripts/borrar-tenant-storage.mjs burger-house --confirm
+-- Los archivos del bucket van aparte (storage.objects está protegido con un
+-- trigger y no acepta deletes por SQL). Dos caminos, cualquiera de los dos:
+--   a) Dashboard → Storage → business_media → carpeta tenants/<id> → Delete
+--   b) node scripts/borrar-tenant-storage.mjs burger-house --confirm
+-- Si vas por (b), córrelo ANTES de este SQL: el script resuelve el id desde
+-- el slug y necesita que el tenant siga en la DB.
 --
 -- Lo que NO borra:
 --   - Auth0: las cuentas de login siguen existiendo. El bloque PREFLIGHT
@@ -71,8 +73,8 @@ begin
 
   -- OJO: los archivos del bucket NO se borran acá. Supabase protege
   -- storage.objects con un trigger (storage.protect_delete) y un delete
-  -- directo falla. Van por la Storage API, ANTES de este bloque:
-  --   node scripts/borrar-tenant-storage.mjs burger-house --confirm
+  -- directo falla; además borrar la fila dejaría el archivo huérfano en el
+  -- object store. Van por la Storage API — ver el NOTICE del final.
 
   -- Suscripción a la plataforma: se vincula por email, no por FK.
   if v_email is not null then
@@ -82,6 +84,7 @@ begin
   delete from tenants where id = v_id;
 
   raise notice 'Tenant % (%) eliminado.', v_slug, v_id;
+  raise notice 'Falta el storage: Dashboard → Storage → business_media → carpeta tenants/% → Delete', v_id;
 end $$;
 
 -- ═══════════════════ VERIFICACIÓN (después) ═══════════════════
