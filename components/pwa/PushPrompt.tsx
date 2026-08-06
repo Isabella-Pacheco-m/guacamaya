@@ -51,6 +51,18 @@ export function PushPrompt() {
   useEffect(() => {
     let cancelado = false
     async function evaluar() {
+      // iPhone: el push solo existe con la PWA instalada (iOS 16.4+). Se
+      // comprueba antes que las APIs porque en Safari sin instalar ni
+      // siquiera están definidas, y ahí la respuesta útil es "instálala".
+      const esIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      const standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (navigator as { standalone?: boolean }).standalone === true
+      if (esIos && !standalone) {
+        setEstado('sin-sw')
+        return
+      }
+
       if (
         !('serviceWorker' in navigator) ||
         !('PushManager' in window) ||
@@ -198,8 +210,9 @@ export function PushPrompt() {
         <p className="text-xs text-muted mt-2 leading-relaxed">
           En iPhone: toca <span className="font-medium">Compartir</span> y
           elige{' '}
-          <span className="font-medium">Añadir a pantalla de inicio</span>. En
-          Android, búscalo en el menú de tu navegador.
+          <span className="font-medium">Añadir a pantalla de inicio</span>. Si
+          abriste este enlace dentro de otra app (Instagram, Google…), ábrelo
+          primero en tu navegador.
         </p>
       </Card>
     )
