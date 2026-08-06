@@ -4,14 +4,26 @@ import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 
-// Invitación a activar notificaciones push. Solo aparece cuando de verdad se
-// puede suscribir: hay service worker registrado (PWA en producción), el
-// navegador soporta push, el permiso no está denegado y el dispositivo aún no
-// está suscrito. "Ahora no" lo silencia un tiempo — pedir permiso a
-// destiempo quema la única oportunidad que da el navegador.
+// Tarjeta de notificaciones del club.
+//
+// Antes se escondía en silencio si algo no cuadraba (permiso bloqueado, SW
+// aún registrándose, navegador sin push) y el miembro no tenía forma de saber
+// por qué. Ahora cada situación dice lo suyo: solo desaparece cuando de
+// verdad no hay nada que ofrecer (el navegador no soporta push) o cuando el
+// propio miembro la descartó.
 
 const DISMISS_KEY = 'push-prompt-dismissed-at'
 const DISMISS_DIAS = 30
+
+type Estado =
+  | 'cargando'
+  | 'disponible' // se puede activar ahora
+  | 'guardando'
+  | 'suscrito'
+  | 'bloqueado' // permiso denegado en el navegador
+  | 'sin-sw' // sin service worker: hay que instalar la app (iOS)
+  | 'no-soportado'
+  | 'descartado'
 
 function urlBase64ToUint8Array(base64: string) {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4)
@@ -23,10 +35,17 @@ function urlBase64ToUint8Array(base64: string) {
   return out
 }
 
-type Estado = 'oculto' | 'elegible' | 'guardando' | 'activado'
+async function esperarServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  // .ready con timeout: tras instalar la PWA el registro puede seguir en
+  // curso, y en dev el SW está deshabilitado (ahí .ready nunca resuelve).
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+  ])
+}
 
 export function PushPrompt() {
-  const [estado, setEstado] = useState<Estado>('oculto')
+  const [estado, setEstado] = useState<Estado>('cargando')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -35,29 +54,47 @@ export function PushPrompt() {
       if (
         !('serviceWorker' in navigator) ||
         !('PushManager' in window) ||
-        !('Notification' in window) ||
-        Notification.permission === 'denied'
+        !('Notification' in window)
       ) {
+        setEstado('no-soportado')
         return
       }
-      const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0)
-      if (Date.now() - dismissedAt < DISMISS_DIAS * 86_400_000) return
 
-      // Esperar al SW con timeout: en la primera carga tras instalar la PWA
-      // el registro puede no haber terminado cuando este efecto corre (y con
-      // getRegistration a secas la tarjeta no salía hasta la visita
-      // siguiente). El timeout cubre dev, donde el SW está deshabilitado y
-      // .ready quedaría colgado para siempre.
-      const reg = await Promise.race([
-        navigator.serviceWorker.ready,
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-      ])
-      if (!reg) return
-      const sub = await reg.pushManager.getSubscription()
+      const reg = await esperarServiceWorker()
       if (cancelado) return
-      if (!sub) setEstado('elegible')
+
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription()
+        if (cancelado) return
+        if (sub) {
+          // Ya suscrito en este dispositivo: reenviamos la suscripción al
+          // servidor (upsert idempotente) por si su fila se perdió — así el
+          // contador del negocio se repara solo.
+          const json = sub.toJSON()
+          fetch('/api/me/push', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
+          }).catch(() => {})
+          setEstado('suscrito')
+          return
+        }
+      }
+
+      if (Notification.permission === 'denied') {
+        setEstado('bloqueado')
+        return
+      }
+
+      const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0)
+      if (Date.now() - dismissedAt < DISMISS_DIAS * 86_400_000) {
+        setEstado('descartado')
+        return
+      }
+
+      setEstado(reg ? 'disponible' : 'sin-sw')
     }
-    evaluar().catch(() => {})
+    evaluar().catch(() => setEstado('sin-sw'))
     return () => {
       cancelado = true
     }
@@ -75,13 +112,20 @@ export function PushPrompt() {
       }
 
       const permiso = await Notification.requestPermission()
+      if (permiso === 'denied') {
+        setEstado('bloqueado')
+        return
+      }
       if (permiso !== 'granted') {
-        setEstado('oculto')
+        setEstado('disponible')
         return
       }
 
-      const reg = await navigator.serviceWorker.getRegistration()
-      if (!reg) throw new Error('Instala la app para recibir notificaciones')
+      const reg = await esperarServiceWorker()
+      if (!reg) {
+        setEstado('sin-sw')
+        return
+      }
 
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -97,26 +141,65 @@ export function PushPrompt() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'No se pudo guardar la suscripción')
       }
-      setEstado('activado')
+      setEstado('suscrito')
     } catch (err) {
-      setEstado('elegible')
+      setEstado('disponible')
       setError(err instanceof Error ? err.message : 'Error inesperado')
     }
   }
 
   function ahoraNo() {
     localStorage.setItem(DISMISS_KEY, String(Date.now()))
-    setEstado('oculto')
+    setEstado('descartado')
   }
 
-  if (estado === 'oculto') return null
+  if (
+    estado === 'cargando' ||
+    estado === 'descartado' ||
+    estado === 'no-soportado'
+  ) {
+    return null
+  }
 
-  if (estado === 'activado') {
+  if (estado === 'suscrito') {
     return (
       <Card>
         <p className="eyebrow text-muted mb-1">Notificaciones</p>
         <p className="text-sm text-graphite">
-          Listo — te avisaremos de promos y novedades del club.
+          Activadas — te avisaremos de promos y novedades del club.
+        </p>
+      </Card>
+    )
+  }
+
+  if (estado === 'bloqueado') {
+    return (
+      <Card>
+        <p className="eyebrow text-muted mb-2">Notificaciones</p>
+        <p className="text-sm text-graphite">
+          Las tienes bloqueadas para esta app.
+        </p>
+        <p className="text-xs text-muted mt-2 leading-relaxed">
+          Para recibir promos y novedades, permítelas desde los ajustes del
+          sitio en tu navegador y vuelve a entrar.
+        </p>
+      </Card>
+    )
+  }
+
+  if (estado === 'sin-sw') {
+    return (
+      <Card>
+        <p className="eyebrow text-electric mb-2">No te pierdas nada</p>
+        <p className="text-sm text-graphite">
+          Instala la app en tu pantalla de inicio para recibir las
+          notificaciones del club.
+        </p>
+        <p className="text-xs text-muted mt-2 leading-relaxed">
+          En iPhone: toca <span className="font-medium">Compartir</span> y
+          elige{' '}
+          <span className="font-medium">Añadir a pantalla de inicio</span>. En
+          Android, búscalo en el menú de tu navegador.
         </p>
       </Card>
     )
