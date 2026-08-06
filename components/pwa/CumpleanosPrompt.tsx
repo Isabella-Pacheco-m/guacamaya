@@ -43,8 +43,8 @@ export function CumpleanosPrompt({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ mes_cumpleanos: nuevoMes }),
       })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
         // 409 = el mes ya estaba definido en el servidor (UI desactualizada).
         // Refrescamos para mostrar el estado real (tarjeta de solo lectura).
         if (res.status === 409) {
@@ -52,7 +52,12 @@ export function CumpleanosPrompt({
         }
         throw new Error(data.error || 'No se pudo guardar')
       }
-      setSavedMes(nuevoMes)
+      // El mes lo confirma el servidor: si la persona ya lo había declarado
+      // en otro de sus clubes, prevalece ese sobre el que acaba de tocar.
+      const confirmado = data?.miembro?.mes_cumpleanos
+      const definitivo = typeof confirmado === 'number' ? confirmado : nuevoMes
+      setMes(definitivo)
+      setSavedMes(definitivo)
       router.refresh()
     } catch (err) {
       setMes(prev)
@@ -96,7 +101,8 @@ export function CumpleanosPrompt({
         Activa ofertas especiales durante tu mes de cumpleaños.
       </p>
       <p className="text-xs text-muted mb-4">
-        Solo puedes elegirlo una vez, así que confírmalo bien.
+        Solo puedes elegirlo una vez — vale para todos tus clubes — así que
+        confírmalo bien.
       </p>
       <div className="grid grid-cols-3 gap-2">
         {MESES.map((label, idx) => {

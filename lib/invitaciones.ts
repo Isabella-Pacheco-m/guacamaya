@@ -114,6 +114,19 @@ export async function selfRegisterMiembro(
   const existing = await getMiembroByAuth0(tenantId, auth0UserId)
   if (existing) return existing
 
+  // El mes de cumpleaños es de la persona, no del club: si ya lo declaró en
+  // otra comunidad, la membresía nueva nace con él (regla "una sola vez" por
+  // identidad — ver migración 0037).
+  const { data: previo, error: previoError } = await supabaseAdmin
+    .from('miembros')
+    .select('mes_cumpleanos')
+    .eq('auth0_user_id', auth0UserId)
+    .not('mes_cumpleanos', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  if (previoError) throw previoError
+
   const { data, error } = await supabaseAdmin
     .from('miembros')
     .insert({
@@ -121,9 +134,10 @@ export async function selfRegisterMiembro(
       auth0_user_id: auth0UserId,
       nombre: nombre.trim() || 'Cliente',
       email: email && email.trim() ? email.trim().toLowerCase() : null,
+      mes_cumpleanos: previo?.mes_cumpleanos ?? null,
     })
     .select(
-      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel, avatar_url'
+      'id, tenant_id, nombre, telefono, email, puntos_actuales, puntos_historicos, nivel, avatar_url, mes_cumpleanos'
     )
     .single()
   if (error) {
