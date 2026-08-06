@@ -3,7 +3,11 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@auth0/nextjs-auth0'
 import { getTenantId, getMiembroId } from '@/lib/auth0'
 import { isSuperadmin } from '@/lib/superadmin-auth'
-import { findMiembroByAuth0, getMiembroByAuth0 } from '@/lib/invitaciones'
+import {
+  findMiembroByAuth0,
+  getMiembroByAuth0,
+  selfRegisterMiembro,
+} from '@/lib/invitaciones'
 import {
   getTenantBySlug,
   findTenantByAdminEmail,
@@ -35,11 +39,11 @@ const AVISO_CADUCIDAD_DIAS = 45
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { error?: string }
+  searchParams: { error?: string; join?: string }
 }) {
   const slug = headers().get('x-tenant-slug') || ''
   if (slug) return renderTenantHome(slug)
-  return renderRootHome(searchParams.error)
+  return renderRootHome(searchParams.error, searchParams.join)
 }
 
 async function renderTenantHome(slug: string) {
@@ -168,7 +172,10 @@ async function renderTenantHome(slug: string) {
   )
 }
 
-async function renderRootHome(errorCode: string | undefined) {
+async function renderRootHome(
+  errorCode: string | undefined,
+  joinParam: string | undefined
+) {
   const session = await getSession()
 
   // El callback de Auth0 siempre vuelve al apex (AUTH0_BASE_URL), aunque el
@@ -194,8 +201,20 @@ async function renderRootHome(errorCode: string | undefined) {
       }
     }
 
-    // Cliente vinculado → subdominio de su tenant.
     const sub = session.user.sub as string | undefined
+
+    // Login iniciado en el subdominio de un club: el handler de login guardó
+    // el slug de origen en el returnTo (/?join=slug). Vincular la cuenta con
+    // ese tenant de una vez — aunque sea nueva — y devolverla a su subdominio,
+    // en vez de dejarla varada en el apex "sin tenant". Va antes del lookup
+    // genérico para que un miembro de otro club también pueda unirse a este.
+    const joinSlug = (joinParam ?? '').trim().toLowerCase()
+    if (sub && joinSlug) {
+      const dest = await autoJoinTenant(joinSlug, session.user)
+      if (dest) redirect(dest)
+    }
+
+    // Cliente vinculado → subdominio de su tenant.
     if (sub) {
       const linked = await findMiembroByAuth0(sub)
       if (linked) redirect(tenantBaseUrl(linked.tenant.slug))
@@ -207,6 +226,37 @@ async function renderRootHome(errorCode: string | undefined) {
   return (
     <RootLanding sessionUnlinked={Boolean(session?.user)} errorMsg={errorMsg} />
   )
+}
+
+// Vincula la cuenta recién logueada con el tenant desde cuyo subdominio se
+// inició el login. Devuelve la URL del subdominio a la que redirigir, o null
+// si no aplica (slug inexistente o cuenta de admin sin perfil de cliente).
+async function autoJoinTenant(
+  slug: string,
+  user: Record<string, unknown>
+): Promise<string | null> {
+  // Cuenta de admin por claim (sin miembro): no crearle perfil de cliente.
+  if (getTenantId(user) && !getMiembroId(user)) return null
+
+  const tenant = await getTenantBySlug(slug)
+  if (!tenant) return null
+  const base = tenantBaseUrl(tenant.slug)
+
+  const features = await getTenantFeatures(tenant.id)
+  // Club por invitación: no se auto-registra — en su subdominio la página del
+  // tenant le explica que necesita un enlace del negocio.
+  if (!features.registro_abierto) return base
+
+  const nombre = String(user.name || user.nickname || user.email || 'Cliente')
+  const email = typeof user.email === 'string' ? user.email : null
+  try {
+    // Idempotente: si ya es miembro de este tenant, lo devuelve sin duplicar.
+    await selfRegisterMiembro(tenant.id, String(user.sub), nombre, email)
+  } catch (err) {
+    // Si falla, en el subdominio queda el "Unirme" de un clic como respaldo.
+    console.error('auto-join tras login', err)
+  }
+  return base
 }
 
 function CenteredCard({
