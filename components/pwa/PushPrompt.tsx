@@ -43,9 +43,15 @@ export function PushPrompt() {
       const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0)
       if (Date.now() - dismissedAt < DISMISS_DIAS * 86_400_000) return
 
-      // getRegistration (no .ready): en dev el SW está deshabilitado y .ready
-      // quedaría colgado para siempre.
-      const reg = await navigator.serviceWorker.getRegistration()
+      // Esperar al SW con timeout: en la primera carga tras instalar la PWA
+      // el registro puede no haber terminado cuando este efecto corre (y con
+      // getRegistration a secas la tarjeta no salía hasta la visita
+      // siguiente). El timeout cubre dev, donde el SW está deshabilitado y
+      // .ready quedaría colgado para siempre.
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ])
       if (!reg) return
       const sub = await reg.pushManager.getSubscription()
       if (cancelado) return
