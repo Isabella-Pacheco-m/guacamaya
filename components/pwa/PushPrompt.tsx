@@ -35,12 +35,19 @@ function urlBase64ToUint8Array(base64: string) {
   return out
 }
 
-async function esperarServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+async function esperarServiceWorker(
+  timeoutMs: number
+): Promise<ServiceWorkerRegistration | null> {
   // .ready con timeout: tras instalar la PWA el registro puede seguir en
   // curso, y en dev el SW está deshabilitado (ahí .ready nunca resuelve).
+  // Si aún no hay ninguno registrado, se registra aquí — el layout ya lo
+  // hace, pero no queremos depender de qué efecto corrió primero.
+  navigator.serviceWorker.getRegistration().then((reg) => {
+    if (!reg) navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
   return Promise.race([
     navigator.serviceWorker.ready,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
   ])
 }
 
@@ -72,7 +79,10 @@ export function PushPrompt() {
         return
       }
 
-      const reg = await esperarServiceWorker()
+      // Espera corta: solo para detectar si YA está suscrito. Que el service
+      // worker no esté listo todavía no debe bloquear el botón — la espera
+      // larga ocurre dentro del clic, cuando sí hace falta.
+      const reg = await esperarServiceWorker(3000)
       if (cancelado) return
 
       if (reg) {
@@ -104,9 +114,14 @@ export function PushPrompt() {
         return
       }
 
-      setEstado(reg ? 'disponible' : 'sin-sw')
+      // El navegador soporta push: se ofrece el botón aunque el service
+      // worker aún no esté activo. Antes se caía a "instala la app" por un
+      // problema de tiempos y no había forma de activarlas.
+      setEstado('disponible')
     }
-    evaluar().catch(() => setEstado('sin-sw'))
+    // Si la detección falla, ofrecer el botón igual: el clic vuelve a
+    // intentarlo y reporta el error real en la tarjeta.
+    evaluar().catch(() => setEstado('disponible'))
     return () => {
       cancelado = true
     }
@@ -133,7 +148,7 @@ export function PushPrompt() {
         return
       }
 
-      const reg = await esperarServiceWorker()
+      const reg = await esperarServiceWorker(15000)
       if (!reg) {
         setEstado('sin-sw')
         return

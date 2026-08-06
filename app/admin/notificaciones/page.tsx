@@ -31,8 +31,8 @@ export default async function NotificacionesPage() {
         descripcion={
           <>
             Mándale una notificación al celular de tus miembros: promos,
-            novedades o un aviso del día. Llega a quienes instalaron la app y
-            activaron las notificaciones.
+            novedades o un aviso del día. Llega a los miembros que las
+            activaron desde su app del club.
           </>
         }
       />
