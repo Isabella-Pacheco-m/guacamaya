@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { TenantTheme } from '@/components/pwa/TenantTheme'
 import { CumpleanosPrompt } from '@/components/pwa/CumpleanosPrompt'
+import { PushPrompt } from '@/components/pwa/PushPrompt'
 import { TarjetaCliente } from '@/components/pwa/TarjetaCliente'
 import { AvatarUploader } from '@/components/pwa/AvatarUploader'
 import { notaColorStyle } from '@/lib/notas'
@@ -254,6 +255,12 @@ export function TenantPwaHome({
           {features.cumpleanos_enabled && (
             <div className="mt-4">
               <CumpleanosPrompt initialMes={miembro.mes_cumpleanos} />
+            </div>
+          )}
+
+          {features.push_enabled && (
+            <div className="mt-4">
+              <PushPrompt />
             </div>
           )}
         </section>

@@ -27,7 +27,7 @@ export type { FeatureKey, TarjetaEstilo, TarjetaFondoTipo, TenantFeatures }
 const DEFAULT_FLAGS = DEFAULT_TENANT_FEATURES
 
 const SELECT =
-  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, notas_enabled, galeria_enabled, galeria_puntos, lanzamientos_enabled, retos_enabled, ranking_enabled, feed_miembros_pueden_publicar, registro_abierto, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello, tarjeta_fondo_tipo, tarjeta_color_fondo2, tarjeta_sello_url'
+  'tenant_id, feed_enabled, sorteos_enabled, tarjeta_enabled, cumpleanos_enabled, notas_enabled, galeria_enabled, galeria_puntos, lanzamientos_enabled, retos_enabled, ranking_enabled, push_enabled, feed_miembros_pueden_publicar, registro_abierto, tarjeta_size, sello_valor_cop, tarjeta_color_fondo, tarjeta_color_sello, tarjeta_estilo_sello, tarjeta_fondo_tipo, tarjeta_color_fondo2, tarjeta_sello_url'
 
 // Memoizada POR REQUEST (React cache): el layout admin y casi todas las
 // páginas la piden en el mismo render. Solo lectura — updateTenantFeatures
@@ -81,6 +81,7 @@ export interface TenantFeaturesPatch {
   lanzamientos_enabled?: boolean
   retos_enabled?: boolean
   ranking_enabled?: boolean
+  push_enabled?: boolean
   feed_miembros_pueden_publicar?: boolean
   registro_abierto?: boolean
   tarjeta_size?: number

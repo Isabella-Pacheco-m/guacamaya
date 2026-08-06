@@ -18,6 +18,7 @@ export const FEATURE_KEYS = [
   'lanzamientos_enabled',
   'retos_enabled',
   'ranking_enabled',
+  'push_enabled',
 ] as const
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
@@ -52,6 +53,9 @@ export interface TenantFeatures {
   // Tabla de posiciones por puntos históricos en la comunidad. Expone nombre
   // y foto de los miembros al resto del club, por eso es opt-in.
   ranking_enabled: boolean
+  // Notificaciones push (Web Push/VAPID) del negocio a los miembros que
+  // instalaron la PWA y aceptaron el permiso.
+  push_enabled: boolean
   feed_miembros_pueden_publicar: boolean
   // Registro abierto: cualquier usuario logueado puede unirse a la comunidad
   // sin enlace de invitación. Default true.
@@ -83,6 +87,7 @@ export const DEFAULT_TENANT_FEATURES: Omit<TenantFeatures, 'tenant_id'> = {
   lanzamientos_enabled: false,
   retos_enabled: false,
   ranking_enabled: false,
+  push_enabled: false,
   feed_miembros_pueden_publicar: false,
   registro_abierto: true,
   tarjeta_size: 10,

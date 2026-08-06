@@ -76,6 +76,13 @@ const FEATURES: FeatureMeta[] = [
       'Proponles metas a tus clientes (visita 3 veces, prueba un producto…). Suben evidencia, tú la verificas y todos los que cumplen ganan puntos.',
     status: 'available',
   },
+  {
+    key: 'push_enabled',
+    label: 'Notificaciones push',
+    description:
+      'Mándale avisos al celular de tus miembros: promos, novedades o el mensaje del día. Llegan a quienes instalaron la app y activaron las notificaciones.',
+    status: 'available',
+  },
 ]
 
 export function FuncionalidadesForm({ initial }: { initial: TenantFeatures }) {

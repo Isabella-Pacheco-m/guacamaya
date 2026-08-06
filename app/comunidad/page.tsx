@@ -11,6 +11,7 @@ import { listLanzamientosPwa } from '@/lib/lanzamientos'
 import { listRanking, getRankingPosicion } from '@/lib/ranking'
 import { TenantTheme } from '@/components/pwa/TenantTheme'
 import { ComunidadTabs, type TabId } from '@/components/pwa/ComunidadTabs'
+import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,6 +98,13 @@ export default async function ComunidadPage({
             </div>
           </div>
         </header>
+
+        {/* Solo en el celular: en desktop instalar no aporta y estorba. */}
+        {features.push_enabled && (
+          <div className="md:hidden">
+            <InstallPrompt nombre={tenant.nombre} />
+          </div>
+        )}
 
         <ComunidadTabs
           tenant={tenant}

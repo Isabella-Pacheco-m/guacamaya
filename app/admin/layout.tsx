@@ -16,6 +16,7 @@ type FeatureFlag =
   | 'galeria_enabled'
   | 'lanzamientos_enabled'
   | 'retos_enabled'
+  | 'push_enabled'
 
 interface NavItem {
   href: string
@@ -95,6 +96,12 @@ const GROUPS: NavGroup[] = [
         label: 'Retos',
         icon: 'retos',
         requires: 'retos_enabled',
+      },
+      {
+        href: '/admin/notificaciones',
+        label: 'Notificaciones',
+        icon: 'notificaciones',
+        requires: 'push_enabled',
       },
     ],
   },

@@ -15,6 +15,7 @@ export type IconName =
   | 'galeria'
   | 'lanzamientos'
   | 'retos'
+  | 'notificaciones'
   | 'funcionalidades'
   | 'marca'
   | 'suscripcion'
@@ -124,6 +125,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M8 21h8" />
       <path d="M12 17v4" />
       <path d="M6 5H4a2 2 0 0 0 2 4M18 5h2a2 2 0 0 1-2 4" />
+    </>
+  ),
+  notificaciones: (
+    <>
+      <path d="M18 8.4a6 6 0 0 0-12 0c0 6.6-2.5 8.4-2.5 8.4h17S18 15 18 8.4Z" />
+      <path d="M13.7 20.5a2 2 0 0 1-3.4 0" />
     </>
   ),
   funcionalidades: (
