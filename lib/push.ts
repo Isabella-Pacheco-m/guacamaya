@@ -52,6 +52,19 @@ export interface PushSubscriptionInput {
 // Alta/refresh de la suscripción de un dispositivo. Upsert por endpoint: si el
 // mismo navegador se re-suscribe (o entra otra cuenta), la fila se actualiza
 // en vez de duplicarse.
+export class PushSaveError extends Error {
+  constructor(
+    message: string,
+    /** SQLSTATE de Postgres — p. ej. 42501 = permiso denegado, 42P01 = tabla
+     *  inexistente. Se devuelve al cliente para poder diagnosticar sin
+     *  revisar los logs del servidor. */
+    public readonly code: string
+  ) {
+    super(message)
+    this.name = 'PushSaveError'
+  }
+}
+
 export async function savePushSuscripcion(
   tenantId: string,
   miembroId: string,
@@ -67,7 +80,24 @@ export async function savePushSuscripcion(
     },
     { onConflict: 'endpoint' }
   )
+  if (error) {
+    throw new PushSaveError(error.message, error.code ?? 'desconocido')
+  }
+}
+
+/** ¿El servidor tiene registrado este endpoint? Confirma que la suscripción
+ *  quedó guardada de verdad, en vez de fiarse del 200 de la escritura. */
+export async function existePushSuscripcion(
+  tenantId: string,
+  endpoint: string
+): Promise<boolean> {
+  const { count, error } = await supabaseAdmin
+    .from('push_suscripciones')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .eq('endpoint', endpoint)
   if (error) throw error
+  return (count ?? 0) > 0
 }
 
 export async function deletePushSuscripcion(

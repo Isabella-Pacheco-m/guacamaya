@@ -3,8 +3,10 @@ import { requireClienteContext } from '@/lib/api-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
   deletePushSuscripcion,
+  existePushSuscripcion,
   getVapidPublicKey,
   pushConfigurado,
+  PushSaveError,
   savePushSuscripcion,
 } from '@/lib/push'
 
@@ -90,9 +92,31 @@ export async function POST(req: NextRequest) {
       p256dh,
       auth: authKey,
     })
+    // Releer: si la escritura "pasó" pero la fila no está (permisos, RLS,
+    // tabla ausente), el cliente se enteraría igual que el negocio — cuando
+    // el panel marca cero. Mejor decirlo aquí.
+    const guardada = await existePushSuscripcion(g.tenantId, endpoint)
+    if (!guardada) {
+      console.error('POST /api/me/push: la suscripción no persistió', {
+        tenantId: g.tenantId,
+      })
+      return NextResponse.json(
+        {
+          error: 'La suscripción no quedó guardada en el servidor',
+          detalle: 'no-persistio',
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('POST /api/me/push', err)
+    if (err instanceof PushSaveError) {
+      return NextResponse.json(
+        { error: 'No pudimos guardar tu suscripción', detalle: err.code },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

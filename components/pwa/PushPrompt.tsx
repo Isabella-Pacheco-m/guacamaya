@@ -35,6 +35,14 @@ function urlBase64ToUint8Array(base64: string) {
   return out
 }
 
+// El servidor manda un `detalle` (SQLSTATE o marca interna) cuando la
+// suscripción no se pudo guardar. Se muestra junto al mensaje: sin él, un
+// fallo de permisos en la base es indistinguible de "no pasó nada".
+function mensajeError(data: { error?: string; detalle?: string }): string {
+  const base = data.error || 'No se pudo guardar la suscripción'
+  return data.detalle ? `${base} (${data.detalle})` : base
+}
+
 async function esperarServiceWorker(
   timeoutMs: number
 ): Promise<ServiceWorkerRegistration | null> {
@@ -91,13 +99,22 @@ export function PushPrompt() {
         if (sub) {
           // Ya suscrito en este dispositivo: reenviamos la suscripción al
           // servidor (upsert idempotente) por si su fila se perdió — así el
-          // contador del negocio se repara solo.
+          // contador del negocio se repara solo. Si el servidor no la acepta
+          // NO decimos "activadas": el dispositivo creería estar suscrito
+          // mientras el negocio ve cero.
           const json = sub.toJSON()
-          fetch('/api/me/push', {
+          const res = await fetch('/api/me/push', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
-          }).catch(() => {})
+          }).catch(() => null)
+          if (cancelado) return
+          if (!res || !res.ok) {
+            const data = res ? await res.json().catch(() => ({})) : {}
+            setError(mensajeError(data))
+            setEstado('disponible')
+            return
+          }
           setEstado('suscrito')
           return
         }
@@ -166,7 +183,7 @@ export function PushPrompt() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'No se pudo guardar la suscripción')
+        throw new Error(mensajeError(data))
       }
       setEstado('suscrito')
     } catch (err) {
