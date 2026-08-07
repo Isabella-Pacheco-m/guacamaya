@@ -39,6 +39,22 @@ const withPWA = require('next-pwa')({
   // síncrono y verificable, en vez del custom worker de next-pwa (que se
   // compila en paralelo sin esperarse y puede faltar en el deploy).
   importScripts: [pushWorkerUrl()],
+  // ⚠️ NO QUITAR: esto es lo que impedía que el service worker existiera.
+  //
+  // Workbox descarga TODO el precaché durante el `install`; si una sola URL
+  // responde 404, la instalación aborta y el worker no se activa nunca. Y
+  // `app-build-manifest.json` es un artefacto interno del App Router que
+  // Next.js NO sirve en producción, así que daba 404 siempre.
+  //
+  // next-pwa v5 ya excluye `build-manifest.json` y
+  // `react-loadable-manifest.json`, pero es de la época del Pages Router y no
+  // conoce la variante `app-`. Resultado: el worker se registraba, fallaba al
+  // instalarse y se quedaba muerto — en todos los navegadores y dispositivos.
+  // Desde fuera parecía un problema de notificaciones push.
+  //
+  // Antes de tocar el precaché, comprobar que todas sus URLs responden 200
+  // (se extraen del sw.js generado).
+  buildExcludes: [/app-build-manifest\.json$/],
   // El worker no es un asset de la app: se carga por importScripts con su
   // hash, no hace falta que además viva en el precaché.
   publicExcludes: ['!noprecache/**/*', '!push-sw.js'],
