@@ -13,6 +13,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { TenantTheme } from '@/components/pwa/TenantTheme'
 import { CumpleanosPrompt } from '@/components/pwa/CumpleanosPrompt'
 import { PushPrompt } from '@/components/pwa/PushPrompt'
+import { AvisoClub, type AvisoData } from '@/components/pwa/AvisoClub'
 import { TarjetaCliente } from '@/components/pwa/TarjetaCliente'
 import { AvatarUploader } from '@/components/pwa/AvatarUploader'
 import { notaColorStyle } from '@/lib/notas'
@@ -42,12 +43,16 @@ export function TenantPwaHome({
   tarjetaPremios,
   comunidad,
   caducidadProxima,
+  avisoClub,
 }: {
   tenant: Tenant
   miembro: Miembro
   features: TenantFeatures
   tarjetaPremios: TarjetaPremioEstado[]
   comunidad: ComunidadPreview
+  /** Última notificación enviada por el negocio, para que el miembro la vea
+   *  aunque el celular no le haya mostrado el push. */
+  avisoClub: AvisoData | null
   /**
    * Aviso de vencimiento SOLO si está cerca (ver AVISO_CADUCIDAD_DIAS en
    * app/page.tsx). El detalle completo vive en /puntos; en la home un
@@ -255,6 +260,12 @@ export function TenantPwaHome({
           {features.cumpleanos_enabled && (
             <div className="mt-4">
               <CumpleanosPrompt initialMes={miembro.mes_cumpleanos} />
+            </div>
+          )}
+
+          {avisoClub && (
+            <div className="mt-4">
+              <AvisoClub aviso={avisoClub} />
             </div>
           )}
 

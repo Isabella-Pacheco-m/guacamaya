@@ -154,9 +154,9 @@ interface SuscripcionRow {
 export async function enviarPushDeBienvenida(
   tenant: Pick<Tenant, 'slug' | 'nombre' | 'logo_url'>,
   sub: PushSubscriptionInput
-): Promise<void> {
+): Promise<number> {
   ensureVapid()
-  await webpush.sendNotification(
+  const res = await webpush.sendNotification(
     { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
     JSON.stringify({
       titulo: `Listo — ya eres parte de ${tenant.nombre}`,
@@ -166,6 +166,9 @@ export async function enviarPushDeBienvenida(
     }),
     { TTL: 60 * 10, urgency: 'high' }
   )
+  // El código del push service (201 = aceptado y encolado para el
+  // dispositivo) es lo único que prueba dónde se corta la cadena.
+  return res.statusCode
 }
 
 const PAGE = 1000

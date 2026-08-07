@@ -21,6 +21,7 @@ import {
   listRecompensasActivas,
 } from '@/lib/tenantQueries'
 import { listFeedPostsPublic } from '@/lib/feed'
+import { listPushEnvios } from '@/lib/push'
 import { listGaleriaAprobadas } from '@/lib/galeria'
 import { listRetosPwa } from '@/lib/retos'
 import { tenantBaseUrl } from '@/lib/config'
@@ -112,7 +113,7 @@ async function renderTenantHome(slug: string) {
   }
 
   const features = await getTenantFeatures(tenant.id)
-  const [tarjetaPremios, ultimoPost, notas, fotos, retos, caducidad] = await Promise.all([
+  const [tarjetaPremios, ultimoPost, notas, fotos, retos, caducidad, envios] = await Promise.all([
     features.tarjeta_enabled
       ? listTarjetaPremiosForMiembro(tenant.id, miembro.id)
       : Promise.resolve([]),
@@ -125,6 +126,11 @@ async function renderTenantHome(slug: string) {
       : Promise.resolve([]),
     features.retos_enabled ? listRetosPwa(tenant.id) : Promise.resolve([]),
     getProximaCaducidad(tenant.id, miembro.id),
+    // El último aviso del negocio se muestra dentro de la app: si el celular
+    // no dejó pasar el push, el miembro lo ve igual al entrar.
+    features.push_enabled
+      ? listPushEnvios(tenant.id, 1)
+      : Promise.resolve([]),
   ])
 
   // Solo se avisa en la home cuando el vencimiento ya está cerca; el detalle
@@ -168,6 +174,7 @@ async function renderTenantHome(slug: string) {
       tarjetaPremios={tarjetaPremios}
       comunidad={comunidad}
       caducidadProxima={caducidadProxima}
+      avisoClub={envios[0] ?? null}
     />
   )
 }

@@ -116,9 +116,10 @@ export async function POST(req: NextRequest) {
     // de cada apertura). Si el push de bienvenida falla, la suscripción sigue
     // siendo válida: se reporta pero no se tumba la respuesta.
     let bienvenidaEnviada: boolean | undefined
+    let respuestaPush: number | string | undefined
     if (bienvenida === true) {
       try {
-        await enviarPushDeBienvenida(g.tenant, {
+        respuestaPush = await enviarPushDeBienvenida(g.tenant, {
           endpoint,
           p256dh,
           auth: authKey,
@@ -127,10 +128,13 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         console.error('push de bienvenida', err)
         bienvenidaEnviada = false
+        respuestaPush =
+          (err as { statusCode?: number })?.statusCode ??
+          (err instanceof Error ? err.message.slice(0, 80) : 'desconocido')
       }
     }
 
-    return NextResponse.json({ ok: true, bienvenidaEnviada })
+    return NextResponse.json({ ok: true, bienvenidaEnviada, respuestaPush })
   } catch (err) {
     console.error('POST /api/me/push', err)
     if (err instanceof PushSaveError) {

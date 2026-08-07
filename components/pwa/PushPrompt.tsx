@@ -262,10 +262,12 @@ export function PushPrompt() {
         return
       }
       if (data.bienvenidaEnviada === false) {
-        setError('El servidor no pudo enviar la prueba.')
+        setError(`El servidor no pudo enviar la prueba (${data.respuestaPush}).`)
         return
       }
-      setAviso('Prueba enviada. Debería llegarte en unos segundos.')
+      setAviso(
+        `Prueba enviada — el servicio de notificaciones respondió ${data.respuestaPush}. Debería llegarte en unos segundos.`
+      )
       // Darle tiempo al worker a recibirla y volver a leer el registro.
       setTimeout(() => {
         ultimoPushRecibido().then(setUltima)
