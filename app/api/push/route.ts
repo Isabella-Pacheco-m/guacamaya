@@ -3,10 +3,11 @@ import { requireAdminTenantId } from '@/lib/api-auth'
 import { getTenantFromRequest } from '@/lib/tenant'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
-  countPushSuscriptores,
+  assertPushListo,
+  diagnosticoPush,
   enviarPushATodos,
   listPushEnvios,
-  pushConfigurado,
+  PushConfigError,
 } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
@@ -19,14 +20,15 @@ export async function GET(req: NextRequest) {
   const auth = await requireAdminTenantId(req)
   if (!auth.ok) return auth.res
 
-  const [suscriptores, envios] = await Promise.all([
-    countPushSuscriptores(auth.tenantId),
+  const [diagnostico, envios] = await Promise.all([
+    diagnosticoPush(auth.tenantId),
     listPushEnvios(auth.tenantId),
   ])
   return NextResponse.json({
-    suscriptores,
+    suscriptores: diagnostico.suscriptores,
     envios,
-    configurado: pushConfigurado(),
+    configurado: diagnostico.configurado,
+    diagnostico,
   })
 }
 
@@ -41,11 +43,18 @@ export async function POST(req: NextRequest) {
       { status: 403 }
     )
   }
-  if (!pushConfigurado()) {
-    return NextResponse.json(
-      { error: 'Notificaciones no configuradas en la plataforma' },
-      { status: 503 }
-    )
+  // Config ausente o inconsistente: se corta aquí. Antes se enviaba igual, el
+  // push service devolvía 201 y el panel reportaba un alcance que no existió.
+  try {
+    assertPushListo()
+  } catch (err) {
+    if (err instanceof PushConfigError) {
+      return NextResponse.json(
+        { error: err.message, detalle: err.detalle },
+        { status: 503 }
+      )
+    }
+    throw err
   }
 
   let body: unknown
@@ -108,6 +117,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(resultado)
   } catch (err) {
     console.error('POST /api/push', err)
+    if (err instanceof PushConfigError) {
+      return NextResponse.json(
+        { error: err.message, detalle: err.detalle },
+        { status: 503 }
+      )
+    }
     return NextResponse.json(
       { error: 'No pudimos completar el envío' },
       { status: 500 }

@@ -18,9 +18,20 @@ export function ServiceWorkerRegister() {
     ) {
       return
     }
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.error('No se pudo registrar el service worker', err)
-    })
+    navigator.serviceWorker
+      // updateViaCache 'none': por defecto el navegador sirve los scripts
+      // importados por el worker (nuestro /push-sw.js) desde la caché HTTP.
+      // Un dispositivo podía quedarse con la versión vieja de los handlers de
+      // push indefinidamente, sin forma de saberlo desde fuera.
+      .register('/sw.js', { updateViaCache: 'none' })
+      .then((reg) => {
+        // Comprobar si hay una versión nueva en cada arranque: sin esto, un
+        // service worker instalado puede sobrevivir semanas a un despliegue.
+        reg.update().catch(() => {})
+      })
+      .catch((err) => {
+        console.error('No se pudo registrar el service worker', err)
+      })
   }, [])
 
   return null

@@ -1,3 +1,21 @@
+const crypto = require('crypto')
+const fs = require('fs')
+const path = require('path')
+
+// El worker de push es un archivo estático de /public (ver public/push-sw.js:
+// ahí está el porqué). Se enlaza con un hash de su contenido en la query para
+// que un navegador con el service worker viejo en caché no siga importando
+// una copia obsoleta: si el archivo cambia, cambia la URL.
+function pushWorkerUrl() {
+  const file = path.join(__dirname, 'public', 'push-sw.js')
+  const hash = crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(file))
+    .digest('hex')
+    .slice(0, 12)
+  return `/push-sw.js?v=${hash}`
+}
+
 // Rutas con sesión que NUNCA deben servirse desde el service worker:
 // servir HTML cacheado de un usuario logueado a otro (o post-logout)
 // rompe la auth y filtra contenido. Para esos paths siempre red, sin caché.
@@ -17,6 +35,13 @@ const withPWA = require('next-pwa')({
   disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
+  // Handlers de push/notificationclick/pushsubscriptionchange. Enlace
+  // síncrono y verificable, en vez del custom worker de next-pwa (que se
+  // compila en paralelo sin esperarse y puede faltar en el deploy).
+  importScripts: [pushWorkerUrl()],
+  // El worker no es un asset de la app: se carga por importScripts con su
+  // hash, no hace falta que además viva en el precaché.
+  publicExcludes: ['!noprecache/**/*', '!push-sw.js'],
   runtimeCaching: [
     {
       urlPattern: NETWORK_ONLY_PATHS,

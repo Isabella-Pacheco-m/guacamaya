@@ -2,12 +2,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { requireClienteContext } from '@/lib/api-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
+  assertPushListo,
   deletePushSuscripcion,
   enviarPushDePrueba,
   existePushSuscripcion,
   type ResultadoPrueba,
   getVapidPublicKey,
-  pushConfigurado,
+  olvidarEndpoint,
+  PushConfigError,
   PushSaveError,
   savePushSuscripcion,
 } from '@/lib/push'
@@ -18,6 +20,10 @@ export const dynamic = 'force-dynamic'
 // Suscripción push del dispositivo del cliente. GET entrega la clave pública
 // VAPID (necesaria para pushManager.subscribe), POST guarda la suscripción y
 // DELETE la retira. Todo gateado por el flag del tenant.
+//
+// El POST también lo llama el service worker cuando el navegador rota la
+// suscripción por su cuenta (evento pushsubscriptionchange), mandando
+// `anterior` con el endpoint muerto para darlo de baja en el mismo paso.
 
 type GateResult =
   | { ok: false; res: NextResponse }
@@ -36,14 +42,22 @@ async function gate(req: NextRequest): Promise<GateResult> {
       ),
     }
   }
-  if (!pushConfigurado()) {
-    return {
-      ok: false,
-      res: NextResponse.json(
-        { error: 'Notificaciones no configuradas en la plataforma' },
-        { status: 503 }
-      ),
+  // Config inconsistente = no se suscribe a nadie. Suscribir contra una clave
+  // que no corresponde crea dispositivos que nunca recibirán nada y que el
+  // negocio contaría como alcance real.
+  try {
+    assertPushListo()
+  } catch (err) {
+    if (err instanceof PushConfigError) {
+      return {
+        ok: false,
+        res: NextResponse.json(
+          { error: err.message, detalle: err.detalle },
+          { status: 503 }
+        ),
+      }
     }
+    throw err
   }
   return { ok: true, tenant: auth.tenant, miembroId: auth.miembro.id }
 }
@@ -64,9 +78,11 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
   }
-  const { endpoint, keys, bienvenida } = (body ?? {}) as {
+  const { endpoint, keys, clave, anterior, bienvenida } = (body ?? {}) as {
     endpoint?: unknown
     keys?: { p256dh?: unknown; auth?: unknown }
+    clave?: unknown
+    anterior?: unknown
     bienvenida?: unknown
   }
 
@@ -89,13 +105,29 @@ export async function POST(req: NextRequest) {
   ) {
     return NextResponse.json({ error: 'keys inválidas' }, { status: 400 })
   }
+  const claveVapid =
+    typeof clave === 'string' && clave.length > 0 && clave.length <= 200
+      ? clave
+      : null
 
   try {
     await savePushSuscripcion(g.tenant.id, g.miembroId, {
       endpoint,
       p256dh,
       auth: authKey,
+      clave: claveVapid,
     })
+
+    // Rotación: el endpoint viejo ya no recibe nada y solo inflaría el conteo
+    // de suscriptores del negocio.
+    if (
+      typeof anterior === 'string' &&
+      anterior.startsWith('https://') &&
+      anterior !== endpoint
+    ) {
+      await olvidarEndpoint(g.tenant.id, anterior)
+    }
+
     // Releer: si la escritura "pasó" pero la fila no está (permisos, RLS,
     // tabla ausente), el cliente se enteraría igual que el negocio — cuando
     // el panel marca cero. Mejor decirlo aquí.
@@ -122,6 +154,7 @@ export async function POST(req: NextRequest) {
         endpoint,
         p256dh,
         auth: authKey,
+        clave: claveVapid,
       })
     }
 

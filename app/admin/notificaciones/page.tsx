@@ -1,12 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/page-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
-import {
-  countPushSuscriptores,
-  listPushEnvios,
-  pushConfigurado,
-  vapidParejaValida,
-} from '@/lib/push'
+import { diagnosticoPush, listPushEnvios } from '@/lib/push'
 import { NotificacionesPanel } from '@/components/admin/NotificacionesPanel'
 import { PageHeader } from '@/components/admin/PageHeader'
 
@@ -18,8 +13,8 @@ export default async function NotificacionesPage() {
   if (!features.push_enabled) {
     redirect('/admin/funcionalidades')
   }
-  const [suscriptores, envios] = await Promise.all([
-    countPushSuscriptores(tenantId),
+  const [diagnostico, envios] = await Promise.all([
+    diagnosticoPush(tenantId),
     listPushEnvios(tenantId),
   ])
 
@@ -38,12 +33,7 @@ export default async function NotificacionesPage() {
         }
       />
 
-      <NotificacionesPanel
-        suscriptores={suscriptores}
-        envios={envios}
-        configurado={pushConfigurado()}
-        clavesOk={vapidParejaValida()}
-      />
+      <NotificacionesPanel diagnostico={diagnostico} envios={envios} />
     </div>
   )
 }

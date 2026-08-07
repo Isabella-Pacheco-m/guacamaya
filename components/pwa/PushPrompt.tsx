@@ -1,16 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import {
+  cancelarSuscripcion,
+  esIosSinInstalar,
+  soportaPush,
+  sincronizarSuscripcion,
+  ultimoPushRecibido,
+  type PruebaServidor,
+  type ResultadoSuscripcion,
+} from '@/lib/push-client'
 
 // Tarjeta de notificaciones del club.
 //
-// Antes se escondía en silencio si algo no cuadraba (permiso bloqueado, SW
-// aún registrándose, navegador sin push) y el miembro no tenía forma de saber
-// por qué. Ahora cada situación dice lo suyo: solo desaparece cuando de
-// verdad no hay nada que ofrecer (el navegador no soporta push) o cuando el
-// propio miembro la descartó.
+// Toda la lógica de suscripción vive en lib/push-client.ts. Lo importante que
+// pasa aquí sin que el miembro haga nada: al montarse se REVALIDA la
+// suscripción contra la clave que usa hoy la plataforma y, si quedó
+// desactualizada, se rehace sola. Antes había que acordarse de pulsar
+// "Reactivar" — y nadie lo hacía, porque la tarjeta decía "Activadas".
 
 const DISMISS_KEY = 'push-prompt-dismissed-at'
 const DISMISS_DIAS = 30
@@ -25,40 +34,6 @@ type Estado =
   | 'no-soportado'
   | 'descartado'
 
-function urlBase64ToUint8Array(base64: string) {
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4)
-  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const raw = atob(b64)
-  // ArrayBuffer explícito: satisface el BufferSource que pide subscribe().
-  const out = new Uint8Array(new ArrayBuffer(raw.length))
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
-  return out
-}
-
-// El servidor manda un `detalle` (SQLSTATE o marca interna) cuando la
-// suscripción no se pudo guardar. Se muestra junto al mensaje: sin él, un
-// fallo de permisos en la base es indistinguible de "no pasó nada".
-function mensajeError(data: { error?: string; detalle?: string }): string {
-  const base = data.error || 'No se pudo guardar la suscripción'
-  return data.detalle ? `${base} (${data.detalle})` : base
-}
-
-async function esperarServiceWorker(
-  timeoutMs: number
-): Promise<ServiceWorkerRegistration | null> {
-  // .ready con timeout: tras instalar la PWA el registro puede seguir en
-  // curso, y en dev el SW está deshabilitado (ahí .ready nunca resuelve).
-  // Si aún no hay ninguno registrado, se registra aquí — el layout ya lo
-  // hace, pero no queremos depender de qué efecto corrió primero.
-  navigator.serviceWorker.getRegistration().then((reg) => {
-    if (!reg) navigator.serviceWorker.register('/sw.js').catch(() => {})
-  })
-  return Promise.race([
-    navigator.serviceWorker.ready,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
-  ])
-}
-
 const recibidaFmt = new Intl.DateTimeFormat('es-CO', {
   day: 'numeric',
   month: 'short',
@@ -67,167 +42,115 @@ const recibidaFmt = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
 })
 
-// El worker anota en la Cache API cada push que recibe (ver worker/index.js).
-// Leerlo permite distinguir "no llegó" de "llegó y el sistema no lo mostró".
-async function ultimoPushRecibido(): Promise<number | null> {
-  try {
-    if (!('caches' in window)) return null
-    const cache = await caches.open('push-log')
-    const res = await cache.match('/__ultimo-push')
-    if (!res) return null
-    const data = (await res.json()) as { ts?: number }
-    return typeof data.ts === 'number' ? data.ts : null
-  } catch {
-    return null
+function resumenPrueba(p: PruebaServidor): string {
+  if (p.clavesOk === false) {
+    return 'La plataforma tiene las claves de notificación mal configuradas — avísale al negocio.'
   }
+  if (p.claveDelDispositivoOk === false) {
+    return 'Tu suscripción estaba desactualizada; se rehízo. Vuelve a probar.'
+  }
+  return `Prueba enviada por ${p.servicio} (${p.simple} / ${p.conDatos}). Si no ves nada en unos segundos, revisa que las notificaciones del navegador estén permitidas en los ajustes del teléfono.`
 }
 
 export function PushPrompt() {
   const [estado, setEstado] = useState<Estado>('cargando')
   const [error, setError] = useState<string | null>(null)
   const [ultima, setUltima] = useState<number | null>(null)
-  const [probando, setProbando] = useState(false)
+  const [ocupado, setOcupado] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
+
+  const refrescarUltima = useCallback(() => {
+    ultimoPushRecibido().then(setUltima)
+  }, [])
+
+  // Traduce el resultado de la sincronización a lo que ve el miembro.
+  const aplicar = useCallback((r: ResultadoSuscripcion, activando: boolean) => {
+    if (r.ok) {
+      setEstado('suscrito')
+      setError(null)
+      if (r.prueba) setAviso(resumenPrueba(r.prueba))
+      else if (r.rehecha) {
+        setAviso('Tu suscripción se renovó sola en este dispositivo.')
+      }
+      return
+    }
+    switch (r.motivo) {
+      case 'no-soportado':
+        setEstado('no-soportado')
+        break
+      case 'permiso-denegado':
+        setEstado('bloqueado')
+        break
+      case 'sin-sw':
+        // Al activar sí es un problema real; en la revalidación de fondo
+        // simplemente aún no estaba listo el service worker.
+        setEstado(activando ? 'sin-sw' : 'disponible')
+        if (activando && r.mensaje) setError(r.mensaje)
+        break
+      case 'permiso-pendiente':
+        setEstado('disponible')
+        break
+      default:
+        setEstado('disponible')
+        if (activando) setError(r.mensaje ?? 'No se pudo activar')
+    }
+  }, [])
 
   useEffect(() => {
     let cancelado = false
-    ultimoPushRecibido().then((ts) => {
-      if (!cancelado) setUltima(ts)
-    })
+    refrescarUltima()
+
     async function evaluar() {
       // iPhone: el push solo existe con la PWA instalada (iOS 16.4+). Se
       // comprueba antes que las APIs porque en Safari sin instalar ni
       // siquiera están definidas, y ahí la respuesta útil es "instálala".
-      const esIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (navigator as { standalone?: boolean }).standalone === true
-      if (esIos && !standalone) {
+      if (esIosSinInstalar()) {
         setEstado('sin-sw')
         return
       }
-
-      if (
-        !('serviceWorker' in navigator) ||
-        !('PushManager' in window) ||
-        !('Notification' in window)
-      ) {
+      if (!soportaPush()) {
         setEstado('no-soportado')
         return
       }
 
-      // Espera corta: solo para detectar si YA está suscrito. Que el service
-      // worker no esté listo todavía no debe bloquear el botón — la espera
-      // larga ocurre dentro del clic, cuando sí hace falta.
-      const reg = await esperarServiceWorker(3000)
+      // Revalidación silenciosa: sin pedir permiso. Repara la suscripción si
+      // quedó atada a una clave vieja y la reenvía al servidor (upsert
+      // idempotente) por si su fila se perdió.
+      const r = await sincronizarSuscripcion()
       if (cancelado) return
 
-      if (reg) {
-        const sub = await reg.pushManager.getSubscription()
-        if (cancelado) return
-        if (sub) {
-          // Ya suscrito en este dispositivo: reenviamos la suscripción al
-          // servidor (upsert idempotente) por si su fila se perdió — así el
-          // contador del negocio se repara solo. Si el servidor no la acepta
-          // NO decimos "activadas": el dispositivo creería estar suscrito
-          // mientras el negocio ve cero.
-          const json = sub.toJSON()
-          const res = await fetch('/api/me/push', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
-          }).catch(() => null)
-          if (cancelado) return
-          if (!res || !res.ok) {
-            const data = res ? await res.json().catch(() => ({})) : {}
-            setError(mensajeError(data))
-            setEstado('disponible')
-            return
-          }
-          setEstado('suscrito')
+      if (!r.ok && r.motivo === 'permiso-pendiente') {
+        const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0)
+        if (Date.now() - dismissedAt < DISMISS_DIAS * 86_400_000) {
+          setEstado('descartado')
           return
         }
       }
-
-      if (Notification.permission === 'denied') {
-        setEstado('bloqueado')
-        return
-      }
-
-      const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0)
-      if (Date.now() - dismissedAt < DISMISS_DIAS * 86_400_000) {
-        setEstado('descartado')
-        return
-      }
-
-      // El navegador soporta push: se ofrece el botón aunque el service
-      // worker aún no esté activo. Antes se caía a "instala la app" por un
-      // problema de tiempos y no había forma de activarlas.
-      setEstado('disponible')
+      aplicar(r, false)
     }
+
     // Si la detección falla, ofrecer el botón igual: el clic vuelve a
     // intentarlo y reporta el error real en la tarjeta.
     evaluar().catch(() => setEstado('disponible'))
     return () => {
       cancelado = true
     }
-  }, [])
+  }, [aplicar, refrescarUltima])
 
   async function activar() {
-    if (estado === 'guardando') return
+    if (ocupado) return
+    setOcupado(true)
     setEstado('guardando')
     setError(null)
-    try {
-      const keyRes = await fetch('/api/me/push')
-      const keyData = await keyRes.json().catch(() => ({}))
-      if (!keyRes.ok || !keyData.vapidPublicKey) {
-        throw new Error(keyData.error || 'Notificaciones no disponibles')
-      }
-
-      const permiso = await Notification.requestPermission()
-      if (permiso === 'denied') {
-        setEstado('bloqueado')
-        return
-      }
-      if (permiso !== 'granted') {
-        setEstado('disponible')
-        return
-      }
-
-      const reg = await esperarServiceWorker(15000)
-      if (!reg) {
-        setEstado('sin-sw')
-        return
-      }
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(keyData.vapidPublicKey),
-      })
-      const json = sub.toJSON()
-      const res = await fetch('/api/me/push', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: sub.endpoint,
-          keys: json.keys,
-          // Confirma en el propio celular que llegan de verdad.
-          bienvenida: true,
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(mensajeError(data))
-      if (data.prueba) {
-        const p = data.prueba
-        setAviso(
-          `Prueba por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}, claves: ${p.clavesOk === false ? 'NO COINCIDEN' : 'ok'}.`
-        )
-      }
-      setEstado('suscrito')
-    } catch (err) {
-      setEstado('disponible')
-      setError(err instanceof Error ? err.message : 'Error inesperado')
-    }
+    setAviso(null)
+    const r = await sincronizarSuscripcion({
+      pedirPermiso: true,
+      // Confirma en el propio celular que llegan de verdad.
+      bienvenida: true,
+    })
+    aplicar(r, true)
+    setOcupado(false)
+    setTimeout(refrescarUltima, 6000)
   }
 
   // Reenvía la suscripción de este dispositivo pidiendo la notificación de
@@ -235,48 +158,15 @@ export function PushPrompt() {
   // le llegan: la tarjeta solo dice "Activadas" y hay que esperar a que el
   // negocio mande una campaña.
   async function probar() {
-    if (probando) return
-    setProbando(true)
+    if (ocupado) return
+    setOcupado(true)
     setError(null)
     setAviso(null)
-    try {
-      const reg = await esperarServiceWorker(15000)
-      const sub = reg ? await reg.pushManager.getSubscription() : null
-      if (!sub) {
-        setError('Este dispositivo ya no está suscrito. Actívalas de nuevo.')
-        setEstado('disponible')
-        return
-      }
-      const json = sub.toJSON()
-      const res = await fetch('/api/me/push', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: sub.endpoint,
-          keys: json.keys,
-          bienvenida: true,
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setError(mensajeError(data))
-        return
-      }
-      const p = data.prueba
-      setAviso(
-        p
-          ? `2 pruebas por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}, claves: ${p.clavesOk === false ? 'NO COINCIDEN' : 'ok'}.`
-          : 'Prueba enviada.'
-      )
-      // Darle tiempo al worker a recibirla y volver a leer el registro.
-      setTimeout(() => {
-        ultimoPushRecibido().then(setUltima)
-      }, 6000)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error inesperado')
-    } finally {
-      setProbando(false)
-    }
+    const r = await sincronizarSuscripcion({ bienvenida: true })
+    aplicar(r, true)
+    setOcupado(false)
+    // Darle tiempo al worker a recibirla y volver a leer el registro.
+    setTimeout(refrescarUltima, 6000)
   }
 
   // Rehace la suscripción desde cero.
@@ -287,34 +177,20 @@ export function PushPrompt() {
   // Desde el servidor es indistinguible de una entrega correcta. Darla de
   // baja y volver a suscribirse es lo único que lo repara.
   async function reactivar() {
-    if (probando) return
-    setProbando(true)
+    if (ocupado) return
+    setOcupado(true)
     setError(null)
     setAviso(null)
-    try {
-      const reg = await esperarServiceWorker(15000)
-      if (!reg) {
-        setError('No se pudo preparar la app en este dispositivo.')
-        return
-      }
-      const vieja = await reg.pushManager.getSubscription()
-      if (vieja) {
-        await fetch('/api/me/push', {
-          method: 'DELETE',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ endpoint: vieja.endpoint }),
-        }).catch(() => {})
-        await vieja.unsubscribe().catch(() => false)
-      }
-      setUltima(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error inesperado')
-      return
-    } finally {
-      setProbando(false)
-    }
-    // Suscribir de nuevo y mandar la prueba con la suscripción recién creada.
-    await activar()
+    await cancelarSuscripcion().catch(() => {})
+    const r = await sincronizarSuscripcion({
+      forzar: true,
+      pedirPermiso: true,
+      bienvenida: true,
+    })
+    setUltima(null)
+    aplicar(r, true)
+    setOcupado(false)
+    setTimeout(refrescarUltima, 6000)
   }
 
   function ahoraNo() {
@@ -342,21 +218,21 @@ export function PushPrompt() {
             Última recibida: {recibidaFmt.format(new Date(ultima))}
           </p>
         )}
-        {aviso && <p className="text-xs text-muted mt-2">{aviso}</p>}
+        {aviso && <p className="text-xs text-muted mt-2 leading-relaxed">{aviso}</p>}
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
         <div className="mt-3 flex items-center gap-4">
           <button
             type="button"
             onClick={probar}
-            disabled={probando}
+            disabled={ocupado}
             className="text-xs text-electric hover:underline disabled:opacity-50"
           >
-            {probando ? 'Enviando…' : 'Enviarme una de prueba'}
+            {ocupado ? 'Enviando…' : 'Enviarme una de prueba'}
           </button>
           <button
             type="button"
             onClick={reactivar}
-            disabled={probando}
+            disabled={ocupado}
             className="text-xs text-muted hover:text-graphite disabled:opacity-50"
           >
             ¿No te llegan? Reactivar
@@ -377,6 +253,33 @@ export function PushPrompt() {
           Para recibir promos y novedades, permítelas desde los ajustes del
           sitio en tu navegador y vuelve a entrar.
         </p>
+      </Card>
+    )
+  }
+
+  // Sin service worker fuera de iPhone no es un problema de instalación: la
+  // app no pudo arrancar su worker. Decirle "instálala" a alguien que está en
+  // Chrome de escritorio lo manda a un callejón sin salida.
+  if (estado === 'sin-sw' && !esIosSinInstalar()) {
+    return (
+      <Card>
+        <p className="eyebrow text-muted mb-2">Notificaciones</p>
+        <p className="text-sm text-graphite">
+          No pudimos preparar las notificaciones en este navegador.
+        </p>
+        {error && (
+          <p className="text-xs text-muted mt-2 leading-relaxed">{error}</p>
+        )}
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={activar}
+            disabled={ocupado}
+            className="text-xs text-electric hover:underline disabled:opacity-50"
+          >
+            Reintentar
+          </button>
+        </div>
       </Card>
     )
   }
