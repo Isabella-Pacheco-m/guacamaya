@@ -2,6 +2,27 @@
 // Maneja Web Push: mostrar la notificación con la marca del tenant y abrir
 // (o enfocar) la PWA al tocarla.
 
+// Deja constancia de que el push SÍ llegó al dispositivo, aunque el sistema
+// no lo muestre. Sin esto, "no llegó nada" y "llegó pero Android lo silenció"
+// son indistinguibles desde fuera. La tarjeta de la PWA lo lee y muestra la
+// fecha de la última recibida.
+const LOG_CACHE = 'push-log'
+const LOG_KEY = '/__ultimo-push'
+
+async function registrarPushRecibido(titulo) {
+  try {
+    const cache = await caches.open(LOG_CACHE)
+    await cache.put(
+      LOG_KEY,
+      new Response(JSON.stringify({ ts: Date.now(), titulo }), {
+        headers: { 'content-type': 'application/json' },
+      })
+    )
+  } catch {
+    // El log es un extra: nunca debe impedir que se muestre la notificación.
+  }
+}
+
 self.addEventListener('push', (event) => {
   // Nunca se sale sin mostrar algo: la suscripción es userVisibleOnly, así
   // que un push sin datos (o con datos ilegibles) que no muestre nada hace
@@ -25,14 +46,17 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(titulo, opciones).catch(() =>
-      // El ícono del tenant es remoto: si no se puede cargar, mostrarla
-      // igual sin adornos antes que quedarnos sin notificación.
-      self.registration.showNotification(titulo, {
-        body: opciones.body,
-        data: opciones.data,
-      })
-    )
+    Promise.all([
+      registrarPushRecibido(titulo),
+      self.registration.showNotification(titulo, opciones).catch(() =>
+        // El ícono del tenant es remoto: si no se puede cargar, mostrarla
+        // igual sin adornos antes que quedarnos sin notificación.
+        self.registration.showNotification(titulo, {
+          body: opciones.body,
+          data: opciones.data,
+        })
+      ),
+    ])
   )
 })
 

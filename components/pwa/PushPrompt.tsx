@@ -59,12 +59,39 @@ async function esperarServiceWorker(
   ])
 }
 
+const recibidaFmt = new Intl.DateTimeFormat('es-CO', {
+  day: 'numeric',
+  month: 'short',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: 'America/Bogota',
+})
+
+// El worker anota en la Cache API cada push que recibe (ver worker/index.js).
+// Leerlo permite distinguir "no llegó" de "llegó y el sistema no lo mostró".
+async function ultimoPushRecibido(): Promise<number | null> {
+  try {
+    if (!('caches' in window)) return null
+    const cache = await caches.open('push-log')
+    const res = await cache.match('/__ultimo-push')
+    if (!res) return null
+    const data = (await res.json()) as { ts?: number }
+    return typeof data.ts === 'number' ? data.ts : null
+  } catch {
+    return null
+  }
+}
+
 export function PushPrompt() {
   const [estado, setEstado] = useState<Estado>('cargando')
   const [error, setError] = useState<string | null>(null)
+  const [ultima, setUltima] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelado = false
+    ultimoPushRecibido().then((ts) => {
+      if (!cancelado) setUltima(ts)
+    })
     async function evaluar() {
       // iPhone: el push solo existe con la PWA instalada (iOS 16.4+). Se
       // comprueba antes que las APIs porque en Safari sin instalar ni
@@ -220,6 +247,11 @@ export function PushPrompt() {
         <p className="text-sm text-graphite">
           Activadas — te avisaremos de promos y novedades del club.
         </p>
+        {ultima !== null && (
+          <p className="text-xs text-muted mt-2">
+            Última recibida: {recibidaFmt.format(new Date(ultima))}
+          </p>
+        )}
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
       </Card>
     )
