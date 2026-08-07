@@ -168,40 +168,151 @@ export async function estadoServiceWorker(): Promise<EstadoServiceWorker> {
   }
 }
 
-/** Frase corta y accionable sobre por qué no hay service worker. */
+/** Frase corta y accionable sobre por qué no hay service worker. Incluye el
+ *  error literal del navegador cuando lo hay: es lo único que permite
+ *  diagnosticar el dispositivo de otra persona sin pedirle la consola. */
 export function explicarSinSW(e: EstadoServiceWorker): string {
   if (!e.soportado) return 'Este navegador no soporta notificaciones.'
-  if (e.error) return `El navegador rechazó el service worker: ${e.error}`
+  const detalle = e.error ?? ultimoErrorRegistro()
+  if (detalle) return `El navegador rechazó el service worker — ${detalle}`
   if (!e.registrado) {
-    return 'La app no pudo instalar su service worker (no se pudo cargar /sw.js).'
+    return 'La app no pudo instalar su service worker. Suele pasar en ventanas de incógnito o con el almacenamiento del sitio bloqueado en los ajustes del navegador.'
   }
   if (!e.activo) {
-    return 'El service worker quedó registrado pero nunca llegó a activarse — suele ser un error al evaluarlo.'
+    return 'El service worker quedó registrado pero nunca llegó a activarse.'
   }
   return 'El service worker tardó demasiado en estar listo.'
 }
 
-export async function esperarServiceWorker(
+// Último error real de registro. console.error no sirve para diagnosticar a
+// distancia: el miembro no abre la consola. Se guarda para poder enseñarlo.
+let errorRegistro: string | null = null
+
+export function ultimoErrorRegistro(): string | null {
+  return errorRegistro
+}
+
+async function registrar(): Promise<ServiceWorkerRegistration | null> {
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', {
+      // Por defecto el navegador sirve los scripts importados por el worker
+      // desde la caché HTTP: un dispositivo podía quedarse con handlers de
+      // push viejos indefinidamente.
+      updateViaCache: 'none',
+    })
+    errorRegistro = null
+    return reg
+  } catch (err) {
+    errorRegistro =
+      err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    console.error('No se pudo registrar el service worker', err)
+    return null
+  }
+}
+
+/**
+ * ¿El worker que atiende a este dispositivo está vivo Y es el actual?
+ *
+ * Se le manda un ping y se espera respuesta. No contesta si murió al
+ * evaluarse (el caso real: un `importScripts` de un deploy anterior que ya no
+ * existe) ni si es una versión anterior sin este handler. En ambos casos el
+ * registro hay que tirarlo: acepta suscripciones y el push service devuelve
+ * 201, pero la notificación no se muestra jamás.
+ */
+async function workerResponde(
+  reg: ServiceWorkerRegistration,
+  timeoutMs = 3000
+): Promise<boolean> {
+  const sw = reg.active
+  if (!sw) return false
+  return new Promise<boolean>((resolve) => {
+    let resuelto = false
+    const listo = (v: boolean) => {
+      if (resuelto) return
+      resuelto = true
+      resolve(v)
+    }
+    const canal = new MessageChannel()
+    canal.port1.onmessage = (e) => listo(e.data?.tipo === 'pong-push')
+    setTimeout(() => listo(false), timeoutMs)
+    try {
+      sw.postMessage({ tipo: 'ping-push' }, [canal.port2])
+    } catch {
+      listo(false)
+    }
+  })
+}
+
+function conTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    p,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ])
+}
+
+/**
+ * Deja un service worker vivo y actual, curando el que haya si hace falta.
+ *
+ * Es el único punto donde se registra el worker (lo usan el layout y la
+ * tarjeta de notificaciones), justamente para que la reparación ocurra
+ * siempre y no dependa de por dónde se entró.
+ */
+// El layout y la tarjeta de notificaciones piden el worker a la vez. Sin
+// compartir el intento, dos reparaciones simultáneas se desregistran la una a
+// la otra y el dispositivo se queda sin ninguna. Un éxito se reutiliza el
+// resto de la vida de la página; un fallo se descarta para poder reintentar.
+let intento: Promise<ServiceWorkerRegistration | null> | null = null
+
+export function esperarServiceWorker(
   timeoutMs: number
 ): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) return null
-  // El layout ya lo registra, pero no queremos depender de qué efecto corrió
-  // primero (ni de que la primera carga aún no lo hubiera hecho). En dev
-  // next-pwa está deshabilitado y /sw.js no existe: registrarlo solo dejaría
-  // un 404 en consola.
-  if (process.env.NODE_ENV === 'production') {
-    navigator.serviceWorker.getRegistration().then((reg) => {
-      if (!reg) {
-        navigator.serviceWorker
-          .register('/sw.js', { updateViaCache: 'none' })
-          .catch(() => {})
-      }
+  if (!intento) {
+    intento = prepararServiceWorker(timeoutMs)
+    intento.then((reg) => {
+      if (!reg) intento = null
     })
   }
-  return Promise.race([
-    navigator.serviceWorker.ready,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
-  ])
+  return intento
+}
+
+async function prepararServiceWorker(
+  timeoutMs: number
+): Promise<ServiceWorkerRegistration | null> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+    return null
+  }
+  // En dev next-pwa está deshabilitado y /sw.js no existe: registrarlo solo
+  // dejaría un 404 en consola.
+  if (process.env.NODE_ENV !== 'production') return null
+
+  let reg = await navigator.serviceWorker.getRegistration().catch(() => null)
+  if (!reg) reg = await registrar()
+  if (!reg) return null
+
+  // Buscar versión nueva antes de nada: un worker instalado puede sobrevivir
+  // semanas a un despliegue.
+  await reg.update().catch(() => {})
+
+  let listo = await conTimeout(navigator.serviceWorker.ready, timeoutMs)
+
+  // Con worker activo, la prueba de vida decide si sirve o hay que tirarlo.
+  if (listo && (await workerResponde(listo))) return listo
+
+  // Registro inservible: desregistrar y empezar de cero. Esto también borra
+  // la suscripción push atada a él — es lo correcto: era una suscripción que
+  // el push service aceptaba y que no entregaba nada. Quien llama vuelve a
+  // suscribir después.
+  console.warn('[push] el service worker no responde; se rehace el registro')
+  await (listo ?? reg).unregister().catch(() => {})
+  const nuevo = await registrar()
+  if (!nuevo) return null
+  listo = await conTimeout(navigator.serviceWorker.ready, timeoutMs)
+  if (!listo) {
+    errorRegistro =
+      errorRegistro ?? 'El service worker nuevo no llegó a activarse.'
+    return null
+  }
+  return listo
 }
 
 // ---------------------------------------------------------------------------

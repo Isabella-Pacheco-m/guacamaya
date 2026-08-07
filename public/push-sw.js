@@ -22,6 +22,36 @@
 ;(function () {
   'use strict'
 
+  // Se responde en el ping: permite ver en la tarjeta de la PWA qué versión
+  // del worker está atendiendo realmente a ese dispositivo.
+  var VERSION = 2
+
+  // Prueba de vida.
+  //
+  // La app pregunta "¿estás vivo?" antes de fiarse de un service worker ya
+  // registrado. Un worker roto —el caso real: el de un deploy anterior cuyo
+  // importScripts apunta a un archivo que ya no existe— no llega ni a
+  // registrar este handler, así que no contesta y la app lo reemplaza. Un
+  // worker viejo pero sano tampoco contesta (no tenía este handler), y
+  // también debe ser reemplazado. Sin esta prueba, un registro envenenado es
+  // indistinguible de uno bueno: acepta la suscripción, el push service
+  // devuelve 201 y la notificación no se muestra nunca.
+  self.addEventListener('message', function (event) {
+    if (!event.data || event.data.tipo !== 'ping-push') return
+    var puerto = event.ports && event.ports[0]
+    if (puerto) puerto.postMessage({ tipo: 'pong-push', version: VERSION })
+  })
+
+  // En pie desde el primer momento: sin esto, el worker nuevo se queda
+  // esperando a que se cierren todas las pestañas del club y el miembro sigue
+  // atendido por el roto.
+  self.addEventListener('install', function () {
+    self.skipWaiting()
+  })
+  self.addEventListener('activate', function (event) {
+    event.waitUntil(self.clients.claim())
+  })
+
   // Deja constancia local de cada push recibido. La tarjeta de notificaciones
   // de la PWA lo lee para poder decir "última recibida: …" — sin esto, "no
   // llegó" y "llegó pero el sistema no la mostró" son indistinguibles.
