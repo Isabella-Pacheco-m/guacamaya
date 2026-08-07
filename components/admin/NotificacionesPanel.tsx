@@ -285,7 +285,9 @@ export function NotificacionesPanel({
                   · {e.enviados} aceptadas por el servicio
                   {e.fallidos > 0 ? ` · ${e.fallidos} fallidas` : ''}
                 </p>
-                {e.detalle && Object.keys(e.detalle).length > 0 && (
+                {/* El desglose crudo solo cuando hay algo que explicar: en un
+                    envío limpio son ruido técnico. */}
+                {e.fallidos > 0 && e.detalle && (
                   <p className="text-[11px] text-muted mt-1 font-mono">
                     {Object.entries(e.detalle)
                       .map(([codigo, n]) => `${codigo}×${n}`)

@@ -302,7 +302,6 @@ async function prepararServiceWorker(
   // la suscripción push atada a él — es lo correcto: era una suscripción que
   // el push service aceptaba y que no entregaba nada. Quien llama vuelve a
   // suscribir después.
-  console.warn('[push] el service worker no responde; se rehace el registro')
   await (listo ?? reg).unregister().catch(() => {})
   const nuevo = await registrar()
   if (!nuevo) return null

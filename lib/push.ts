@@ -622,8 +622,11 @@ export async function enviarPushDePrueba(
     const res = await webpush.sendNotification(suscripcion, null, opciones)
     simple = String(res.statusCode)
   } catch (err) {
-    console.error('push de prueba (simple)', err)
+    // Solo el motivo: el error de web-push arrastra el endpoint completo del
+    // dispositivo, que es una credencial y no tiene por qué acabar en los
+    // logs del servidor.
     simple = motivoDe(err)
+    console.error('push de prueba (simple):', simple)
   }
 
   let conDatos: string
@@ -640,8 +643,8 @@ export async function enviarPushDePrueba(
     )
     conDatos = String(res.statusCode)
   } catch (err) {
-    console.error('push de prueba (con datos)', err)
     conDatos = motivoDe(err)
+    console.error('push de prueba (con datos):', conDatos)
   }
 
   let servicio = 'desconocido'

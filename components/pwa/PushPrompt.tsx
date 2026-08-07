@@ -42,14 +42,17 @@ const recibidaFmt = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
 })
 
+// Lo que ve el miembro tras pedir una prueba. Sin códigos HTTP ni nombres de
+// servicio: eso era andamiaje de diagnóstico y su sitio es el panel del
+// negocio, no la tarjeta de un cliente del club.
 function resumenPrueba(p: PruebaServidor): string {
   if (p.clavesOk === false) {
-    return 'La plataforma tiene las claves de notificación mal configuradas — avísale al negocio.'
+    return 'Hay un problema de configuración en la plataforma — avísale al negocio.'
   }
   if (p.claveDelDispositivoOk === false) {
     return 'Tu suscripción estaba desactualizada; se rehízo. Vuelve a probar.'
   }
-  return `Prueba enviada por ${p.servicio} (${p.simple} / ${p.conDatos}). Si no ves nada en unos segundos, revisa que las notificaciones del navegador estén permitidas en los ajustes del teléfono.`
+  return 'Te enviamos una notificación de prueba. Si no aparece en unos segundos, revisa que las notificaciones estén permitidas en los ajustes de tu teléfono.'
 }
 
 export function PushPrompt() {
