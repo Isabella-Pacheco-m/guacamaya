@@ -279,6 +279,44 @@ export function PushPrompt() {
     }
   }
 
+  // Rehace la suscripción desde cero.
+  //
+  // El registro push del navegador puede quedar en un estado zombi: el
+  // endpoint sigue vivo para el push service (responde 201) pero ya no apunta
+  // a nada en el dispositivo, así que los mensajes se aceptan y se pierden.
+  // Desde el servidor es indistinguible de una entrega correcta. Darla de
+  // baja y volver a suscribirse es lo único que lo repara.
+  async function reactivar() {
+    if (probando) return
+    setProbando(true)
+    setError(null)
+    setAviso(null)
+    try {
+      const reg = await esperarServiceWorker(15000)
+      if (!reg) {
+        setError('No se pudo preparar la app en este dispositivo.')
+        return
+      }
+      const vieja = await reg.pushManager.getSubscription()
+      if (vieja) {
+        await fetch('/api/me/push', {
+          method: 'DELETE',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ endpoint: vieja.endpoint }),
+        }).catch(() => {})
+        await vieja.unsubscribe().catch(() => false)
+      }
+      setUltima(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error inesperado')
+      return
+    } finally {
+      setProbando(false)
+    }
+    // Suscribir de nuevo y mandar la prueba con la suscripción recién creada.
+    await activar()
+  }
+
   function ahoraNo() {
     localStorage.setItem(DISMISS_KEY, String(Date.now()))
     setEstado('descartado')
@@ -306,14 +344,24 @@ export function PushPrompt() {
         )}
         {aviso && <p className="text-xs text-muted mt-2">{aviso}</p>}
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
-        <button
-          type="button"
-          onClick={probar}
-          disabled={probando}
-          className="mt-3 text-xs text-electric hover:underline disabled:opacity-50"
-        >
-          {probando ? 'Enviando…' : 'Enviarme una de prueba'}
-        </button>
+        <div className="mt-3 flex items-center gap-4">
+          <button
+            type="button"
+            onClick={probar}
+            disabled={probando}
+            className="text-xs text-electric hover:underline disabled:opacity-50"
+          >
+            {probando ? 'Enviando…' : 'Enviarme una de prueba'}
+          </button>
+          <button
+            type="button"
+            onClick={reactivar}
+            disabled={probando}
+            className="text-xs text-muted hover:text-graphite disabled:opacity-50"
+          >
+            ¿No te llegan? Reactivar
+          </button>
+        </div>
       </Card>
     )
   }
