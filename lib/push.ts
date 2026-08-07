@@ -151,24 +151,77 @@ interface SuscripcionRow {
  * verán y comprueba que de verdad llegan, en vez de esperar a la primera
  * campaña del negocio para descubrir que algo no funcionaba.
  */
-export async function enviarPushDeBienvenida(
+function codigoDe(err: unknown): number | string {
+  const status = (err as { statusCode?: number })?.statusCode
+  if (typeof status === 'number') return status
+  return err instanceof Error ? err.message.slice(0, 60) : 'error'
+}
+
+export interface ResultadoPrueba {
+  /** Host del push service (fcm.googleapis.com, Samsung, Mozilla…). */
+  servicio: string
+  /** Push SIN contenido: no lleva cifrado, solo despierta al worker. */
+  simple: number | string
+  /** Push con contenido cifrado, el formato normal de las campañas. */
+  conDatos: number | string
+}
+
+/**
+ * Prueba de entrega en dos formas.
+ *
+ * Un push con contenido va cifrado con las claves del navegador; si el
+ * descifrado falla, el navegador lo descarta sin avisar a nadie y desde el
+ * servidor se ve idéntico a un envío perfecto. Mandar también uno SIN
+ * contenido —que no necesita descifrado— separa las dos causas: si llega el
+ * simple y no el otro, el problema es el cifrado; si no llega ninguno, el
+ * mensaje no está alcanzando el dispositivo.
+ */
+export async function enviarPushDePrueba(
   tenant: Pick<Tenant, 'slug' | 'nombre' | 'logo_url'>,
   sub: PushSubscriptionInput
-): Promise<number> {
+): Promise<ResultadoPrueba> {
   ensureVapid()
-  const res = await webpush.sendNotification(
-    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-    JSON.stringify({
-      titulo: `Listo — ya eres parte de ${tenant.nombre}`,
-      cuerpo: 'Así te avisaremos de promos, sorteos y novedades del club.',
-      url: tenantBaseUrl(tenant.slug),
-      icono: tenant.logo_url ?? undefined,
-    }),
-    { TTL: 60 * 10, urgency: 'high' }
-  )
-  // El código del push service (201 = aceptado y encolado para el
-  // dispositivo) es lo único que prueba dónde se corta la cadena.
-  return res.statusCode
+  const suscripcion = {
+    endpoint: sub.endpoint,
+    keys: { p256dh: sub.p256dh, auth: sub.auth },
+  }
+  const opciones = { TTL: 60 * 10, urgency: 'high' as const }
+
+  let simple: number | string
+  try {
+    const res = await webpush.sendNotification(suscripcion, null, opciones)
+    simple = res.statusCode
+  } catch (err) {
+    console.error('push de prueba (simple)', err)
+    simple = codigoDe(err)
+  }
+
+  let conDatos: number | string
+  try {
+    const res = await webpush.sendNotification(
+      suscripcion,
+      JSON.stringify({
+        titulo: `Listo — ya eres parte de ${tenant.nombre}`,
+        cuerpo: 'Así te avisaremos de promos, sorteos y novedades del club.',
+        url: tenantBaseUrl(tenant.slug),
+        icono: tenant.logo_url ?? undefined,
+      }),
+      opciones
+    )
+    conDatos = res.statusCode
+  } catch (err) {
+    console.error('push de prueba (con datos)', err)
+    conDatos = codigoDe(err)
+  }
+
+  let servicio = 'desconocido'
+  try {
+    servicio = new URL(sub.endpoint).host
+  } catch {
+    // endpoint raro: el host es informativo, no vale la pena fallar por él.
+  }
+
+  return { servicio, simple, conDatos }
 }
 
 const PAGE = 1000

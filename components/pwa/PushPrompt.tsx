@@ -217,9 +217,10 @@ export function PushPrompt() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(mensajeError(data))
-      if (data.bienvenidaEnviada === false) {
-        setError(
-          'Quedaste suscrito, pero la notificación de prueba no salió. Avísale al negocio.'
+      if (data.prueba) {
+        const p = data.prueba
+        setAviso(
+          `Prueba enviada por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}.`
         )
       }
       setEstado('suscrito')
@@ -261,12 +262,11 @@ export function PushPrompt() {
         setError(mensajeError(data))
         return
       }
-      if (data.bienvenidaEnviada === false) {
-        setError(`El servidor no pudo enviar la prueba (${data.respuestaPush}).`)
-        return
-      }
+      const p = data.prueba
       setAviso(
-        `Prueba enviada — el servicio de notificaciones respondió ${data.respuestaPush}. Debería llegarte en unos segundos.`
+        p
+          ? `Se enviaron 2 pruebas por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}. Mira cuáles llegan.`
+          : 'Prueba enviada.'
       )
       // Darle tiempo al worker a recibirla y volver a leer el registro.
       setTimeout(() => {
@@ -359,6 +359,7 @@ export function PushPrompt() {
         Activa las notificaciones y entérate primero de promos, sorteos y
         novedades del club.
       </p>
+      {aviso && <p className="text-xs text-muted mb-3">{aviso}</p>}
       {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
       <div className="flex items-center gap-4">
         {/* Secundario a propósito: el sol es de una sola acción por pantalla

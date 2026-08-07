@@ -3,8 +3,9 @@ import { requireClienteContext } from '@/lib/api-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
   deletePushSuscripcion,
-  enviarPushDeBienvenida,
+  enviarPushDePrueba,
   existePushSuscripcion,
+  type ResultadoPrueba,
   getVapidPublicKey,
   pushConfigurado,
   PushSaveError,
@@ -115,26 +116,16 @@ export async function POST(req: NextRequest) {
     // Solo cuando el miembro acaba de activarlas (no en las resincronizaciones
     // de cada apertura). Si el push de bienvenida falla, la suscripción sigue
     // siendo válida: se reporta pero no se tumba la respuesta.
-    let bienvenidaEnviada: boolean | undefined
-    let respuestaPush: number | string | undefined
+    let prueba: ResultadoPrueba | undefined
     if (bienvenida === true) {
-      try {
-        respuestaPush = await enviarPushDeBienvenida(g.tenant, {
-          endpoint,
-          p256dh,
-          auth: authKey,
-        })
-        bienvenidaEnviada = true
-      } catch (err) {
-        console.error('push de bienvenida', err)
-        bienvenidaEnviada = false
-        respuestaPush =
-          (err as { statusCode?: number })?.statusCode ??
-          (err instanceof Error ? err.message.slice(0, 80) : 'desconocido')
-      }
+      prueba = await enviarPushDePrueba(g.tenant, {
+        endpoint,
+        p256dh,
+        auth: authKey,
+      })
     }
 
-    return NextResponse.json({ ok: true, bienvenidaEnviada, respuestaPush })
+    return NextResponse.json({ ok: true, prueba })
   } catch (err) {
     console.error('POST /api/me/push', err)
     if (err instanceof PushSaveError) {
