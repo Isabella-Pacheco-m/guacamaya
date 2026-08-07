@@ -86,6 +86,8 @@ export function PushPrompt() {
   const [estado, setEstado] = useState<Estado>('cargando')
   const [error, setError] = useState<string | null>(null)
   const [ultima, setUltima] = useState<number | null>(null)
+  const [probando, setProbando] = useState(false)
+  const [aviso, setAviso] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelado = false
@@ -227,6 +229,54 @@ export function PushPrompt() {
     }
   }
 
+  // Reenvía la suscripción de este dispositivo pidiendo la notificación de
+  // prueba. Sin esto, quien ya está suscrito no tiene forma de comprobar que
+  // le llegan: la tarjeta solo dice "Activadas" y hay que esperar a que el
+  // negocio mande una campaña.
+  async function probar() {
+    if (probando) return
+    setProbando(true)
+    setError(null)
+    setAviso(null)
+    try {
+      const reg = await esperarServiceWorker(15000)
+      const sub = reg ? await reg.pushManager.getSubscription() : null
+      if (!sub) {
+        setError('Este dispositivo ya no está suscrito. Actívalas de nuevo.')
+        setEstado('disponible')
+        return
+      }
+      const json = sub.toJSON()
+      const res = await fetch('/api/me/push', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: sub.endpoint,
+          keys: json.keys,
+          bienvenida: true,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(mensajeError(data))
+        return
+      }
+      if (data.bienvenidaEnviada === false) {
+        setError('El servidor no pudo enviar la prueba.')
+        return
+      }
+      setAviso('Prueba enviada. Debería llegarte en unos segundos.')
+      // Darle tiempo al worker a recibirla y volver a leer el registro.
+      setTimeout(() => {
+        ultimoPushRecibido().then(setUltima)
+      }, 6000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error inesperado')
+    } finally {
+      setProbando(false)
+    }
+  }
+
   function ahoraNo() {
     localStorage.setItem(DISMISS_KEY, String(Date.now()))
     setEstado('descartado')
@@ -252,7 +302,16 @@ export function PushPrompt() {
             Última recibida: {recibidaFmt.format(new Date(ultima))}
           </p>
         )}
+        {aviso && <p className="text-xs text-muted mt-2">{aviso}</p>}
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+        <button
+          type="button"
+          onClick={probar}
+          disabled={probando}
+          className="mt-3 text-xs text-electric hover:underline disabled:opacity-50"
+        >
+          {probando ? 'Enviando…' : 'Enviarme una de prueba'}
+        </button>
       </Card>
     )
   }
