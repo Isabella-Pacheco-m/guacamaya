@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import {
-  cancelarSuscripcion,
   esIosSinInstalar,
   soportaPush,
   sincronizarSuscripcion,
@@ -156,46 +155,6 @@ export function PushPrompt() {
     setTimeout(refrescarUltima, 6000)
   }
 
-  // Reenvía la suscripción de este dispositivo pidiendo la notificación de
-  // prueba. Sin esto, quien ya está suscrito no tiene forma de comprobar que
-  // le llegan: la tarjeta solo dice "Activadas" y hay que esperar a que el
-  // negocio mande una campaña.
-  async function probar() {
-    if (ocupado) return
-    setOcupado(true)
-    setError(null)
-    setAviso(null)
-    const r = await sincronizarSuscripcion({ bienvenida: true })
-    aplicar(r, true)
-    setOcupado(false)
-    // Darle tiempo al worker a recibirla y volver a leer el registro.
-    setTimeout(refrescarUltima, 6000)
-  }
-
-  // Rehace la suscripción desde cero.
-  //
-  // El registro push del navegador puede quedar en un estado zombi: el
-  // endpoint sigue vivo para el push service (responde 201) pero ya no apunta
-  // a nada en el dispositivo, así que los mensajes se aceptan y se pierden.
-  // Desde el servidor es indistinguible de una entrega correcta. Darla de
-  // baja y volver a suscribirse es lo único que lo repara.
-  async function reactivar() {
-    if (ocupado) return
-    setOcupado(true)
-    setError(null)
-    setAviso(null)
-    await cancelarSuscripcion().catch(() => {})
-    const r = await sincronizarSuscripcion({
-      forzar: true,
-      pedirPermiso: true,
-      bienvenida: true,
-    })
-    setUltima(null)
-    aplicar(r, true)
-    setOcupado(false)
-    setTimeout(refrescarUltima, 6000)
-  }
-
   function ahoraNo() {
     localStorage.setItem(DISMISS_KEY, String(Date.now()))
     setEstado('descartado')
@@ -223,24 +182,6 @@ export function PushPrompt() {
         )}
         {aviso && <p className="text-xs text-muted mt-2 leading-relaxed">{aviso}</p>}
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
-        <div className="mt-3 flex items-center gap-4">
-          <button
-            type="button"
-            onClick={probar}
-            disabled={ocupado}
-            className="text-xs text-electric hover:underline disabled:opacity-50"
-          >
-            {ocupado ? 'Enviando…' : 'Enviarme una de prueba'}
-          </button>
-          <button
-            type="button"
-            onClick={reactivar}
-            disabled={ocupado}
-            className="text-xs text-muted hover:text-graphite disabled:opacity-50"
-          >
-            ¿No te llegan? Reactivar
-          </button>
-        </div>
       </Card>
     )
   }

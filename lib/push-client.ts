@@ -371,8 +371,6 @@ interface OpcionesSync {
   pedirPermiso?: boolean
   /** Pedir al servidor la notificación de prueba tras registrar. */
   bienvenida?: boolean
-  /** Rehacer la suscripción aunque la clave coincida ("Reactivar"). */
-  forzar?: boolean
 }
 
 /**
@@ -407,7 +405,7 @@ export async function sincronizarSuscripcion(
     if (sub) {
       const suya = claveDeSuscripcion(sub)
       const desactualizada = suya !== null && suya !== clave
-      if (desactualizada || opciones.forzar) {
+      if (desactualizada) {
         anterior = sub.endpoint
         await sub.unsubscribe().catch(() => false)
         sub = null
@@ -447,19 +445,6 @@ export async function sincronizarSuscripcion(
       mensaje: err instanceof Error ? err.message : 'Error inesperado',
     }
   }
-}
-
-/** Da de baja este dispositivo (local y en el servidor). */
-export async function cancelarSuscripcion(): Promise<void> {
-  const reg = await esperarServiceWorker(8000)
-  const sub = reg ? await reg.pushManager.getSubscription() : null
-  if (!sub) return
-  await fetch('/api/me/push', {
-    method: 'DELETE',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ endpoint: sub.endpoint }),
-  }).catch(() => {})
-  await sub.unsubscribe().catch(() => false)
 }
 
 // ---------------------------------------------------------------------------
