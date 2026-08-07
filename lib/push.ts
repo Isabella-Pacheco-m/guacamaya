@@ -192,7 +192,10 @@ export async function enviarPushATodos(
           webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             payload,
-            { TTL: 60 * 60 * 24 }
+            // urgency alta: con la normal, Android puede retener el mensaje
+            // hasta que el teléfono salga de reposo y la promo llega tarde
+            // (o nunca, si expira el TTL antes).
+            { TTL: 60 * 60 * 24, urgency: 'high' }
           )
         )
       )

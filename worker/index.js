@@ -3,13 +3,17 @@
 // (o enfocar) la PWA al tocarla.
 
 self.addEventListener('push', (event) => {
-  if (!event.data) return
-
-  let payload
-  try {
-    payload = event.data.json()
-  } catch {
-    payload = { titulo: 'Novedades del club', cuerpo: event.data.text() }
+  // Nunca se sale sin mostrar algo: la suscripción es userVisibleOnly, así
+  // que un push sin datos (o con datos ilegibles) que no muestre nada hace
+  // que el navegador enseñe su propio aviso genérico — o que no aparezca
+  // nada y parezca que la notificación se perdió.
+  let payload = {}
+  if (event.data) {
+    try {
+      payload = event.data.json()
+    } catch {
+      payload = { cuerpo: event.data.text() }
+    }
   }
 
   const titulo = payload.titulo || 'Novedades del club'
@@ -20,7 +24,16 @@ self.addEventListener('push', (event) => {
     data: { url: payload.url || '/' },
   }
 
-  event.waitUntil(self.registration.showNotification(titulo, opciones))
+  event.waitUntil(
+    self.registration.showNotification(titulo, opciones).catch(() =>
+      // El ícono del tenant es remoto: si no se puede cargar, mostrarla
+      // igual sin adornos antes que quedarnos sin notificación.
+      self.registration.showNotification(titulo, {
+        body: opciones.body,
+        data: opciones.data,
+      })
+    )
+  )
 })
 
 self.addEventListener('notificationclick', (event) => {
