@@ -7,7 +7,6 @@ import {
   esIosSinInstalar,
   soportaPush,
   sincronizarSuscripcion,
-  ultimoPushRecibido,
   type PruebaServidor,
   type ResultadoSuscripcion,
 } from '@/lib/push-client'
@@ -33,14 +32,6 @@ type Estado =
   | 'no-soportado'
   | 'descartado'
 
-const recibidaFmt = new Intl.DateTimeFormat('es-CO', {
-  day: 'numeric',
-  month: 'short',
-  hour: 'numeric',
-  minute: '2-digit',
-  timeZone: 'America/Bogota',
-})
-
 // Lo que ve el miembro tras pedir una prueba. Sin códigos HTTP ni nombres de
 // servicio: eso era andamiaje de diagnóstico y su sitio es el panel del
 // negocio, no la tarjeta de un cliente del club.
@@ -57,13 +48,8 @@ function resumenPrueba(p: PruebaServidor): string {
 export function PushPrompt() {
   const [estado, setEstado] = useState<Estado>('cargando')
   const [error, setError] = useState<string | null>(null)
-  const [ultima, setUltima] = useState<number | null>(null)
   const [ocupado, setOcupado] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
-
-  const refrescarUltima = useCallback(() => {
-    ultimoPushRecibido().then(setUltima)
-  }, [])
 
   // Traduce el resultado de la sincronización a lo que ve el miembro.
   const aplicar = useCallback((r: ResultadoSuscripcion, activando: boolean) => {
@@ -100,7 +86,6 @@ export function PushPrompt() {
 
   useEffect(() => {
     let cancelado = false
-    refrescarUltima()
 
     async function evaluar() {
       // iPhone: el push solo existe con la PWA instalada (iOS 16.4+). Se
@@ -137,7 +122,7 @@ export function PushPrompt() {
     return () => {
       cancelado = true
     }
-  }, [aplicar, refrescarUltima])
+  }, [aplicar])
 
   async function activar() {
     if (ocupado) return
@@ -152,7 +137,6 @@ export function PushPrompt() {
     })
     aplicar(r, true)
     setOcupado(false)
-    setTimeout(refrescarUltima, 6000)
   }
 
   function ahoraNo() {
@@ -175,11 +159,6 @@ export function PushPrompt() {
         <p className="text-sm text-graphite">
           Activadas — te avisaremos de promos y novedades del club.
         </p>
-        {ultima !== null && (
-          <p className="text-xs text-muted mt-2">
-            Última recibida: {recibidaFmt.format(new Date(ultima))}
-          </p>
-        )}
         {aviso && <p className="text-xs text-muted mt-2 leading-relaxed">{aviso}</p>}
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
       </Card>

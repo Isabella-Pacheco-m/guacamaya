@@ -447,19 +447,3 @@ export async function sincronizarSuscripcion(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Registro local de pushes recibidos (lo escribe public/push-sw.js)
-// ---------------------------------------------------------------------------
-
-export async function ultimoPushRecibido(): Promise<number | null> {
-  try {
-    if (typeof window === 'undefined' || !('caches' in window)) return null
-    const cache = await caches.open('push-log')
-    const res = await cache.match('/__ultimo-push')
-    if (!res) return null
-    const data = (await res.json()) as { ts?: number }
-    return typeof data.ts === 'number' ? data.ts : null
-  } catch {
-    return null
-  }
-}

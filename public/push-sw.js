@@ -24,7 +24,7 @@
 
   // Se responde en el ping: permite ver en la tarjeta de la PWA qué versión
   // del worker está atendiendo realmente a ese dispositivo.
-  var VERSION = 2
+  var VERSION = 3
 
   // Prueba de vida.
   //
@@ -51,26 +51,6 @@
   self.addEventListener('activate', function (event) {
     event.waitUntil(self.clients.claim())
   })
-
-  // Deja constancia local de cada push recibido. La tarjeta de notificaciones
-  // de la PWA lo lee para poder decir "última recibida: …" — sin esto, "no
-  // llegó" y "llegó pero el sistema no la mostró" son indistinguibles.
-  var LOG_CACHE = 'push-log'
-  var LOG_KEY = '/__ultimo-push'
-
-  async function anotarRecibido(titulo) {
-    try {
-      var cache = await caches.open(LOG_CACHE)
-      await cache.put(
-        LOG_KEY,
-        new Response(JSON.stringify({ ts: Date.now(), titulo: titulo }), {
-          headers: { 'content-type': 'application/json' },
-        })
-      )
-    } catch (e) {
-      // El log es un extra: jamás debe impedir que se muestre la notificación.
-    }
-  }
 
   // Confirma al servidor que ESTE dispositivo recibió el push.
   //
@@ -133,7 +113,7 @@
             data: opciones.data,
           })
         }
-        await Promise.all([anotarRecibido(titulo), confirmarEntrega(payload.id)])
+        await confirmarEntrega(payload.id)
       })()
     )
   })

@@ -24,17 +24,17 @@ interface ResultadoEnvio {
   porEstado: Record<string, number>
 }
 
-// El push service responde 201 cuando ACEPTA el mensaje, no cuando el celular
-// lo muestra. Por eso el panel separa siempre las dos cifras: "aceptadas" es
-// lo que dice Google/Apple, "confirmadas" es lo que reportó el propio
-// dispositivo al recibirlas. Cuando las dos coinciden, la campaña llegó.
+// El servidor sigue registrando el detalle de cada envío (aceptadas, fallidas
+// y confirmaciones de entrega de cada celular): están en push_envios y son la
+// forma de diagnosticar si algo vuelve a fallar. Simplemente no se muestran,
+// porque al negocio no le sirven para decidir nada.
 function textoResultado(r: ResultadoEnvio): string {
   const partes = [
     r.enviados === 1
-      ? 'Aceptada por el servicio para 1 dispositivo'
-      : `Aceptada por el servicio para ${r.enviados} dispositivos`,
+      ? 'Enviada a 1 dispositivo'
+      : `Enviada a ${r.enviados} dispositivos`,
   ]
-  if (r.fallidos > 0) partes.push(`${r.fallidos} fallaron`)
+  if (r.fallidos > 0) partes.push(`${r.fallidos} no la recibieron`)
   if (r.purgadas > 0) {
     partes.push(
       r.purgadas === 1
@@ -42,7 +42,7 @@ function textoResultado(r: ResultadoEnvio): string {
         : `${r.purgadas} suscripciones inválidas se dieron de baja`
     )
   }
-  return `${partes.join(' · ')}. En unos segundos aparecerá abajo cuántos dispositivos la confirmaron.`
+  return `${partes.join(' · ')}.`
 }
 
 export function NotificacionesPanel({
@@ -275,35 +275,9 @@ export function NotificacionesPanel({
                     {dateFmt.format(new Date(e.created_at))}
                   </span>
                 </div>
-                <p className="text-xs text-muted mt-2 tabular-nums">
-                  <span className="text-graphite font-medium">
-                    {e.entregados}
-                  </span>{' '}
-                  {e.entregados === 1
-                    ? 'dispositivo confirmó que la recibió'
-                    : 'dispositivos confirmaron que la recibieron'}{' '}
-                  · {e.enviados} aceptadas por el servicio
-                  {e.fallidos > 0 ? ` · ${e.fallidos} fallidas` : ''}
-                </p>
-                {/* El desglose crudo solo cuando hay algo que explicar: en un
-                    envío limpio son ruido técnico. */}
-                {e.fallidos > 0 && e.detalle && (
-                  <p className="text-[11px] text-muted mt-1 font-mono">
-                    {Object.entries(e.detalle)
-                      .map(([codigo, n]) => `${codigo}×${n}`)
-                      .join('  ')}
-                  </p>
-                )}
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted leading-relaxed">
-            &ldquo;Aceptadas&rdquo; es lo que respondió el servicio de
-            notificaciones (Google, Apple); &ldquo;confirmadas&rdquo; es lo que
-            reportó el celular al recibirlas. Si hay aceptadas pero ninguna
-            confirmada, el mensaje se está perdiendo entre el servicio y el
-            dispositivo.
-          </p>
         </div>
       )}
     </div>
