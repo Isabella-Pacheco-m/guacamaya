@@ -21,10 +21,14 @@ export function NotificacionesPanel({
   suscriptores,
   envios: initialEnvios,
   configurado,
+  clavesOk,
 }: {
   suscriptores: number
   envios: PushEnvio[]
   configurado: boolean
+  /** null = sin configurar. false = el par de claves no corresponde y los
+   *  celulares descartan todo lo que se envíe, sin error visible. */
+  clavesOk: boolean | null
 }) {
   const router = useRouter()
   const [envios, setEnvios] = useState<PushEnvio[]>(initialEnvios)
@@ -96,6 +100,19 @@ export function NotificacionesPanel({
 
   return (
     <div className="flex flex-col gap-8">
+      {clavesOk === false && (
+        <div className="bg-white rounded-lg shadow-card p-5 border border-red-200">
+          <p className="text-sm font-medium text-red-700">
+            Las claves de notificaciones están mal configuradas.
+          </p>
+          <p className="text-xs text-muted mt-1 leading-relaxed">
+            La clave pública y la privada no son pareja: los envíos se aceptan
+            pero los celulares los descartan sin mostrar nada. Hay que
+            corregirlas en la plataforma.
+          </p>
+        </div>
+      )}
+
       {/* Suscriptores */}
       <div className="bg-white rounded-lg shadow-card p-5 flex items-baseline gap-3">
         <span className="text-3xl font-light tabular-nums">{suscriptores}</span>

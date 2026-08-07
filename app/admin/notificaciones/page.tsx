@@ -5,6 +5,7 @@ import {
   countPushSuscriptores,
   listPushEnvios,
   pushConfigurado,
+  vapidParejaValida,
 } from '@/lib/push'
 import { NotificacionesPanel } from '@/components/admin/NotificacionesPanel'
 import { PageHeader } from '@/components/admin/PageHeader'
@@ -41,6 +42,7 @@ export default async function NotificacionesPage() {
         suscriptores={suscriptores}
         envios={envios}
         configurado={pushConfigurado()}
+        clavesOk={vapidParejaValida()}
       />
     </div>
   )

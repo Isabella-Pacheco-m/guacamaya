@@ -220,7 +220,7 @@ export function PushPrompt() {
       if (data.prueba) {
         const p = data.prueba
         setAviso(
-          `Prueba enviada por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}.`
+          `Prueba por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}, claves: ${p.clavesOk === false ? 'NO COINCIDEN' : 'ok'}.`
         )
       }
       setEstado('suscrito')
@@ -265,7 +265,7 @@ export function PushPrompt() {
       const p = data.prueba
       setAviso(
         p
-          ? `Se enviaron 2 pruebas por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}. Mira cuáles llegan.`
+          ? `2 pruebas por ${p.servicio} — simple: ${p.simple}, con contenido: ${p.conDatos}, claves: ${p.clavesOk === false ? 'NO COINCIDEN' : 'ok'}.`
           : 'Prueba enviada.'
       )
       // Darle tiempo al worker a recibirla y volver a leer el registro.

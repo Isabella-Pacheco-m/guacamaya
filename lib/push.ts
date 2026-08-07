@@ -3,6 +3,7 @@
 // BUILD en vez de reventar en el navegador.
 import 'server-only'
 
+import crypto from 'node:crypto'
 import webpush from 'web-push'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { tenantBaseUrl } from '@/lib/config'
@@ -33,6 +34,31 @@ export function pushConfigurado(): boolean {
 
 export function getVapidPublicKey(): string | null {
   return VAPID_PUBLIC_KEY || null
+}
+
+/**
+ * ¿La clave pública y la privada configuradas son realmente pareja?
+ *
+ * Si no lo son, el navegador se suscribe con la pública, el servidor firma
+ * con la privada y el push service acepta igual (201) — pero el navegador
+ * comprueba la firma contra la clave con la que se suscribió, no cuadra, y
+ * descarta el mensaje en silencio. Sin este chequeo, un par mal pegado en
+ * las variables de entorno es indistinguible de un problema del teléfono.
+ *
+ * La verificación es pura matemática: la pública debe ser el resultado de
+ * multiplicar la privada por el punto generador de la curva P-256.
+ */
+export function vapidParejaValida(): boolean | null {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return null
+  try {
+    const ecdh = crypto.createECDH('prime256v1')
+    ecdh.setPrivateKey(Buffer.from(VAPID_PRIVATE_KEY, 'base64url'))
+    return ecdh
+      .getPublicKey()
+      .equals(Buffer.from(VAPID_PUBLIC_KEY, 'base64url'))
+  } catch {
+    return false
+  }
 }
 
 let vapidListo = false
@@ -160,6 +186,9 @@ function codigoDe(err: unknown): number | string {
 export interface ResultadoPrueba {
   /** Host del push service (fcm.googleapis.com, Samsung, Mozilla…). */
   servicio: string
+  /** ¿El par de claves VAPID configurado es consistente? Si no, el navegador
+   *  descarta todo lo que enviemos aunque el push service lo acepte. */
+  clavesOk: boolean | null
   /** Push SIN contenido: no lleva cifrado, solo despierta al worker. */
   simple: number | string
   /** Push con contenido cifrado, el formato normal de las campañas. */
@@ -221,7 +250,7 @@ export async function enviarPushDePrueba(
     // endpoint raro: el host es informativo, no vale la pena fallar por él.
   }
 
-  return { servicio, simple, conDatos }
+  return { servicio, clavesOk: vapidParejaValida(), simple, conDatos }
 }
 
 const PAGE = 1000
