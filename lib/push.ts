@@ -144,6 +144,30 @@ interface SuscripcionRow {
   auth: string
 }
 
+/**
+ * Push de confirmación al activar las notificaciones.
+ *
+ * Cierra el ciclo en el momento en que el miembro dice que sí: ve cómo se
+ * verán y comprueba que de verdad llegan, en vez de esperar a la primera
+ * campaña del negocio para descubrir que algo no funcionaba.
+ */
+export async function enviarPushDeBienvenida(
+  tenant: Pick<Tenant, 'slug' | 'nombre' | 'logo_url'>,
+  sub: PushSubscriptionInput
+): Promise<void> {
+  ensureVapid()
+  await webpush.sendNotification(
+    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+    JSON.stringify({
+      titulo: `Listo — ya eres parte de ${tenant.nombre}`,
+      cuerpo: 'Así te avisaremos de promos, sorteos y novedades del club.',
+      url: tenantBaseUrl(tenant.slug),
+      icono: tenant.logo_url ?? undefined,
+    }),
+    { TTL: 60 * 10, urgency: 'high' }
+  )
+}
+
 const PAGE = 1000
 const CHUNK = 100
 

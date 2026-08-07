@@ -3,12 +3,14 @@ import { requireClienteContext } from '@/lib/api-auth'
 import { getTenantFeatures } from '@/lib/tenant-features'
 import {
   deletePushSuscripcion,
+  enviarPushDeBienvenida,
   existePushSuscripcion,
   getVapidPublicKey,
   pushConfigurado,
   PushSaveError,
   savePushSuscripcion,
 } from '@/lib/push'
+import type { Tenant } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +20,7 @@ export const dynamic = 'force-dynamic'
 
 type GateResult =
   | { ok: false; res: NextResponse }
-  | { ok: true; tenantId: string; miembroId: string }
+  | { ok: true; tenant: Tenant; miembroId: string }
 
 async function gate(req: NextRequest): Promise<GateResult> {
   const auth = await requireClienteContext(req)
@@ -42,7 +44,7 @@ async function gate(req: NextRequest): Promise<GateResult> {
       ),
     }
   }
-  return { ok: true, tenantId: auth.tenant.id, miembroId: auth.miembro.id }
+  return { ok: true, tenant: auth.tenant, miembroId: auth.miembro.id }
 }
 
 export async function GET(req: NextRequest) {
@@ -61,9 +63,10 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
   }
-  const { endpoint, keys } = (body ?? {}) as {
+  const { endpoint, keys, bienvenida } = (body ?? {}) as {
     endpoint?: unknown
     keys?: { p256dh?: unknown; auth?: unknown }
+    bienvenida?: unknown
   }
 
   if (
@@ -87,7 +90,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await savePushSuscripcion(g.tenantId, g.miembroId, {
+    await savePushSuscripcion(g.tenant.id, g.miembroId, {
       endpoint,
       p256dh,
       auth: authKey,
@@ -95,10 +98,10 @@ export async function POST(req: NextRequest) {
     // Releer: si la escritura "pasó" pero la fila no está (permisos, RLS,
     // tabla ausente), el cliente se enteraría igual que el negocio — cuando
     // el panel marca cero. Mejor decirlo aquí.
-    const guardada = await existePushSuscripcion(g.tenantId, endpoint)
+    const guardada = await existePushSuscripcion(g.tenant.id, endpoint)
     if (!guardada) {
       console.error('POST /api/me/push: la suscripción no persistió', {
-        tenantId: g.tenantId,
+        tenantId: g.tenant.id,
       })
       return NextResponse.json(
         {
@@ -108,7 +111,26 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       )
     }
-    return NextResponse.json({ ok: true })
+
+    // Solo cuando el miembro acaba de activarlas (no en las resincronizaciones
+    // de cada apertura). Si el push de bienvenida falla, la suscripción sigue
+    // siendo válida: se reporta pero no se tumba la respuesta.
+    let bienvenidaEnviada: boolean | undefined
+    if (bienvenida === true) {
+      try {
+        await enviarPushDeBienvenida(g.tenant, {
+          endpoint,
+          p256dh,
+          auth: authKey,
+        })
+        bienvenidaEnviada = true
+      } catch (err) {
+        console.error('push de bienvenida', err)
+        bienvenidaEnviada = false
+      }
+    }
+
+    return NextResponse.json({ ok: true, bienvenidaEnviada })
   } catch (err) {
     console.error('POST /api/me/push', err)
     if (err instanceof PushSaveError) {

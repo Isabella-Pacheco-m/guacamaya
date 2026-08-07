@@ -179,11 +179,19 @@ export function PushPrompt() {
       const res = await fetch('/api/me/push', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
+        body: JSON.stringify({
+          endpoint: sub.endpoint,
+          keys: json.keys,
+          // Confirma en el propio celular que llegan de verdad.
+          bienvenida: true,
+        }),
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(mensajeError(data))
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(mensajeError(data))
+      if (data.bienvenidaEnviada === false) {
+        setError(
+          'Quedaste suscrito, pero la notificación de prueba no salió. Avísale al negocio.'
+        )
       }
       setEstado('suscrito')
     } catch (err) {
@@ -212,6 +220,7 @@ export function PushPrompt() {
         <p className="text-sm text-graphite">
           Activadas — te avisaremos de promos y novedades del club.
         </p>
+        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
       </Card>
     )
   }
